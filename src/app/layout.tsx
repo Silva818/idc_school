@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "I Do Calisthenics",
+  title: "IDC School",
   description:
     "Тренировки с собственным весом в комфортном темпе и с фокусом на технике.",
 };
