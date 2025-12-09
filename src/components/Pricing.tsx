@@ -10,31 +10,40 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   );
 }
 
-// отдельные цены для AMD и EUR
+// отдельные цены для AMD, EUR и USD
 const prices = {
   review: {
-    AMD: { total: 5500, per: 5500 }, // разовый формат
+    AMD: { total: 1100, per: 1100 }, // разовый формат
     EUR: { total: 11, per: 11 },
+    USD: { total: 11, per: 11 },
   },
   month: {
-    AMD: { total: 48000, per: 4000 }, // 12 тренировок
+    AMD: { total: 9600, per: 800 }, // 12 тренировок
     EUR: { total: 108, per: 9 },
+    USD: { total: 108, per: 9 },
   },
   slow12: {
-    AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
+    AMD: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
     EUR: { total: 120, per: 10 },
+    USD: { total: 120, per: 10 },
   },
   long36: {
-    AMD: { total: 115200, per: 3200 }, // 36 тренировок
+    AMD: { total: 23400, per: 650 }, // 36 тренировок
     EUR: { total: 252, per: 7 },
+    USD: { total: 252, per: 7 },
   },
 } as const;
 
-type Currency = "AMD" | "EUR";
+export type Currency = "AMD" | "EUR" | "USD";
 
 function formatPrice(value: number, currency: Currency) {
-  const suffix = currency === "AMD" ? "₽" : "€";
-  return `${value.toLocaleString("ru-RU")} ${suffix}`;
+  const suffixMap: Record<Currency, string> = {
+    AMD: "֏",
+    EUR: "€",
+    USD: "$",
+  };
+
+  return `${value.toLocaleString("ru-RU")} ${suffixMap[currency]}`;
 }
 
 // то, что передаём вверх в модалку покупки
@@ -52,15 +61,17 @@ type PricingProps = {
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
   const [currency, setCurrency] = useState<Currency>("AMD");
-  const isAmd = currency === "AMD";
 
-  const toggleCurrency = () => {
-    setCurrency((prev) => (prev === "AMD" ? "EUR" : "AMD"));
-  };
+  const isAMD = currency === "AMD";
+  const isEUR = currency === "EUR";
+  const isUSD = currency === "USD";
 
-  const switchHint = isAmd
-    ? "Оплата армянской картой"
-    : "Оплата зарубежной картой";
+  const switchHint =
+    currency === "AMD"
+      ? "Оплата армянской картой"
+      : currency === "EUR"
+      ? "Оплата картой в евро"
+      : "Оплата картой в долларах";
 
   return (
     <section
@@ -91,20 +102,30 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs sm:text-sm">
                 <button
                   type="button"
-                  onClick={toggleCurrency}
+                  onClick={() => setCurrency("AMD")}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    isAmd ? "bg-white text-brand-dark" : "text-brand-muted",
+                    isAMD ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
-                  ₽ AMD
+                  ֏ AMD
                 </button>
                 <button
                   type="button"
-                  onClick={toggleCurrency}
+                  onClick={() => setCurrency("USD")}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    !isAmd ? "bg-white text-brand-dark" : "text-brand-muted",
+                    isUSD ? "bg-white text-brand-dark" : "text-brand-muted",
+                  ].join(" ")}
+                >
+                  $ USD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("EUR")}
+                  className={[
+                    "px-3 py-1.5 rounded-full transition-colors",
+                    isEUR ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
                   € EUR

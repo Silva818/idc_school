@@ -1,8 +1,8 @@
 // src/app/page.tsx
 
 "use client";
-import Image from "next/image";
 
+import Image from "next/image";
 import {
   useEffect,
   useRef,
@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type FormEvent,
 } from "react";
+
 import { HowItWorks } from "@/components/HowItWorks";
 import { Courses } from "@/components/Courses";
 import { Pricing, type PurchaseOptions } from "@/components/Pricing";
@@ -21,6 +22,12 @@ import { courseNames } from "@/data/courses";
 import { ChatWidget } from "@/components/ChatWidget";
 import { Footer } from "@/components/Footer";
 
+// мапа символов валют для модалки покупки
+const currencySymbols: Record<PurchaseOptions["currency"], string> = {
+  AMD: "֏",
+  EUR: "€",
+  USD: "$",
+};
 
 function HowStepCard({
   children,
@@ -219,10 +226,8 @@ export default function HomePage() {
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
         {/* Top bar */}
         <header className="flex items-center justify-between gap-4 mb-10 sm:mb-14">
-          
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-2xl bg-brand-blue/80 flex items-center justify-center text-xs font-semibold">
-            </div>
+            <div className="h-7 w-7 rounded-2xl bg-brand-blue/80 flex items-center justify-center text-xs font-semibold" />
             <span className="text-sm sm:text-base font-medium tracking-tight">
               IDC School
             </span>
@@ -310,18 +315,14 @@ export default function HomePage() {
             <div className="relative rounded-4xl bg-gradient-to-br from-brand-blue to-[#111827] p-1 shadow-soft">
               <div className="rounded-4xl bg-brand-dark/90 border border-white/10 p-4 sm:p-5 lg:p-6">
                 <div className="relative overflow-hidden rounded-3xl bg-black/60 h-56 sm:h-64 lg:h-72 mb-4 sm:mb-5">
-                <video
-    className="absolute inset-0 h-full w-full object-cover"
-    src="/hero-preview1.mp4"
-    // poster="/hero-poster.jpg" // опционально: картинка-обложка из public
-    playsInline
-    muted
-    autoPlay
-    loop
-  />
-  {/* Если хочешь поверх полупрозрачный градиент — можно добавить:
-  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-  */}
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover"
+                    src="/hero-preview1.mp4"
+                    playsInline
+                    muted
+                    autoPlay
+                    loop
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
@@ -372,21 +373,22 @@ export default function HomePage() {
 
         {/* Остальные секции */}
         <HowItWorks />
-        </div>
+      </div>
 
-        <Courses onOpenTestModal={openTestModal} />
-        <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
+      <Courses onOpenTestModal={openTestModal} />
+
+      <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
         <Pricing
           onOpenTestModal={openTestModal}
           onOpenPurchaseModal={openPurchaseModal}
         />
-        <About />
-        <Testimonials />
+        {/* <About />
+        <Testimonials /> */}
         <FAQ />
       </div>
 
-          {/* ПОДВАЛ */}
-          <Footer />
+      {/* ПОДВАЛ */}
+      <Footer />
 
       {/* МОДАЛКА ТЕСТА СИЛЫ */}
       {isTestModalOpen && (
@@ -495,7 +497,7 @@ export default function HomePage() {
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
                   Тариф: {purchaseOptions.tariffLabel} ·{" "}
                   {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
-                  {purchaseOptions.currency === "AMD" ? "֏" : "€"}
+                  {currencySymbols[purchaseOptions.currency]}
                 </p>
               </div>
 
@@ -669,7 +671,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={isLoginSubmitting}
-                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-brand-dark disabled:opacity-60 disabled:pointer-events-none hover:bg-white transition-colors"
+                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-brand-dark disabled:opacity-60 disabled:pointer-events-none hover:bg白 transition-colors"
               >
                 {isLoginSubmitting ? "Проверяем…" : "Войти"}
               </button>
@@ -677,6 +679,7 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
       <ChatWidget />
     </main>
   );
