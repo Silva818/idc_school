@@ -1,6 +1,7 @@
 // src/components/Pricing.tsx
 "use client";
 
+import { useState } from "react";
 import { TestSignupButton } from "@/components/TestSignupButton";
 
 function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
@@ -9,31 +10,40 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   );
 }
 
-// отдельные цены для RUB и EUR (оставляем как есть, но используем только EUR)
+// отдельные цены для AMD, EUR и USD
 const prices = {
   review: {
-    RUB: { total: 1100, per: 1100 }, // разовый формат
+    AMD: { total: 1100, per: 1100 }, // разовый формат
     EUR: { total: 11, per: 11 },
+    USD: { total: 11, per: 11 }, // при необходимости поменяй цифры
   },
   month: {
-    RUB: { total: 9600, per: 800 }, // 12 тренировок
+    AMD: { total: 9600, per: 800 }, // 12 тренировок
     EUR: { total: 108, per: 9 },
+    USD: { total: 108, per: 9 },
   },
   slow12: {
-    RUB: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
+    AMD: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
     EUR: { total: 120, per: 10 },
+    USD: { total: 120, per: 10 },
   },
   long36: {
-    RUB: { total: 23400, per: 650 }, // 36 тренировок
+    AMD: { total: 23400, per: 650 }, // 36 тренировок
     EUR: { total: 252, per: 7 },
+    USD: { total: 252, per: 7 },
   },
 } as const;
 
-type Currency = "RUB" | "EUR";
+type Currency = "AMD" | "EUR" | "USD";
 
 function formatPrice(value: number, currency: Currency) {
-  const suffix = currency === "RUB" ? "₽" : "€";
-  return `${value.toLocaleString("ru-RU")} ${suffix}`;
+  const suffixMap: Record<Currency, string> = {
+    AMD: "֏", // можно заменить на "AMD", если так удобнее
+    EUR: "€",
+    USD: "$",
+  };
+
+  return `${value.toLocaleString("ru-RU")} ${suffixMap[currency]}`;
 }
 
 // то, что передаём вверх в модалку покупки
@@ -50,10 +60,18 @@ type PricingProps = {
 };
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
-  // фиксированная валюта — только EUR
-  const currency: Currency = "EUR";
+  const [currency, setCurrency] = useState<Currency>("AMD");
 
-  const switchHint = "Оплата зарубежной картой";
+  const isAMD = currency === "AMD";
+  const isEUR = currency === "EUR";
+  const isUSD = currency === "USD";
+
+  const switchHint =
+    currency === "AMD"
+      ? "Оплата армянской картой"
+      : currency === "EUR"
+      ? "Оплата картой в евро"
+      : "Оплата картой в долларах";
 
   return (
     <section
@@ -61,7 +79,7 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
       className="py-16 sm:py-20 lg:py-24 scroll-mt-24 md:scroll-mt-28 border-t border-white/5"
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
-        {/* Заголовок + "переключатель" валюты (теперь только EUR) */}
+        {/* Заголовок + переключатель валюты */}
         <div className="mb-10 sm:mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
@@ -77,14 +95,41 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
             </p>
           </div>
 
-          {/* Фиксированная валюта: только EUR */}
+          {/* Переключатель валюты */}
           <div className="flex flex-col items-start sm:items-end gap-1.5">
             <div className="flex items-center gap-3">
               <span className="text-[11px] uppercase tracking-[0.16em] text-brand-muted/80" />
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs sm:text-sm">
-                <span className="px-3 py-1.5 rounded-full bg-white text-brand-dark">
+                <button
+                  type="button"
+                  onClick={() => setCurrency("AMD")}
+                  className={[
+                    "px-3 py-1.5 rounded-full transition-colors",
+                    isAMD ? "bg-white text-brand-dark" : "text-brand-muted",
+                  ].join(" ")}
+                >
+                  ֏ AMD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("USD")}
+                  className={[
+                    "px-3 py-1.5 rounded-full transition-colors",
+                    isUSD ? "bg-white text-brand-dark" : "text-brand-muted",
+                  ].join(" ")}
+                >
+                  $ USD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("EUR")}
+                  className={[
+                    "px-3 py-1.5 rounded-full transition-colors",
+                    isEUR ? "bg-white text-brand-dark" : "text-brand-muted",
+                  ].join(" ")}
+                >
                   € EUR
-                </span>
+                </button>
               </div>
             </div>
             <p className="text-[11px] sm:text-xs text-brand-muted/80">

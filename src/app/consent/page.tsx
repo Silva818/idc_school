@@ -32,26 +32,17 @@ export default function ConsentPage() {
           <p>
             Отправляя заявку или регистрируясь на сайте{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>{" "}
-            и/или в чат-боте{" "}
-            <a
-              href="https://t.me/idcmain_bot"
-              target="_blank"
-              rel="noreferrer"
-              className="text-white underline decoration-dotted"
-            >
-              https://t.me/idcmain_bot
-            </a>{" "}
+      
             Пользователь подтверждает согласие на обработку своих персональных
-            данных Индивидуальным предпринимателем Шатворяном Ованесом
-            Рубеновичем (далее - Оператор, ИНН: 771777622100; ОГРН:
-            318774600511781, Москва ул Новоалексеевская 9 кв 94 индекс 129626),
+            данных Индивидуальным предпринимателем Амбарцумян Сирвард Сергеевна
+            (далее - Оператор, ИНН: 26913722),
             в целях предоставления ответов на запросы, а также в целях оказания
             услуг Пользователю.
           </p>
