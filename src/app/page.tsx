@@ -495,9 +495,17 @@ export default function HomePage() {
                   Оплата блока тренировок
                 </h2>
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
-                  Тариф: {purchaseOptions.tariffLabel} ·{" "}
-                  {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
-                  {purchaseOptions.currency === "RUB" ? "₽" : "€"}
+                Тариф: {purchaseOptions.tariffLabel} ·{" "}
+{purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
+{(() => {
+  const symbols: Record<PurchaseOptions["currency"], string> = {
+    AMD: "֏",
+    EUR: "€",
+    USD: "$",
+  };
+  return symbols[purchaseOptions.currency];
+})()}
+
                 </p>
               </div>
 
