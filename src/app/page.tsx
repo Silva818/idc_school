@@ -358,9 +358,10 @@ export default function HomePage() {
                           Подбери программу под себя
                         </div>
                       </div>
-                      <button className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors">
+                      <a href="#courses"
+                      className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors">
                         Начать
-                      </button>
+                        </a>
                     </div>
                   </div>
                 </div>
