@@ -41,28 +41,13 @@ export default function PrivacyPage() {
             интернет. Под сайтом в Соглашении понимается сайт, расположенный в
             сети интернет по адресу:{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com
             </a>
-          </p>
-
-          <p>
-            Чат-бот - автоматизированный многофункциональный помощник,
-            размещенный в мессенджере Телеграм по адресу{" "}
-            <a
-              href="https://t.me/idcmain_bot"
-              target="_blank"
-              rel="noreferrer"
-              className="text-white underline decoration-dotted"
-            >
-              https://t.me/idcmain_bot
-            </a>
-            , который может показывать информацию пользователям, а также
-            собирать информацию, в том числе Заказы.
           </p>
 
           <p>
@@ -92,9 +77,7 @@ export default function PrivacyPage() {
             определяющая цели обработки персональных данных, подлежащих
             обработке, действия (операции), совершаемые с персональными
             данными. Оператором является Индивидуальный предприниматель
-            Шатворян Ованес Рубенович (далее - Оператор, ИНН: 771777622100;
-            ОГРН: 318774600511781, Москва ул. Новоалексеевская 9 кв 94, индекс
-            129626).
+            Амбарцумян Сирвард Сергеевна (далее - Оператор, ИНН: 26913722).
           </p>
 
           <p>
@@ -160,12 +143,12 @@ export default function PrivacyPage() {
             1.2.1. Устанавливает правила обработки Оператором персональных
             данных, предоставляемых лицами, которые используют Сайт{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>
             , включая поддомены и их страницы для получения услуг (далее –
             Заказчики, Пользователи, Сайт);
@@ -764,12 +747,9 @@ export default function PrivacyPage() {
             9. Сведения об Операторе:
           </p>
 
-          <p>Шатворян Ованес Рубенович</p>
-          <p>ОГРН: 318774600511781</p>
-          <p>ИНН: 771777622100</p>
-          <p>ОГРН / ОГРНИП: 3 18774600511781</p>
-          <p>Адрес: Москва ул Новоалексеевская 9 кв 94, индекс 129626</p>
-          <p>E-mail: OV.SHATVORYAN@GMAIL.COM</p>
+          <p>Амбарцумян Сирвард Сергеевна</p>
+          <p>ИНН: 26913722</p>
+          <p>E-mail: silva.ambartsumian@outlook.com</p>
         </section>
       </div>
     </main>
