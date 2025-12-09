@@ -10,40 +10,31 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   );
 }
 
-// отдельные цены для AMD, EUR и USD
+// отдельные цены для RUB и EUR
 const prices = {
   review: {
-    AMD: { total: 1100, per: 1100 }, // разовый формат
+    RUB: { total: 1100, per: 1100 }, // разовый формат
     EUR: { total: 11, per: 11 },
-    USD: { total: 11, per: 11 }, // при необходимости поменяй цифры
   },
   month: {
-    AMD: { total: 9600, per: 800 }, // 12 тренировок
+    RUB: { total: 9600, per: 800 }, // 12 тренировок
     EUR: { total: 108, per: 9 },
-    USD: { total: 108, per: 9 },
   },
   slow12: {
-    AMD: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
+    RUB: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
     EUR: { total: 120, per: 10 },
-    USD: { total: 120, per: 10 },
   },
   long36: {
-    AMD: { total: 23400, per: 650 }, // 36 тренировок
+    RUB: { total: 23400, per: 650 }, // 36 тренировок
     EUR: { total: 252, per: 7 },
-    USD: { total: 252, per: 7 },
   },
 } as const;
 
-type Currency = "AMD" | "EUR" | "USD";
+type Currency = "RUB" | "EUR";
 
 function formatPrice(value: number, currency: Currency) {
-  const suffixMap: Record<Currency, string> = {
-    AMD: "֏", // можно заменить на "AMD", если так удобнее
-    EUR: "€",
-    USD: "$",
-  };
-
-  return `${value.toLocaleString("ru-RU")} ${suffixMap[currency]}`;
+  const suffix = currency === "RUB" ? "₽" : "€";
+  return `${value.toLocaleString("ru-RU")} ${suffix}`;
 }
 
 // то, что передаём вверх в модалку покупки
@@ -60,18 +51,16 @@ type PricingProps = {
 };
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
-  const [currency, setCurrency] = useState<Currency>("AMD");
+  const [currency, setCurrency] = useState<Currency>("RUB");
+  const isRub = currency === "RUB";
 
-  const isAMD = currency === "AMD";
-  const isEUR = currency === "EUR";
-  const isUSD = currency === "USD";
+  const toggleCurrency = () => {
+    setCurrency((prev) => (prev === "RUB" ? "EUR" : "RUB"));
+  };
 
-  const switchHint =
-    currency === "AMD"
-      ? "Оплата армянской картой"
-      : currency === "EUR"
-      ? "Оплата картой в евро"
-      : "Оплата картой в долларах";
+  const switchHint = isRub
+    ? "Оплата российской картой"
+    : "Оплата зарубежной картой";
 
   return (
     <section
@@ -102,30 +91,20 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs sm:text-sm">
                 <button
                   type="button"
-                  onClick={() => setCurrency("AMD")}
+                  onClick={toggleCurrency}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    isAMD ? "bg-white text-brand-dark" : "text-brand-muted",
+                    isRub ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
-                  ֏ AMD
+                  ₽ RUB
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCurrency("USD")}
+                  onClick={toggleCurrency}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    isUSD ? "bg-white text-brand-dark" : "text-brand-muted",
-                  ].join(" ")}
-                >
-                  $ USD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency("EUR")}
-                  className={[
-                    "px-3 py-1.5 rounded-full transition-colors",
-                    isEUR ? "bg-white text-brand-dark" : "text-brand-muted",
+                    !isRub ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
                   € EUR
