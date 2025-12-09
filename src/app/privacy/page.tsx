@@ -178,12 +178,12 @@ export default function PrivacyPage() {
             персональных данных применяется ко всей информации, которую
             Оператор может получить о посетителях Сайта{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>
             , включая поддомены и их страницы.
           </p>
@@ -213,12 +213,12 @@ export default function PrivacyPage() {
             2.1.1. Предоставление доступа Пользователю к сервисам, информации
             и/или материалам, содержащимся на Сайте{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>
             , включая поддомены и их страницы, уточнение деталей заказа.
           </p>
@@ -660,12 +660,12 @@ export default function PrivacyPage() {
             в случае их заполнения и/или отправки Пользователем самостоятельно
             через специальные формы, расположенные на Сайте{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>
             , включая поддомены и их страницы. Заполняя соответствующие формы
             и/или отправляя свои персональные данные Оператору, Пользователь
