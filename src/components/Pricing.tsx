@@ -10,30 +10,30 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   );
 }
 
-// отдельные цены для RUB и EUR
+// отдельные цены для AMD и EUR
 const prices = {
   review: {
-    RUB: { total: 1100, per: 1100 }, // разовый формат
+    AMD: { total: 5500, per: 5500 }, // разовый формат
     EUR: { total: 11, per: 11 },
   },
   month: {
-    RUB: { total: 9600, per: 800 }, // 12 тренировок
+    AMD: { total: 48000, per: 4000 }, // 12 тренировок
     EUR: { total: 108, per: 9 },
   },
   slow12: {
-    RUB: { total: 11400, per: 950 }, // 12 тренировок в спокойном темпе
+    AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
     EUR: { total: 120, per: 10 },
   },
   long36: {
-    RUB: { total: 23400, per: 650 }, // 36 тренировок
+    AMD: { total: 115200, per: 3200 }, // 36 тренировок
     EUR: { total: 252, per: 7 },
   },
 } as const;
 
-type Currency = "RUB" | "EUR";
+type Currency = "AMD" | "EUR";
 
 function formatPrice(value: number, currency: Currency) {
-  const suffix = currency === "RUB" ? "₽" : "€";
+  const suffix = currency === "AMD" ? "₽" : "€";
   return `${value.toLocaleString("ru-RU")} ${suffix}`;
 }
 
@@ -51,15 +51,15 @@ type PricingProps = {
 };
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
-  const [currency, setCurrency] = useState<Currency>("RUB");
-  const isRub = currency === "RUB";
+  const [currency, setCurrency] = useState<Currency>("AMD");
+  const isAmd = currency === "AMD";
 
   const toggleCurrency = () => {
-    setCurrency((prev) => (prev === "RUB" ? "EUR" : "RUB"));
+    setCurrency((prev) => (prev === "AMD" ? "EUR" : "AMD"));
   };
 
-  const switchHint = isRub
-    ? "Оплата российской картой"
+  const switchHint = isAmd
+    ? "Оплата армянской картой"
     : "Оплата зарубежной картой";
 
   return (
@@ -94,17 +94,17 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                   onClick={toggleCurrency}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    isRub ? "bg-white text-brand-dark" : "text-brand-muted",
+                    isAmd ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
-                  ₽ RUB
+                  ₽ AMD
                 </button>
                 <button
                   type="button"
                   onClick={toggleCurrency}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
-                    !isRub ? "bg-white text-brand-dark" : "text-brand-muted",
+                    !isAmd ? "bg-white text-brand-dark" : "text-brand-muted",
                   ].join(" ")}
                 >
                   € EUR

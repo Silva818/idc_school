@@ -221,17 +221,10 @@ export default function HomePage() {
         <header className="flex items-center justify-between gap-4 mb-10 sm:mb-14">
           
           <div className="flex items-center gap-2">
-          <Image src="/logo-idc-white1.svg" // положи файл в public/logo-idc-white.png
-              alt="I Do Calisthenics"
-              width={150}
-              height={40}
-              className="h-7 w-auto sm:h-8 lg:h-9"
-              priority/>
-            
-            {/* <div className="h-7 w-7 rounded-2xl bg-brand-blue/80 flex items-center justify-center text-xs font-semibold">
-            </div> */}
+            <div className="h-7 w-7 rounded-2xl bg-brand-blue/80 flex items-center justify-center text-xs font-semibold">
+            </div>
             <span className="text-sm sm:text-base font-medium tracking-tight">
-              I Do Calisthenics
+              IDC School
             </span>
           </div>
 
@@ -244,12 +237,6 @@ export default function HomePage() {
             </a>
             <a href="#pricing" className="hover:text-white transition-colors">
               Цены
-            </a>
-            <a href="#about" className="hover:text-white transition-colors">
-              О проекте
-            </a>
-            <a href="#reviews" className="hover:text-white transition-colors">
-              Отзывы
             </a>
             <a href="#faq" className="hover:text-white transition-colors">
               FAQ
@@ -508,7 +495,7 @@ export default function HomePage() {
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
                   Тариф: {purchaseOptions.tariffLabel} ·{" "}
                   {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
-                  {purchaseOptions.currency === "RUB" ? "₽" : "€"}
+                  {purchaseOptions.currency === "AMD" ? "֏" : "€"}
                 </p>
               </div>
 
