@@ -27,23 +27,22 @@ export default function OfferPage() {
         <section className="rounded-3xl border border-white/10 bg-black/30 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 text-[13px] sm:text-sm leading-relaxed text-brand-muted space-y-4">
           <p>
             Настоящий документ является публичной офертой Индивидуального
-            предпринимателя Шатворяна Ованеса Рубеновича{" "}
-            (ИНН: 771777622100; ОГРН: 318774600511781, далее по тексту –
+            предпринимателя Амбарцумяна Сирварда Сергеевна{" "}
+            (ИНН: 26913722; далее по тексту –
             «Исполнитель»), содержащей предложение о заключении с физическим
             или юридическим лицом (далее по тексту – «Получатель услуг»)
             договора оказания услуг по организации и проведению
-            физкультурных, физкультурно-оздоровительных, спортивных
-            мероприятий и иных услуг в рамках проекта I Do Calisthenics,
+            онлайн физкультурных, физкультурно-оздоровительных и иных услуг в рамках проекта IDC School,
             информация о которых размещена на сайте{" "}
             <a
-              href="https://calisthenics.ru/"
+              href="https://idcschool.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/
+              https://idcschool.com/
             </a>{" "}
-            и в чат-боте{" "}
+            {/* и в чат-боте{" "}
             <a
               href="https://t.me/idcmain_bot"
               target="_blank"
@@ -51,7 +50,7 @@ export default function OfferPage() {
               className="text-white underline decoration-dotted"
             >
               https://t.me/idcmain_bot
-            </a>
+            </a> */}
             .
           </p>
 
@@ -69,12 +68,12 @@ export default function OfferPage() {
             сайте. Действующая редакция условий находится на интернет-странице
             по адресу:{" "}
             <a
-              href="https://calisthenics.ru/public_offer"
+              href="https://idcschool.com/public_offer"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://calisthenics.ru/public_offer
+              https://idcschool.com/public_offer
             </a>
             .
           </p>
@@ -129,8 +128,7 @@ export default function OfferPage() {
               дистанционным способом.
             </li>
             <li>
-              Исполнитель – Индивидуальный предприниматель Шатворян Ованес
-              Рубенович.
+              Исполнитель – Индивидуальный предприниматель Амбарцумян Сирвард Сергеевна.
             </li>
             <li>
               Услуги – оказываемые Исполнителем услуги по организации и
@@ -142,19 +140,19 @@ export default function OfferPage() {
               Сайт – сайт Исполнителя, расположенный в сети Интернет по
               адресу{" "}
               <a
-                href="https://calisthenics.ru/"
+                href="https://idcschool.com/"
                 target="_blank"
                 rel="noreferrer"
                 className="text-white underline decoration-dotted"
               >
-                https://calisthenics.ru/
+                https://idcschool.com
               </a>
               , предназначенный для информирования об услугах и заключения
               договоров оказания услуг дистанционным способом на основании
               ознакомления Получателя услуг с предложенным Исполнителем
               описанием и на условиях настоящей оферты.
             </li>
-            <li>
+            {/* <li>
               Чат-бот – автоматизированный многофункциональный помощник,
               размещенный в мессенджере Телеграм по адресу{" "}
               <a
@@ -167,7 +165,7 @@ export default function OfferPage() {
               </a>
               , который может показывать информацию пользователям, а также
               собирать информацию, в том числе Заказы.
-            </li>
+            </li> */}
             <li>
               Заказ – заявка Получателя услуг, совершенная с использованием
               Сайта и/или чат-бота на получение услуг.
@@ -570,7 +568,7 @@ export default function OfferPage() {
 
 <p>
   9. Оферта, выраженная в соглашении, вступает в силу с момента размещения в сети Интернет по адресу
-  https://calisthenics.ru/public_offer и действует до момента отзыва оферты Исполнителем.
+  https://idcschool.com/public_offer и действует до момента отзыва оферты Исполнителем.
 </p>
 
 <p>
