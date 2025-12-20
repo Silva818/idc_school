@@ -76,14 +76,17 @@
 //   }
 // }
 
-
 // src/app/api/create-payment/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 type Currency = "RUB" | "AMD" | "EUR" | "USD";
 
-function generateRoboPaymentLink(paymentId: number | string, sum: number, email: string) {
+function generateRoboPaymentLink(
+  paymentId: number | string,
+  sum: number,
+  email: string
+) {
   const shopId = process.env.ROBO_ID;
   const secretKey1 = process.env.ROBO_SECRET1;
 
@@ -91,7 +94,8 @@ function generateRoboPaymentLink(paymentId: number | string, sum: number, email:
     throw new Error("ROBO_ID или ROBO_SECRET1 не заданы в .env");
   }
 
-  const sumString = String(sum);
+  // Robokassa обычно ожидает точку как разделитель (на всякий нормализуем)
+  const sumString = String(sum).replace(",", ".");
 
   const signature = crypto
     .createHash("md5")
@@ -109,7 +113,7 @@ function generateRoboPaymentLink(paymentId: number | string, sum: number, email:
   );
 }
 
-// ISO numeric currency codes for Ameria vPOS: 051 AMD, 978 EUR, 840 USD :contentReference[oaicite:2]{index=2}
+// Ameria vPOS currency ISO numeric codes: AMD 051, EUR 978, USD 840, RUB 643 :contentReference[oaicite:2]{index=2}
 const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   AMD: "051",
   EUR: "978",
@@ -117,8 +121,12 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
 };
 
 function makeOrderId(): number {
-  // OrderID должен быть integer :contentReference[oaicite:3]{index=3}
-  return Math.floor(Date.now() / 1000);
+  // Требование: integer :contentReference[oaicite:3]{index=3}
+  // Делаем более уникально, чем просто секунды: миллисекунды + маленький хвост
+  const ms = Date.now(); // ~13 цифр
+  const tail = Math.floor(Math.random() * 90) + 10; // 2 цифры
+  const orderId = Number(String(ms).slice(-9) + String(tail)); // <= 11 цифр
+  return orderId;
 }
 
 async function initAmeriaPayment(params: {
@@ -134,25 +142,33 @@ async function initAmeriaPayment(params: {
   const appBase = process.env.APP_BASE_URL;
 
   if (!base || !ClientID || !Username || !Password || !appBase) {
-    throw new Error("Не заданы AMERIA_VPOS_BASE / AMERIA_CLIENT_ID / AMERIA_USERNAME / AMERIA_PASSWORD / APP_BASE_URL");
+    throw new Error(
+      "Не заданы AMERIA_VPOS_BASE / AMERIA_CLIENT_ID / AMERIA_USERNAME / AMERIA_PASSWORD / APP_BASE_URL"
+    );
   }
 
   const orderId = makeOrderId();
 
-  // BackURL — банк вернёт пользователя сюда после оплаты :contentReference[oaicite:4]{index=4}
+  // BackURL — адрес возврата после оплаты :contentReference[oaicite:4]{index=4}
   const backURL = `${appBase}/pay/ameria/return`;
+
+  // Amount в InitPayment — decimal :contentReference[oaicite:5]{index=5}
+  const amount = Number(params.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Некорректная сумма amount");
+  }
 
   const body = {
     ClientID,
     Username,
     Password,
-    Amount: Number(params.amount),
+    Amount: amount,
     OrderID: orderId,
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
     Opaque: params.opaque ?? "",
-    // Timeout: 1200 // опционально :contentReference[oaicite:5]{index=5}
+    // Timeout: 1200, // опционально, max 1200 :contentReference[oaicite:6]{index=6}
   };
 
   const r = await fetch(`${base}/api/VPOS/InitPayment`, {
@@ -164,13 +180,15 @@ async function initAmeriaPayment(params: {
 
   const data = await r.json();
 
-  // InitPaymentResponse: ResponseCode=1 успешно 
+  // InitPaymentResponse: ResponseCode успешный = 1 
   if (!r.ok || data?.ResponseCode !== 1 || !data?.PaymentID) {
     throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
   }
 
-  // Pay URL: /Payments/Pay?id=@id&lang=@lang :contentReference[oaicite:7]{index=7}
-  const paymentUrl = `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}&lang=ru`;
+  // После InitPayment нужно редиректить на Payments/Pay?id=@id&lang=@lang :contentReference[oaicite:8]{index=8}
+  const paymentUrl = `${base}/Payments/Pay?id=${encodeURIComponent(
+    data.PaymentID
+  )}&lang=ru`;
 
   return { paymentUrl, paymentId: data.PaymentID, orderId };
 }
@@ -198,10 +216,13 @@ export async function POST(req: Request) {
     };
 
     if (!amount || !email || !fullName || !tariffId || !tariffLabel || !currency) {
-      return NextResponse.json({ error: "Не хватает данных для оплаты" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Не хватает данных для оплаты" },
+        { status: 400 }
+      );
     }
 
-    // 1) RUB -> Robokassa (если вдруг оставишь)
+    // 1) RUB -> Robokassa (если используешь)
     if (currency === "RUB") {
       const paymentId = Date.now();
       const paymentUrl = generateRoboPaymentLink(paymentId, amount, email);
@@ -210,7 +231,13 @@ export async function POST(req: Request) {
 
     // 2) AMD/EUR/USD -> Ameria vPOS
     const description = tariffLabel || courseName || `Payment: ${tariffId}`;
-    const opaque = JSON.stringify({ tariffId, tariffLabel, email, fullName, currency });
+    const opaque = JSON.stringify({
+      tariffId,
+      tariffLabel,
+      email,
+      fullName,
+      currency,
+    });
 
     const { paymentUrl } = await initAmeriaPayment({
       amount,
@@ -223,7 +250,10 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Ошибка в create-payment:", error);
     return NextResponse.json(
-      { error: "Ошибка на сервере при создании оплаты", details: String(error?.message ?? error) },
+      {
+        error: "Ошибка на сервере при создании оплаты",
+        details: String(error?.message ?? error),
+      },
       { status: 500 }
     );
   }
