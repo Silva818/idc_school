@@ -220,7 +220,6 @@ export async function POST(req: Request) {
       await sendPurchaseToAirtable({
         email: email,
         FIO: fullName,
-        tgId: "",
         Sum: amount,
         Lessons: lessons,
         inv_id: paymentId,
@@ -278,7 +277,6 @@ export async function POST(req: Request) {
     await sendPurchaseToAirtable({
       email: email,
       FIO: fullName,
-      tgId: "",
       Sum: amount,
       Lessons: lessons,
       inv_id: paymentId,
