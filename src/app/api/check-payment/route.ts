@@ -238,6 +238,9 @@ export async function POST(req: Request) {
       });
     }
 
+    console.log("🔍 Airtable search result:", found);
+
+
     // 3) обновить статус (и возвращать НОРМАЛЬНЫЙ ответ, что статус обновлён)
     if (paid) {
       const patch = await airtablePatchRecord(found.recordId, {
