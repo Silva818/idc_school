@@ -205,7 +205,7 @@ export async function POST(req: Request) {
       amount,
       currency,
       description,
-      opaque: JSON.stringify({ tariffId, email, fullName }),
+      opaque,
     });
 
     await sendPurchaseToAirtable({
