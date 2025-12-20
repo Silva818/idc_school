@@ -110,9 +110,7 @@ async function sendPurchaseToAirtable(fields: Record<string, any>) {
     return;
   }
 
-  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(
-    table
-  )}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`;
 
   const r = await fetch(url, {
     method: "POST",
@@ -167,7 +165,6 @@ export async function POST(req: Request) {
     };
 
     const lessons = lessonsByTariff[tariffId] ?? 1;
-    const pricePerLesson = Number((amount / lessons).toFixed(2));
 
     /* ---------- RUB ---------- */
     if (currency === "RUB") {
@@ -175,13 +172,11 @@ export async function POST(req: Request) {
       const paymentUrl = generateRoboPaymentLink(paymentId, amount, email);
 
       await sendPurchaseToAirtable({
-        email,
+        email: email,
         FIO: fullName,
         tgId: "",
-        Created_time: new Date().toISOString(),
         Sum: amount,
         Lessons: lessons,
-        "Price per lesson": pricePerLesson,
         inv_id: paymentId,
         Currency: currency,
         Tag: tariffId,
@@ -201,13 +196,11 @@ export async function POST(req: Request) {
     });
 
     await sendPurchaseToAirtable({
-      email,
+      email: email,
       FIO: fullName,
       tgId: "",
-      Created_time: new Date().toISOString(),
       Sum: amount,
       Lessons: lessons,
-      "Price per lesson": pricePerLesson,
       inv_id: paymentId,
       Currency: currency,
       Tag: tariffId,
