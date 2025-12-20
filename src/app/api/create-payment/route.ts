@@ -142,7 +142,15 @@ export async function POST(req: Request) {
     }
 
     // 2) AMD/EUR/USD -> Ameria vPOS
-    const description = tariffLabel || courseName || `Payment: ${tariffId}`;
+    const descriptionByTariff: Record<string, string> = {
+      review: "IDC School - 1 lesson",
+      month: "IDC School - 12 lessons (4 weeks)",
+      slow12: "IDC School - 12 lessons (8 weeks)",
+      long36: "IDC School - 36 lessons",
+    };
+    
+    const description = descriptionByTariff[tariffId] ?? `IDC School - ${tariffId}`;
+    
     const opaque = JSON.stringify({
       tariffId,
       tariffLabel,
