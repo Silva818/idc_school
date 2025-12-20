@@ -248,11 +248,13 @@ export async function POST(req: Request) {
 
     // 2) найти запись в Airtable (с fallback-стратегиями)
     // ВАЖНО: имя поля должно совпадать с Airtable колонкой
-    const formulas = [
-      `{paymentId}='${paymentId}'`,
-      `{inv_id}='${paymentId}'`,
-      `{PaymentID}='${paymentId}'`,
-    ];
+    const pid = String(paymentId).trim();
+    // // экранируем одинарные кавычки, чтобы Airtable формула не ломалась
+    // const pidEsc = pid.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    
+    // строгое сравнение строк
+    const formulas = [`{paymentId}='${pid}'`];
+
 
     let found: any = null;
     for (const f of formulas) {
