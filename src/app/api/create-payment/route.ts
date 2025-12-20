@@ -124,14 +124,14 @@ const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
 
 
 function makeOrderId(): number {
-  if (IS_AMERIA_TEST) {
-    // допустимый диапазон теста: 4107001–4108000
-    return 4107001 + Math.floor(Math.random() * 1000);
-  }
-
-  // prod
-  return Math.floor(Date.now() / 1000);
+  // integer, уникальный
+  // 1) берём текущие миллисекунды
+  // 2) добавляем 2 цифры рандома
+  const ms = Date.now(); // 13 цифр
+  const tail = Math.floor(Math.random() * 90) + 10; // 2 цифры
+  return Number(String(ms).slice(-9) + String(tail)); // 11 цифр
 }
+
 
 
 async function initAmeriaPayment(params: {
