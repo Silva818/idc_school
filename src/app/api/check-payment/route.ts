@@ -212,6 +212,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "paymentId required" }, { status: 400 });
     }
 
+
     // 1) спросить Ameria
     const details = await getAmeriaPaymentDetails(paymentId);
     console.log("✅ Ameria details parsed:", details);
@@ -233,23 +234,31 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3) обновить статус
+    // 3) обновить статус (и возвращать НОРМАЛЬНЫЙ ответ, что статус обновлён)
     if (paid) {
-      await airtablePatchRecord(found.recordId, {
+      const patch = await airtablePatchRecord(found.recordId, {
         Status: "paid",
         Paid_time: new Date().toISOString(), // ⚠️ если у тебя колонка называется иначе — поменяй
-        // Можно сохранять сырой ответ (если есть long text поле):
-        // Ameria_raw: JSON.stringify(details),
       });
 
-      return NextResponse.json({ ok: true, status: "paid" });
+      return NextResponse.json({
+        ok: true,
+        status: "paid",
+        updated: patch,
+        recordId: found.recordId,
+      });
     } else {
-      // если хочешь НЕ трогать статус пока не paid — можно убрать этот patch
-      await airtablePatchRecord(found.recordId, {
+      const patch = await airtablePatchRecord(found.recordId, {
         Status: "pending",
       });
 
-      return NextResponse.json({ ok: true, status: "pending", ameria: details });
+      return NextResponse.json({
+        ok: true,
+        status: "pending",
+        updated: patch,
+        recordId: found.recordId,
+        ameria: details,
+      });
     }
   } catch (e: any) {
     console.error("check-payment error:", e);
