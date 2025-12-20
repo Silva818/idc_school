@@ -3,35 +3,39 @@ import { NextResponse } from "next/server";
 
 /* ---------------- AIRTABLE HELPERS ---------------- */
 
-async function airtableSearchByPaymentId(paymentId: string) {
+function airtableEnv() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
 
-  console.log("🔎 Airtable ENV check (search):", {
+  console.log("🔎 Airtable ENV check:", {
     hasApiKey: Boolean(apiKey),
     baseId,
     table,
   });
 
   if (!apiKey || !baseId || !table) {
-    console.warn("❌ Airtable env missing — skip search");
-    return { ok: false as const, reason: "env_missing" as const };
+    return { ok: false as const, apiKey: "", baseId: "", table: "" };
   }
 
-  // ⚠️ paymentId у тебя лежит в колонке "paymentId"
-  const filter = `{paymentId}='${paymentId}'`;
+  return { ok: true as const, apiKey, baseId, table };
+}
+
+async function airtableSearchByFormula(formula: string) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
   const url =
-    `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}` +
-    `?filterByFormula=${encodeURIComponent(filter)}`;
+    `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(env.table)}` +
+    `?filterByFormula=${encodeURIComponent(formula)}`;
 
   console.log("📡 Airtable SEARCH url:", url);
+  console.log("🧮 Airtable formula:", formula);
 
   try {
     const r = await fetch(url, {
       method: "GET",
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { Authorization: `Bearer ${env.apiKey}` },
       cache: "no-store",
     });
 
@@ -56,8 +60,8 @@ async function airtableSearchByPaymentId(paymentId: string) {
 
     const record = json?.records?.[0];
     if (!record?.id) {
-      console.warn("⚠️ Airtable record NOT FOUND by paymentId:", paymentId);
-      return { ok: false as const, reason: "not_found" as const };
+      console.warn("⚠️ Airtable record NOT FOUND by formula");
+      return { ok: false as const, reason: "not_found" as const, formula };
     }
 
     console.log("✅ Airtable record found:", { recordId: record.id });
@@ -68,24 +72,55 @@ async function airtableSearchByPaymentId(paymentId: string) {
   }
 }
 
-async function airtablePatchRecord(recordId: string, fields: Record<string, any>) {
-  const apiKey = process.env.AIRTABLE_API_KEY;
-  const baseId = process.env.AIRTABLE_BASE_ID;
-  const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
+async function airtableGetRecord(recordId: string) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
-  console.log("🔎 Airtable ENV check (patch):", {
-    hasApiKey: Boolean(apiKey),
-    baseId,
-    table,
-  });
+  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
+    env.table
+  )}/${recordId}`;
 
-  if (!apiKey || !baseId || !table) {
-    console.warn("❌ Airtable env missing — skip patch");
-    return { ok: false as const, reason: "env_missing" as const };
+  console.log("📡 Airtable GET record url:", url);
+
+  try {
+    const r = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.apiKey}` },
+      cache: "no-store",
+    });
+
+    const text = await r.text();
+
+    console.log("📬 Airtable GET record response:", {
+      ok: r.ok,
+      status: r.status,
+      body: text,
+    });
+
+    if (!r.ok) {
+      return { ok: false as const, reason: "get_failed" as const, text };
+    }
+
+    let json: any;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return { ok: false as const, reason: "get_bad_json" as const, text };
+    }
+
+    return { ok: true as const, record: json };
+  } catch (err) {
+    console.error("💥 Airtable GET crashed:", err);
+    return { ok: false as const, reason: "get_crashed" as const };
   }
+}
 
-  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(
-    table
+async function airtablePatchRecord(recordId: string, fields: Record<string, any>) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
+
+  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
+    env.table
   )}/${recordId}`;
 
   console.log("📡 Airtable PATCH url:", url);
@@ -95,7 +130,7 @@ async function airtablePatchRecord(recordId: string, fields: Record<string, any>
     const r = await fetch(url, {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${env.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ fields }),
@@ -114,7 +149,7 @@ async function airtablePatchRecord(recordId: string, fields: Record<string, any>
       return { ok: false as const, reason: "patch_failed" as const, text };
     }
 
-    return { ok: true as const };
+    return { ok: true as const, text };
   } catch (err) {
     console.error("💥 Airtable PATCH crashed:", err);
     return { ok: false as const, reason: "patch_crashed" as const };
@@ -140,7 +175,6 @@ async function getAmeriaPaymentDetails(paymentId: string) {
     throw new Error("Ameria env vars missing");
   }
 
-  // ⚠️ Если в твоей доке endpoint другой — поменяй тут.
   const url = `${base}/api/VPOS/GetPaymentDetails`;
 
   const body = {
@@ -176,31 +210,20 @@ async function getAmeriaPaymentDetails(paymentId: string) {
   return data;
 }
 
-
-
-// ✅ Здесь мы делаем эвристику. После первого реального ответа Ameria
-// ты пришлёшь мне JSON из логов — я подстрою 100% корректно под твои поля.
 function isPaidAmeria(details: any): boolean {
-    // если Ameria вернула неуспех на уровне API
-    // (иногда ResponseCode может быть "00" внутри details)
-    const d = details?.details ?? details;
-  
-    const state = String(d?.PaymentState ?? "").toLowerCase();
-    const responseCode = String(d?.ResponseCode ?? "").trim();
-    const orderStatus = String(d?.OrderStatus ?? "").trim();
-  
-    // Самый надёжный признак по твоему JSON:
-    if (state === "payment_deposited") return true;
-  
-    // Часто тоже означает успех:
-    if (responseCode === "00") return true;
-  
-    // В твоём примере orderStatus = "2" при успехе:
-    if (orderStatus === "2") return true;
-  
-    return false;
-  }
-  
+  // по твоему реальному JSON:
+  // ResponseCode: "00" и PaymentState: "payment_deposited" и OrderStatus: "2"
+  const rc = String(details?.ResponseCode ?? "").trim();
+  const state = String(details?.PaymentState ?? "").toLowerCase();
+  const orderStatus = String(details?.OrderStatus ?? "").trim();
+
+  if (rc === "00") return true;
+  if (state.includes("deposited")) return true;
+  if (orderStatus === "2") return true;
+
+  return false;
+}
+
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
@@ -216,7 +239,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "paymentId required" }, { status: 400 });
     }
 
-
     // 1) спросить Ameria
     const details = await getAmeriaPaymentDetails(paymentId);
     console.log("✅ Ameria details parsed:", details);
@@ -224,49 +246,70 @@ export async function POST(req: Request) {
     const paid = isPaidAmeria(details);
     console.log("💡 isPaidAmeria:", paid);
 
-    // 2) найти запись в Airtable по paymentId
-    const found = await airtableSearchByPaymentId(paymentId);
+    // 2) найти запись в Airtable (с fallback-стратегиями)
+    // ВАЖНО: имя поля должно совпадать с Airtable колонкой
+    const formulas = [
+      `{paymentId}='${paymentId}'`,
+      `{inv_id}='${paymentId}'`,
+      `{PaymentID}='${paymentId}'`,
+    ];
 
-    if (!found.ok) {
-      // даже если Airtable не найден — всё равно вернём статус Ameria,
-      // чтобы ты видел что оплата прошла, а проблема в Airtable-связке
+    let found: any = null;
+    for (const f of formulas) {
+      const r = await airtableSearchByFormula(f);
+      if (r.ok) {
+        found = { ...r, formula: f };
+        break;
+      } else {
+        console.warn("🔁 Search attempt failed:", r);
+      }
+    }
+
+    if (!found?.ok) {
+      console.warn("❌ Airtable record NOT FOUND by any formula");
       return NextResponse.json({
         ok: true,
         paid,
-        airtable: found,
+        status: paid ? "paid" : "pending",
+        airtable: { ok: false, reason: "not_found" },
         ameria: details,
       });
     }
 
-    console.log("🔍 Airtable search result:", found);
+    console.log("✅ Airtable matched formula:", found.formula);
 
-
-    // 3) обновить статус (и возвращать НОРМАЛЬНЫЙ ответ, что статус обновлён)
-    if (paid) {
-      const patch = await airtablePatchRecord(found.recordId, {
-        Status: "paid",
-        Paid_time: new Date().toISOString(), // ⚠️ если у тебя колонка называется иначе — поменяй
-      });
-
-      return NextResponse.json({
-        ok: true,
-        status: "paid",
-        updated: patch,
-        recordId: found.recordId,
-      });
+    // 3) перед PATCH — прочитаем запись и покажем, какие там вообще поля
+    const before = await airtableGetRecord(found.recordId);
+    if (before.ok) {
+      console.log("🧾 Airtable record BEFORE patch fields keys:", Object.keys(before.record?.fields ?? {}));
+      console.log("🧾 Airtable record BEFORE patch fields:", before.record?.fields ?? {});
     } else {
-      const patch = await airtablePatchRecord(found.recordId, {
-        Status: "pending",
-      });
-
-      return NextResponse.json({
-        ok: true,
-        status: "pending",
-        updated: patch,
-        recordId: found.recordId,
-        ameria: details,
-      });
+      console.warn("⚠️ Could not GET record before patch:", before);
     }
+
+    // 4) обновить статус
+    const patchFields: Record<string, any> = paid
+      ? { Status: "paid" }
+      : { Status: "pending" };
+
+    // Paid_time добавляем только если колонка есть — иначе Airtable вернёт 422.
+    // Поэтому ставим мягко: если у тебя колонки нет — просто не добавляй её.
+    // Хочешь — создай колонку Paid_time (date) и раскомментируй строку ниже.
+    // if (paid) patchFields["Paid_time"] = new Date().toISOString();
+
+    const patch = await airtablePatchRecord(found.recordId, patchFields);
+
+    console.log("✅ Patch result:", patch);
+
+    // 5) вернуть нормальный ответ
+    return NextResponse.json({
+      ok: true,
+      paid,
+      status: paid ? "paid" : "pending",
+      recordId: found.recordId,
+      matchedFormula: found.formula,
+      updated: patch,
+    });
   } catch (e: any) {
     console.error("check-payment error:", e);
     return NextResponse.json(
