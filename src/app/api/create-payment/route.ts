@@ -120,14 +120,19 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   USD: "840",
 };
 
+const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
+
+
 function makeOrderId(): number {
-  // Требование: integer :contentReference[oaicite:3]{index=3}
-  // Делаем более уникально, чем просто секунды: миллисекунды + маленький хвост
-  const ms = Date.now(); // ~13 цифр
-  const tail = Math.floor(Math.random() * 90) + 10; // 2 цифры
-  const orderId = Number(String(ms).slice(-9) + String(tail)); // <= 11 цифр
-  return orderId;
+  if (IS_AMERIA_TEST) {
+    // допустимый диапазон теста: 4107001–4108000
+    return 4107001 + Math.floor(Math.random() * 1000);
+  }
+
+  // prod
+  return Math.floor(Date.now() / 1000);
 }
+
 
 async function initAmeriaPayment(params: {
   amount: number;

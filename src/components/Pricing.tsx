@@ -13,7 +13,7 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
 // отдельные цены для AMD, EUR и USD
 const prices = {
   review: {
-    AMD: { total: 5500, per: 5500 }, // разовый формат
+    AMD: { total: 10, per: 10 }, // разовый формат
     EUR: { total: 11, per: 11 },
     USD: { total: 11, per: 11 },
   },

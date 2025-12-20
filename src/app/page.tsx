@@ -157,11 +157,11 @@ export default function HomePage() {
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
-
+  
     setIsBuySubmitting(true);
-    // ✅ сбрасываем ошибку перед запросом
+    // сбрасываем ошибку перед новым запросом
     setBuyError("");
-
+  
     try {
       const res = await fetch("/api/create-payment", {
         method: "POST",
@@ -176,24 +176,33 @@ export default function HomePage() {
           currency: purchaseOptions.currency,
         }),
       });
-
-      // ✅ читаем ответ как текст, чтобы видеть ошибки даже при !ok
+  
+      // читаем ответ как текст, чтобы видеть тело даже при ошибке
       const text = await res.text();
-
+  
       if (!res.ok) {
-        console.error("Ошибка создания оплаты", text);
+        console.error("Ошибка создания оплаты:", text);
         setBuyError(text || "Ошибка создания оплаты");
         return;
       }
-
+  
       const data = JSON.parse(text);
-
+  
       if (data.paymentUrl) {
+        // если Ameria вернула paymentId — сохраним на клиенте
+        if (data.paymentId) {
+          sessionStorage.setItem(
+            "ameriaPaymentId",
+            String(data.paymentId)
+          );
+        }
+  
         window.location.assign(data.paymentUrl);
-      } else {
-        console.error("paymentUrl не получен из API", data);
-        setBuyError("paymentUrl не получен из API");
+        return;
       }
+  
+      console.error("paymentUrl не получен из API", data);
+      setBuyError("paymentUrl не получен из API");
     } catch (err: any) {
       console.error("Ошибка запроса (покупка тарифа)", err);
       setBuyError(err?.message ?? "Ошибка запроса (покупка тарифа)");
@@ -201,7 +210,7 @@ export default function HomePage() {
       setIsBuySubmitting(false);
     }
   }
-
+  
   /* ---------- Модалка логина (Войти) ---------- */
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");

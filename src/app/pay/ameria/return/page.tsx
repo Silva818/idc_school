@@ -1,23 +1,27 @@
-// src/app/pay/ameria/return/page.tsx
-export const dynamic = "force-dynamic";
+"use client";
 
-export default async function AmeriaReturnPage({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  const paymentID = typeof searchParams.paymentID === "string" ? searchParams.paymentID : null;
+import { useEffect, useState } from "react";
+
+export default function AmeriaReturnPage() {
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const fromQuery =
+      sp.get("paymentID") || sp.get("PaymentID") || sp.get("id") || sp.get("paymentId");
+
+    const fromStorage = sessionStorage.getItem("ameriaPaymentId");
+
+    setData({
+      query: Object.fromEntries(sp.entries()),
+      paymentId: fromQuery || fromStorage || null,
+    });
+  }, []);
 
   return (
     <main style={{ padding: 24 }}>
       <h1>Результат оплаты</h1>
-      {!paymentID ? (
-        <p>Не найден paymentID в параметрах возврата.</p>
-      ) : (
-        <pre style={{ whiteSpace: "pre-wrap" }}>
-          {JSON.stringify({ searchParams }, null, 2)}
-        </pre>
-      )}
+      <pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(data, null, 2)}</pre>
     </main>
   );
 }
