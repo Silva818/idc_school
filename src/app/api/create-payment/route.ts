@@ -222,9 +222,10 @@ export async function POST(req: Request) {
         FIO: fullName,
         Sum: amount,
         Lessons: lessons,
-        inv_id: paymentId,
+        paymentId: paymentId,
         Currency: currency,
         Tag: tariffId,
+        Status: "created",
       });
 
       return NextResponse.json({ paymentUrl, paymentId });
@@ -279,9 +280,10 @@ export async function POST(req: Request) {
       FIO: fullName,
       Sum: amount,
       Lessons: lessons,
-      inv_id: paymentId,
+      paymentId: paymentId,
       Currency: currency,
       Tag: tariffId,
+      Status: "created",
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId });
