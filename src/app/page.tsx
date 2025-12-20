@@ -139,8 +139,13 @@ export default function HomePage() {
   const [buyAgreed, setBuyAgreed] = useState(false);
   const [isBuySubmitting, setIsBuySubmitting] = useState(false);
 
+  // ✅ добавили состояние для ошибок оплаты
+  const [buyError, setBuyError] = useState("");
+
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
+    // ✅ сбрасываем ошибку при открытии
+    setBuyError("");
     setIsPurchaseModalOpen(true);
   }
 
@@ -154,6 +159,8 @@ export default function HomePage() {
     if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
 
     setIsBuySubmitting(true);
+    // ✅ сбрасываем ошибку перед запросом
+    setBuyError("");
 
     try {
       const res = await fetch("/api/create-payment", {
@@ -170,18 +177,26 @@ export default function HomePage() {
         }),
       });
 
+      // ✅ читаем ответ как текст, чтобы видеть ошибки даже при !ok
+      const text = await res.text();
+
       if (!res.ok) {
-        console.error("Ошибка создания оплаты", await res.text());
-      } else {
-        const data = await res.json();
-        if (data.paymentUrl) {
-          window.location.href = data.paymentUrl;
-        } else {
-          console.error("paymentUrl не получен из API");
-        }
+        console.error("Ошибка создания оплаты", text);
+        setBuyError(text || "Ошибка создания оплаты");
+        return;
       }
-    } catch (err) {
+
+      const data = JSON.parse(text);
+
+      if (data.paymentUrl) {
+        window.location.assign(data.paymentUrl);
+      } else {
+        console.error("paymentUrl не получен из API", data);
+        setBuyError("paymentUrl не получен из API");
+      }
+    } catch (err: any) {
       console.error("Ошибка запроса (покупка тарифа)", err);
+      setBuyError(err?.message ?? "Ошибка запроса (покупка тарифа)");
     } finally {
       setIsBuySubmitting(false);
     }
@@ -358,10 +373,12 @@ export default function HomePage() {
                           Подбери программу под себя
                         </div>
                       </div>
-                      <a href="#courses"
-                      className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors">
+                      <a
+                        href="#courses"
+                        className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors"
+                      >
                         Начать
-                        </a>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -590,6 +607,13 @@ export default function HomePage() {
                   и условиями оплаты.
                 </span>
               </label>
+
+              {/* ✅ выводим ошибку оплаты прямо в модалке */}
+              {buyError && (
+                <p className="text-[11px] sm:text-xs text-red-300/90 bg-red-500/10 border border-red-500/30 rounded-2xl px-3 py-2">
+                  {buyError}
+                </p>
+              )}
 
               <button
                 type="submit"
