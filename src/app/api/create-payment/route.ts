@@ -105,32 +105,61 @@ async function sendPurchaseToAirtable(fields: Record<string, any>) {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
 
+  console.log("🔎 Airtable ENV check:", {
+    hasApiKey: Boolean(apiKey),
+    baseId,
+    table,
+  });
+
   if (!apiKey || !baseId || !table) {
-    console.warn("Airtable env missing — skip log");
+    console.warn("❌ Airtable env missing — skip log");
     return;
   }
 
-  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(
+    table
+  )}`;
 
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ fields }),
-  });
+  console.log("📡 Airtable POST url:", url);
+  console.log("📦 Airtable payload:", fields);
 
-  if (!r.ok) {
-    console.error("Airtable write failed:", await r.text());
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+      cache: "no-store",
+    });
+
+    const text = await r.text();
+
+    console.log("📬 Airtable response:", {
+      ok: r.ok,
+      status: r.status,
+      body: text,
+    });
+
+    if (!r.ok) {
+      console.error("❌ Airtable write failed");
+    } else {
+      console.log("✅ Airtable write success");
+    }
+  } catch (err) {
+    console.error("💥 Airtable fetch crashed:", err);
   }
 }
 
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
+  console.log("🔥 create-payment POST hit");
+
   try {
     const body = await req.json();
+    console.log("📥 request body:", body);
 
     const {
       amount,
@@ -151,6 +180,14 @@ export async function POST(req: Request) {
     };
 
     if (!amount || !currency || !email || !fullName || !tariffId) {
+      console.warn("⚠️ Missing fields:", {
+        amount,
+        currency,
+        email,
+        fullName,
+        tariffId,
+      });
+
       return NextResponse.json(
         { error: "Не хватает данных" },
         { status: 400 }
@@ -170,6 +207,15 @@ export async function POST(req: Request) {
     if (currency === "RUB") {
       const paymentId = Date.now();
       const paymentUrl = generateRoboPaymentLink(paymentId, amount, email);
+
+      console.log("📝 preparing Airtable fields (RUB)", {
+        email,
+        fullName,
+        amount,
+        lessons,
+        currency,
+        tariffId,
+      });
 
       await sendPurchaseToAirtable({
         email: email,
@@ -192,8 +238,9 @@ export async function POST(req: Request) {
       slow12: "IDC School - 12 lessons (8 weeks)",
       long36: "IDC School - 36 lessons",
     };
-    
-    const description = descriptionByTariff[tariffId] ?? `IDC School - ${tariffId}`;
+
+    const description =
+      descriptionByTariff[tariffId] ?? `IDC School - ${tariffId}`;
 
     const opaque = JSON.stringify({
       tariffId,
@@ -201,11 +248,31 @@ export async function POST(req: Request) {
       currency,
     });
 
+    console.log("🏦 Init Ameria payment:", {
+      amount,
+      currency,
+      description,
+      opaque,
+    });
+
     const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
       amount,
       currency,
       description,
       opaque,
+    });
+
+    console.log("✅ Ameria init ok:", { paymentId, orderId, paymentUrl });
+
+    console.log("📝 preparing Airtable fields (AMERIA)", {
+      email,
+      fullName,
+      amount,
+      lessons,
+      currency,
+      tariffId,
+      paymentId,
+      orderId,
     });
 
     await sendPurchaseToAirtable({
