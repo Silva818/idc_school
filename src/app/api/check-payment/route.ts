@@ -176,27 +176,31 @@ async function getAmeriaPaymentDetails(paymentId: string) {
   return data;
 }
 
+
+
 // ✅ Здесь мы делаем эвристику. После первого реального ответа Ameria
 // ты пришлёшь мне JSON из логов — я подстрою 100% корректно под твои поля.
 function isPaidAmeria(details: any): boolean {
-  if (details?.ResponseCode !== 1) return false;
-
-  const state = String(details?.PaymentState ?? details?.PaymentStatus ?? "").toUpperCase();
-  const order = String(details?.OrderStatus ?? "").toUpperCase();
-  const result = String(details?.Result ?? details?.ResultCode ?? "").toUpperCase();
-
-  return (
-    state.includes("APPROVED") ||
-    state.includes("PAID") ||
-    state.includes("SUCCESS") ||
-    order.includes("APPROVED") ||
-    order.includes("PAID") ||
-    order.includes("SUCCESS") ||
-    result.includes("APPROVED") ||
-    result.includes("SUCCESS")
-  );
-}
-
+    // если Ameria вернула неуспех на уровне API
+    // (иногда ResponseCode может быть "00" внутри details)
+    const d = details?.details ?? details;
+  
+    const state = String(d?.PaymentState ?? "").toLowerCase();
+    const responseCode = String(d?.ResponseCode ?? "").trim();
+    const orderStatus = String(d?.OrderStatus ?? "").trim();
+  
+    // Самый надёжный признак по твоему JSON:
+    if (state === "payment_deposited") return true;
+  
+    // Часто тоже означает успех:
+    if (responseCode === "00") return true;
+  
+    // В твоём примере orderStatus = "2" при успехе:
+    if (orderStatus === "2") return true;
+  
+    return false;
+  }
+  
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
