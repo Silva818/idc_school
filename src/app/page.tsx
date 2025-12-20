@@ -191,7 +191,7 @@ export default function HomePage() {
       if (data.paymentUrl) {
         // если Ameria вернула paymentId — сохраним на клиенте
         if (data.paymentId) {
-          sessionStorage.setItem(
+          localStorage.setItem(
             "ameriaPaymentId",
             String(data.paymentId)
           );
@@ -210,6 +210,7 @@ export default function HomePage() {
       setIsBuySubmitting(false);
     }
   }
+  
   
   /* ---------- Модалка логина (Войти) ---------- */
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);

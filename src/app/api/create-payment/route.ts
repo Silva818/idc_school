@@ -1,81 +1,3 @@
-// // src/app/api/create-payment/route.ts
-// import { NextResponse } from "next/server";
-// import crypto from "crypto";
-
-// function generatePaymentLink(paymentId: number | string, sum: number, email: string) {
-//   const shopId = process.env.ROBO_ID;      // MerchantLogin
-//   const secretKey1 = process.env.ROBO_SECRET1; // Secret Key 1
-
-//   if (!shopId || !secretKey1) {
-//     throw new Error("ROBO_ID или ROBO_SECRET1 не заданы в .env");
-//   }
-
-//   // Робокасса ожидает строку с точкой как разделителем
-//   const sumString = sum.toString();
-
-//   const signature = crypto
-//     .createHash("md5")
-//     .update(`${shopId}:${sumString}:${paymentId}:${secretKey1}`)
-//     .digest("hex");
-
-//   const url =
-//     `https://auth.robokassa.ru/Merchant/Index.aspx` +
-//     `?MerchantLogin=${shopId}` +
-//     `&OutSum=${encodeURIComponent(sumString)}` +
-//     `&InvId=${encodeURIComponent(String(paymentId))}` +
-//     `&SignatureValue=${signature}` +
-//     `&Email=${encodeURIComponent(email)}` +
-//     `&IsTest=0`;
-
-//   return url;
-// }
-
-// export async function POST(req: Request) {
-//   try {
-//     const body = await req.json();
-
-//     const {
-//       amount,
-//       currency,
-//       email,
-//       fullName,
-//       courseName,
-//       tariffId,
-//       tariffLabel,
-//     } = body as {
-//       amount: number;
-//       currency: "RUB" | "EUR";
-//       email: string;
-//       fullName: string;
-//       courseName: string;
-//       tariffId: string;
-//       tariffLabel: string;
-//     };
-
-//     if (!amount || !email || !fullName || !tariffId) {
-//       return NextResponse.json(
-//         { error: "Не хватает данных для оплаты" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // paymentId — можно заменить на id из базы, если будешь сохранять заказы
-//     const paymentId = Date.now();
-
-//     const paymentUrl = generatePaymentLink(paymentId, amount, email);
-
-//     // здесь потом можно сохранить заказ в БД (paymentId, fullName, email, courseName, tariffId, tariffLabel, currency, amount)
-
-//     return NextResponse.json({ paymentUrl });
-//   } catch (error) {
-//     console.error("Ошибка в create-payment:", error);
-//     return NextResponse.json(
-//       { error: "Ошибка на сервере при создании оплаты" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 // src/app/api/create-payment/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
@@ -94,7 +16,6 @@ function generateRoboPaymentLink(
     throw new Error("ROBO_ID или ROBO_SECRET1 не заданы в .env");
   }
 
-  // Robokassa обычно ожидает точку как разделитель (на всякий нормализуем)
   const sumString = String(sum).replace(",", ".");
 
   const signature = crypto
@@ -113,7 +34,6 @@ function generateRoboPaymentLink(
   );
 }
 
-// Ameria vPOS currency ISO numeric codes: AMD 051, EUR 978, USD 840, RUB 643 :contentReference[oaicite:2]{index=2}
 const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   AMD: "051",
   EUR: "978",
@@ -121,27 +41,12 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
 };
 
 const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
-
-
-// function makeOrderId(): number {
-//   // integer, уникальный
-//   // 1) берём текущие миллисекунды
-//   // 2) добавляем 2 цифры рандома
-//   const ms = Date.now(); // 13 цифр
-//   const tail = Math.floor(Math.random() * 90) + 10; // 2 цифры
-//   return Number(String(ms).slice(-9) + String(tail)); // 11 цифр
-// }
-
 function makeOrderId(): number {
   if (IS_AMERIA_TEST) {
-    // допустимый диапазон теста: 4107001–4108000
-    return 4107001 + Math.floor(Math.random() * 1000);
+    return 4107001 + (Date.now() % 1000); // 4107001..4108000
   }
-
-  // prod
   return Math.floor(Date.now() / 1000);
 }
-
 
 
 async function initAmeriaPayment(params: {
@@ -163,11 +68,9 @@ async function initAmeriaPayment(params: {
   }
 
   const orderId = makeOrderId();
+  const backURL = `${appBase}/pay/ameria/return?orderId=${orderId}`;
 
-  // BackURL — адрес возврата после оплаты :contentReference[oaicite:4]{index=4}
-  const backURL = `${appBase}/pay/ameria/return`;
 
-  // Amount в InitPayment — decimal :contentReference[oaicite:5]{index=5}
   const amount = Number(params.amount);
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("Некорректная сумма amount");
@@ -183,7 +86,6 @@ async function initAmeriaPayment(params: {
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
     Opaque: params.opaque ?? "",
-    // Timeout: 1200, // опционально, max 1200 :contentReference[oaicite:6]{index=6}
   };
 
   const r = await fetch(`${base}/api/VPOS/InitPayment`, {
@@ -195,12 +97,10 @@ async function initAmeriaPayment(params: {
 
   const data = await r.json();
 
-  // InitPaymentResponse: ResponseCode успешный = 1 
   if (!r.ok || data?.ResponseCode !== 1 || !data?.PaymentID) {
     throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
   }
 
-  // После InitPayment нужно редиректить на Payments/Pay?id=@id&lang=@lang :contentReference[oaicite:8]{index=8}
   const paymentUrl = `${base}/Payments/Pay?id=${encodeURIComponent(
     data.PaymentID
   )}&lang=ru`;
@@ -230,7 +130,14 @@ export async function POST(req: Request) {
       tariffLabel: string;
     };
 
-    if (!amount || !email || !fullName || !tariffId || !tariffLabel || !currency) {
+    if (
+      !amount ||
+      !email ||
+      !fullName ||
+      !tariffId ||
+      !tariffLabel ||
+      !currency
+    ) {
       return NextResponse.json(
         { error: "Не хватает данных для оплаты" },
         { status: 400 }
@@ -254,14 +161,15 @@ export async function POST(req: Request) {
       currency,
     });
 
-    const { paymentUrl } = await initAmeriaPayment({
+    // ✅ ВАЖНО: возвращаем paymentId (и orderId для отладки)
+    const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
       amount,
       currency,
       description,
       opaque,
     });
 
-    return NextResponse.json({ paymentUrl });
+    return NextResponse.json({ paymentUrl, paymentId, orderId });
   } catch (error: any) {
     console.error("Ошибка в create-payment:", error);
     return NextResponse.json(
