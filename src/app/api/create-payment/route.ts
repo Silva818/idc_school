@@ -1,8 +1,9 @@
-// src/app/api/create-payment/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 type Currency = "RUB" | "AMD" | "EUR" | "USD";
+
+/* ---------------- ROBOKASSA ---------------- */
 
 function generateRoboPaymentLink(
   paymentId: number | string,
@@ -13,7 +14,7 @@ function generateRoboPaymentLink(
   const secretKey1 = process.env.ROBO_SECRET1;
 
   if (!shopId || !secretKey1) {
-    throw new Error("ROBO_ID или ROBO_SECRET1 не заданы в .env");
+    throw new Error("ROBO_ID или ROBO_SECRET1 не заданы");
   }
 
   const sumString = String(sum).replace(",", ".");
@@ -34,6 +35,8 @@ function generateRoboPaymentLink(
   );
 }
 
+/* ---------------- AMERIA ---------------- */
+
 const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   AMD: "051",
   EUR: "978",
@@ -41,10 +44,7 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
 };
 
 function makeOrderId(): number {
-  // 7 цифр: 1000000..9999999
-  const base = Date.now() % 9000000; // 0..8999999
-  const orderId = 1000000 + base; // 1000000..9999999
-  return orderId;
+  return 1000000 + (Date.now() % 9000000);
 }
 
 async function initAmeriaPayment(params: {
@@ -53,38 +53,24 @@ async function initAmeriaPayment(params: {
   description: string;
   opaque?: string;
 }) {
-  const baseRaw = process.env.AMERIA_VPOS_BASE;
+  const base = process.env.AMERIA_VPOS_BASE?.replace(/\/+$/, "");
   const ClientID = process.env.AMERIA_CLIENT_ID;
   const Username = process.env.AMERIA_USERNAME;
   const Password = process.env.AMERIA_PASSWORD;
-  const appBaseRaw = process.env.APP_BASE_URL;
+  const appBase = process.env.APP_BASE_URL?.replace(/\/+$/, "");
 
-  if (!baseRaw || !ClientID || !Username || !Password || !appBaseRaw) {
-    throw new Error(
-      "Не заданы AMERIA_VPOS_BASE / AMERIA_CLIENT_ID / AMERIA_USERNAME / AMERIA_PASSWORD / APP_BASE_URL"
-    );
+  if (!base || !ClientID || !Username || !Password || !appBase) {
+    throw new Error("Ameria env vars missing");
   }
-
-  // ✅ нормализуем, чтобы не было // в url и лишних /
-  const base = baseRaw.replace(/\/+$/, "");
-  const appBase = appBaseRaw.replace(/\/+$/, "");
 
   const orderId = makeOrderId();
-
-  // ⚠️ BackURL лучше оставить БЕЗ обязательных query-параметров.
-  // Если хочешь, можно добавлять orderId, но это не обязательно для Ameria.
   const backURL = `${appBase}/pay/ameria/return`;
-
-  const amount = Number(params.amount);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Некорректная сумма amount");
-  }
 
   const body = {
     ClientID,
     Username,
     Password,
-    Amount: amount,
+    Amount: params.amount,
     OrderID: orderId,
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
@@ -112,69 +98,126 @@ async function initAmeriaPayment(params: {
   return { paymentUrl, paymentId: data.PaymentID, orderId };
 }
 
+/* ---------------- AIRTABLE ---------------- */
+
+async function sendPurchaseToAirtable(fields: Record<string, any>) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
+
+  if (!apiKey || !baseId || !table) {
+    console.warn("Airtable env missing — skip log");
+    return;
+  }
+
+  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(
+    table
+  )}`;
+
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ fields }),
+  });
+
+  if (!r.ok) {
+    console.error("Airtable write failed:", await r.text());
+  }
+}
+
+/* ---------------- API ---------------- */
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { amount, currency, email, fullName, courseName, tariffId, tariffLabel } =
-      body as {
-        amount: number;
-        currency: Currency;
-        email: string;
-        fullName: string;
-        courseName?: string;
-        tariffId: string;
-        tariffLabel: string;
-      };
+    const {
+      amount,
+      currency,
+      email,
+      fullName,
+      tariffId,
+      tariffLabel,
+      courseName,
+    } = body as {
+      amount: number;
+      currency: Currency;
+      email: string;
+      fullName: string;
+      tariffId: string;
+      tariffLabel: string;
+      courseName?: string;
+    };
 
-    if (!amount || !email || !fullName || !tariffId || !tariffLabel || !currency) {
+    if (!amount || !currency || !email || !fullName || !tariffId) {
       return NextResponse.json(
-        { error: "Не хватает данных для оплаты" },
+        { error: "Не хватает данных" },
         { status: 400 }
       );
     }
 
-    // 1) RUB -> Robokassa (если используешь)
+    const lessonsByTariff: Record<string, number> = {
+      review: 1,
+      month: 12,
+      slow12: 12,
+      long36: 36,
+    };
+
+    const lessons = lessonsByTariff[tariffId] ?? 1;
+    const pricePerLesson = Number((amount / lessons).toFixed(2));
+
+    /* ---------- RUB ---------- */
     if (currency === "RUB") {
       const paymentId = Date.now();
       const paymentUrl = generateRoboPaymentLink(paymentId, amount, email);
-      return NextResponse.json({ paymentUrl });
+
+      await sendPurchaseToAirtable({
+        email,
+        FIO: fullName,
+        tgId: "",
+        Created_time: new Date().toISOString(),
+        Sum: amount,
+        Lessons: lessons,
+        "Price per lesson": pricePerLesson,
+        inv_id: paymentId,
+        Currency: currency,
+        Tag: tariffId,
+      });
+
+      return NextResponse.json({ paymentUrl, paymentId });
     }
 
-    // 2) AMD/EUR/USD -> Ameria vPOS
-    const descriptionByTariff: Record<string, string> = {
-      review: "IDC School - 1 lesson",
-      month: "IDC School - 12 lessons (4 weeks)",
-      slow12: "IDC School - 12 lessons (8 weeks)",
-      long36: "IDC School - 36 lessons",
-    };
-    
-    const description = descriptionByTariff[tariffId] ?? `IDC School - ${tariffId}`;
-    
-    const opaque = JSON.stringify({
-      tariffId,
-      tariffLabel,
-      email,
-      fullName,
-      currency,
-    });
+    /* ---------- AMERIA ---------- */
+    const description = tariffLabel || courseName || tariffId;
 
-    // ✅ возвращаем paymentId + orderId (для отладки)
     const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
       amount,
       currency,
       description,
-      opaque,
+      opaque: JSON.stringify({ tariffId, email, fullName }),
+    });
+
+    await sendPurchaseToAirtable({
+      email,
+      FIO: fullName,
+      tgId: "",
+      Created_time: new Date().toISOString(),
+      Sum: amount,
+      Lessons: lessons,
+      "Price per lesson": pricePerLesson,
+      inv_id: paymentId,
+      Currency: currency,
+      Tag: tariffId,
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId });
-  } catch (error: any) {
-    console.error("Ошибка в create-payment:", error);
+  } catch (e: any) {
+    console.error("create-payment error:", e);
     return NextResponse.json(
-      {
-        error: "Ошибка на сервере при создании оплаты",
-        details: String(error?.message ?? error),
-      },
+      { error: "Server error", details: String(e?.message ?? e) },
       { status: 500 }
     );
   }
