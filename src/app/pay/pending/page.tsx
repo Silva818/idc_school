@@ -1,71 +1,194 @@
-// app/pay/pending/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+type CheckPaymentResp =
+  | { ok: true; status?: string; paid?: boolean; recordId?: string }
+  | { ok?: boolean; error?: string; details?: string };
 
 export default function PayPendingPage() {
-  const [seconds, setSeconds] = useState(15);
+  const [paymentId, setPaymentId] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [resp, setResp] = useState<CheckPaymentResp | null>(null);
+  const [ticks, setTicks] = useState<number>(0);
 
-  // маленький UX: подсказка, когда можно попробовать обновить
-  useEffect(() => {
-    const t = setInterval(() => {
-      setSeconds((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => clearInterval(t);
+  const timerRef = useRef<number | null>(null);
+
+  const noRedirect = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get("noRedirect") === "1";
   }, []);
 
+  const readPaymentId = () => {
+    const sp = new URLSearchParams(window.location.search);
+    const pid =
+      sp.get("paymentID") ||
+      sp.get("PaymentID") ||
+      sp.get("paymentId") ||
+      sp.get("id") ||
+      localStorage.getItem("ameriaPaymentId") ||
+      "";
+    return pid;
+  };
+
+  const checkOnce = async (pid: string) => {
+    try {
+      setLoading(true);
+
+      const r = await fetch("/api/check-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: pid }),
+        cache: "no-store",
+      });
+
+      const json = await r.json().catch(() => ({}));
+      setResp(json);
+
+      const s = String((json as any)?.status ?? "").toLowerCase();
+
+      if (!noRedirect) {
+        if (s === "paid") {
+          window.location.href = "/pay/success";
+          return;
+        }
+      }
+    } catch (e: any) {
+      setResp({ ok: false, error: e?.message ?? "check-payment failed" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const pid = readPaymentId();
+    setPaymentId(pid);
+
+    if (!pid) {
+      setLoading(false);
+      setResp({ ok: false, error: "paymentId не найден (ни в URL, ни в localStorage)" });
+      return;
+    }
+
+    // на всякий случай фиксируем
+    localStorage.setItem("ameriaPaymentId", pid);
+
+    // первая проверка сразу
+    checkOnce(pid);
+
+    // затем polling
+    timerRef.current = window.setInterval(() => {
+      setTicks((t) => t + 1);
+      checkOnce(pid);
+    }, 3000);
+
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noRedirect]);
+
+  const statusLabel = (() => {
+    const s = String((resp as any)?.status ?? "").toLowerCase();
+    if (s === "paid") return "PAID";
+    if (s === "pending") return "PENDING";
+    if ((resp as any)?.paid === true) return "PAID";
+    if ((resp as any)?.paid === false) return "PENDING";
+    if (resp && (resp as any)?.error) return "ERROR";
+    return "UNKNOWN";
+  })();
+
   return (
-    <main className="relative min-h-screen w-full bg-[#050816]">
-      <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-brand-blue/30 blur-[120px]" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-brand-primary/20 blur-[120px]" />
+    <main className="min-h-[70vh] bg-[#050816]">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
+          Оплата
+        </p>
 
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 relative">
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-soft p-6 sm:p-8">
-          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted mb-3">
-            <span className="inline-block h-2 aspect-square rounded-full bg-brand-accent" />
-            <span>Обработка платежа</span>
-          </div>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+          Платёж обрабатывается
+        </h1>
 
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
-            Платёж ещё подтверждается ⏳
-          </h1>
-
-          <p className="text-sm sm:text-base text-brand-muted leading-relaxed mb-6">
-            Иногда банку нужно чуть больше времени, чтобы окончательно подтвердить
-            операцию. Обычно это занимает до пары минут.
-          </p>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 mb-6">
-            <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
-              Что можно сделать:
-              <br />
-              • Подожди немного и обнови страницу возврата оплаты.
-              <br />
-              • Если прошло больше 5–10 минут — напиши в поддержку и приложи PaymentID.
+        <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-soft px-5 py-6 sm:px-6 sm:py-7">
+          {paymentId ? (
+            <p className="text-xs sm:text-sm text-brand-muted">
+              PaymentID: <span className="text-white font-semibold">{paymentId}</span>
             </p>
+          ) : null}
+
+          <div className="mt-4">
+            {statusLabel === "PAID" ? (
+              <>
+                <p className="text-white text-base sm:text-lg font-semibold">
+                  ✅ Платёж подтверждён
+                </p>
+                <p className="mt-2 text-sm text-brand-muted">
+                  Сейчас перенаправим на страницу успеха.
+                </p>
+              </>
+            ) : statusLabel === "ERROR" ? (
+              <>
+                <p className="text-white text-base sm:text-lg font-semibold">
+                  ⚠️ Не удалось проверить платёж
+                </p>
+                <p className="mt-2 text-sm text-brand-muted">
+                  Попробуй ещё раз через минуту. Если деньги списались — статус обычно
+                  подтягивается чуть позже.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-white text-base sm:text-lg font-semibold">
+                  ⏳ Ждём подтверждение банка…
+                </p>
+                <p className="mt-2 text-sm text-brand-muted">
+                  Мы автоматически проверяем статус каждые несколько секунд и обновляем покупку в Airtable.
+                </p>
+              </>
+            )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href="/pay/ameria/return"
-              className="inline-flex items-center justify-center rounded-full bg-brand-primary px-5 py-2.5 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              className="rounded-full bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
+              onClick={() => window.location.reload()}
+              disabled={loading}
             >
-              Проверить снова {seconds > 0 ? `(${seconds})` : ""}
+              {loading ? "Проверяем…" : "Проверить сейчас"}
+            </button>
+
+            <a
+              href="/#pricing"
+              className="rounded-full border border-white/40 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+            >
+              Вернуться на сайт
             </a>
 
             <a
-              href="/"
-              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              href="/pay/ameria/return?noRedirect=1"
+              className="rounded-full border border-white/20 px-4 py-2 text-xs sm:text-sm font-semibold text-brand-muted hover:bg-white/5 transition-colors"
             >
-              На главную
+              Открыть debug return
             </a>
           </div>
 
-          <p className="mt-6 text-[11px] sm:text-xs text-brand-muted/80">
-            Если у тебя есть PaymentID — он отображается на странице возврата
-            (return). Это ускорит поддержку.
+          <p className="mt-5 text-[11px] text-brand-muted/80">
+            Автопроверка: {ticks} попыток
           </p>
         </div>
+
+        {/* Тех. детали — оставляем для дебага */}
+        {resp && (
+          <details className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+            <summary className="cursor-pointer text-sm text-white/90">
+              Технические детали (check-payment)
+            </summary>
+            <pre className="mt-3 text-xs text-white/80 whitespace-pre-wrap">
+              {JSON.stringify(resp, null, 2)}
+            </pre>
+          </details>
+        )}
       </div>
     </main>
   );
