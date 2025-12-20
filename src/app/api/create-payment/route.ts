@@ -40,29 +40,12 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   USD: "840",
 };
 
-
-
-// const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
-// function makeOrderId(): number {
-//   if (IS_AMERIA_TEST) {
-//     return 4107001 + (Date.now() % 1000); // 4107001..4108000
-//   }
-//   return Math.floor(Date.now() / 1000);
-// }
-
-
 function makeOrderId(): number {
-  /**
-   * Формат:
-   * - берём последние 9 цифр timestamp в мс
-   * - добавляем 2 случайные цифры
-   * Итог: 11 цифр, всегда уникально
-   */
-  const ms = Date.now(); // 13 цифр
-  const random = Math.floor(Math.random() * 90) + 10; // 10–99
-  return Number(String(ms).slice(-9) + String(random));
+  // 7 цифр: 1000000..9999999
+  const base = Date.now() % 9000000; // 0..8999999
+  const orderId = 1000000 + base; // 1000000..9999999
+  return orderId;
 }
-
 
 async function initAmeriaPayment(params: {
   amount: number;
@@ -70,21 +53,27 @@ async function initAmeriaPayment(params: {
   description: string;
   opaque?: string;
 }) {
-  const base = process.env.AMERIA_VPOS_BASE;
+  const baseRaw = process.env.AMERIA_VPOS_BASE;
   const ClientID = process.env.AMERIA_CLIENT_ID;
   const Username = process.env.AMERIA_USERNAME;
   const Password = process.env.AMERIA_PASSWORD;
-  const appBase = process.env.APP_BASE_URL;
+  const appBaseRaw = process.env.APP_BASE_URL;
 
-  if (!base || !ClientID || !Username || !Password || !appBase) {
+  if (!baseRaw || !ClientID || !Username || !Password || !appBaseRaw) {
     throw new Error(
       "Не заданы AMERIA_VPOS_BASE / AMERIA_CLIENT_ID / AMERIA_USERNAME / AMERIA_PASSWORD / APP_BASE_URL"
     );
   }
 
-  const orderId = makeOrderId();
-  const backURL = `${appBase}/pay/ameria/return?orderId=${orderId}`;
+  // ✅ нормализуем, чтобы не было // в url и лишних /
+  const base = baseRaw.replace(/\/+$/, "");
+  const appBase = appBaseRaw.replace(/\/+$/, "");
 
+  const orderId = makeOrderId();
+
+  // ⚠️ BackURL лучше оставить БЕЗ обязательных query-параметров.
+  // Если хочешь, можно добавлять orderId, но это не обязательно для Ameria.
+  const backURL = `${appBase}/pay/ameria/return`;
 
   const amount = Number(params.amount);
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -127,32 +116,18 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      amount,
-      currency,
-      email,
-      fullName,
-      courseName,
-      tariffId,
-      tariffLabel,
-    } = body as {
-      amount: number;
-      currency: Currency;
-      email: string;
-      fullName: string;
-      courseName?: string;
-      tariffId: string;
-      tariffLabel: string;
-    };
+    const { amount, currency, email, fullName, courseName, tariffId, tariffLabel } =
+      body as {
+        amount: number;
+        currency: Currency;
+        email: string;
+        fullName: string;
+        courseName?: string;
+        tariffId: string;
+        tariffLabel: string;
+      };
 
-    if (
-      !amount ||
-      !email ||
-      !fullName ||
-      !tariffId ||
-      !tariffLabel ||
-      !currency
-    ) {
+    if (!amount || !email || !fullName || !tariffId || !tariffLabel || !currency) {
       return NextResponse.json(
         { error: "Не хватает данных для оплаты" },
         { status: 400 }
@@ -176,7 +151,7 @@ export async function POST(req: Request) {
       currency,
     });
 
-    // ✅ ВАЖНО: возвращаем paymentId (и orderId для отладки)
+    // ✅ возвращаем paymentId + orderId (для отладки)
     const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
       amount,
       currency,
