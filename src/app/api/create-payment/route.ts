@@ -40,12 +40,27 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   USD: "840",
 };
 
-const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
+
+
+// const IS_AMERIA_TEST = process.env.AMERIA_TEST_MODE === "true";
+// function makeOrderId(): number {
+//   if (IS_AMERIA_TEST) {
+//     return 4107001 + (Date.now() % 1000); // 4107001..4108000
+//   }
+//   return Math.floor(Date.now() / 1000);
+// }
+
+
 function makeOrderId(): number {
-  if (IS_AMERIA_TEST) {
-    return 4107001 + (Date.now() % 1000); // 4107001..4108000
-  }
-  return Math.floor(Date.now() / 1000);
+  /**
+   * Формат:
+   * - берём последние 9 цифр timestamp в мс
+   * - добавляем 2 случайные цифры
+   * Итог: 11 цифр, всегда уникально
+   */
+  const ms = Date.now(); // 13 цифр
+  const random = Math.floor(Math.random() * 90) + 10; // 10–99
+  return Number(String(ms).slice(-9) + String(random));
 }
 
 
