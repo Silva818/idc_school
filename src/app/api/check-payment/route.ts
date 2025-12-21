@@ -9,7 +9,7 @@ function devLog(...args: any[]) {
   if (process.env.NODE_ENV !== "production") console.log(...args);
 }
 
-/* ---------------- AIRTABLE HELPERS ---------------- */
+/* ---------------- AIRTABLE HELPERS (bot-style: filterByFormula) ---------------- */
 
 function airtableEnv() {
   const apiKey = process.env.AIRTABLE_API_KEY;
@@ -22,22 +22,32 @@ function airtableEnv() {
   return { ok: true as const, apiKey, baseId, table };
 }
 
-// Экранируем кавычки для Airtable formula
+// Экранируем кавычки для Airtable formula (строки в '...')
 function escapeAirtableString(value: string) {
-  // Airtable формулы: строки в '...'
-  // экранируем обратный слэш и одинарные кавычки
   return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
-async function airtableSearchByFormula(formula: string) {
+type AirtableFindByPaymentIdResult =
+  | { ok: true; recordId: string; foundCount: number }
+  | {
+      ok: false;
+      reason: "env_missing" | "not_found" | "multiple_found" | "search_failed" | "bad_json" | "search_crashed";
+      details?: any;
+    };
+
+async function airtableFindByPaymentId(paymentId: string): Promise<AirtableFindByPaymentIdResult> {
   const env = airtableEnv();
-  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
+  if (!env.ok) return { ok: false, reason: "env_missing" };
+
+  const pidEsc = escapeAirtableString(paymentId);
+  // ВАЖНО: имя поля должно совпадать с колонкой в Airtable: paymentId
+  const formula = `{paymentId}='${pidEsc}'`;
 
   const url =
     `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(env.table)}` +
     `?filterByFormula=${encodeURIComponent(formula)}`;
 
-  devLog("📡 Airtable SEARCH:", { formula });
+  devLog("📡 Airtable FIND by paymentId:", { formula });
 
   try {
     const r = await fetch(url, {
@@ -47,21 +57,36 @@ async function airtableSearchByFormula(formula: string) {
     });
 
     const text = await r.text();
-    if (!r.ok) return { ok: false as const, reason: "search_failed" as const, text };
+
+    if (!r.ok) {
+      return {
+        ok: false,
+        reason: "search_failed",
+        details: { status: r.status, bodyPreview: text.slice(0, 800) },
+      };
+    }
 
     let json: any;
     try {
       json = JSON.parse(text);
     } catch {
-      return { ok: false as const, reason: "search_bad_json" as const, text };
+      return { ok: false, reason: "bad_json", details: { bodyPreview: text.slice(0, 800) } };
     }
 
-    const record = json?.records?.[0];
-    if (!record?.id) return { ok: false as const, reason: "not_found" as const, formula };
+    const records: any[] = Array.isArray(json?.records) ? json.records : [];
+    if (records.length === 0) return { ok: false, reason: "not_found" };
 
-    return { ok: true as const, recordId: record.id as string };
-  } catch {
-    return { ok: false as const, reason: "search_crashed" as const };
+    // Защита: если почему-то несколько записей с одним paymentId — лучше не обновлять “первую попавшуюся”
+    if (records.length > 1) {
+      return { ok: false, reason: "multiple_found", details: { foundCount: records.length } };
+    }
+
+    const recordId = records[0]?.id;
+    if (!recordId) return { ok: false, reason: "bad_json" };
+
+    return { ok: true, recordId: String(recordId), foundCount: 1 };
+  } catch (e: any) {
+    return { ok: false, reason: "search_crashed", details: { message: String(e?.message ?? e) } };
   }
 }
 
@@ -85,7 +110,7 @@ async function airtablePatchRecord(recordId: string, fields: Record<string, any>
     });
 
     const text = await r.text();
-    if (!r.ok) return { ok: false as const, reason: "patch_failed" as const, text };
+    if (!r.ok) return { ok: false as const, reason: "patch_failed" as const, text: text.slice(0, 1200) };
 
     return { ok: true as const };
   } catch {
@@ -159,9 +184,7 @@ function parseAmeriaStatus(details: any): {
 
   const osRaw = details?.OrderStatus;
   const orderStatus =
-    osRaw === undefined || osRaw === null || osRaw === ""
-      ? undefined
-      : Number(osRaw);
+    osRaw === undefined || osRaw === null || osRaw === "" ? undefined : Number(osRaw);
 
   const reasonMessage = rc ? (RC_MESSAGE[rc] ?? "Отказ/ошибка со стороны банка") : undefined;
 
@@ -211,24 +234,23 @@ export async function POST(req: Request) {
     const details = await getAmeriaPaymentDetails(paymentId);
     const parsed = parseAmeriaStatus(details);
 
-    // 2) Airtable обновляем ТОЛЬКО при paid
+    // 2) Airtable: обновляем ТОЛЬКО при paid, и ищем запись "как в боте" через filterByFormula
     let airtableUpdate: any = { ok: false, skipped: true };
 
     if (parsed.status === "paid") {
-      const pidEsc = escapeAirtableString(paymentId);
-      const formula = `{paymentId}='${pidEsc}'`;
-
-      const found = await airtableSearchByFormula(formula);
+      const found = await airtableFindByPaymentId(paymentId);
 
       if (found.ok) {
         const patch = await airtablePatchRecord(found.recordId, { Status: "paid" });
-        airtableUpdate = { ok: patch.ok, recordId: found.recordId, reason: patch.ok ? undefined : patch.reason };
+        airtableUpdate = patch.ok
+          ? { ok: true, skipped: false, recordId: found.recordId }
+          : { ok: false, skipped: false, recordId: found.recordId, reason: patch.reason, details: (patch as any).text };
       } else {
-        airtableUpdate = { ok: false, recordId: null, reason: found.reason };
+        airtableUpdate = { ok: false, skipped: false, reason: found.reason, details: found.details ?? undefined };
       }
     }
 
-    // 3) Safe subset для дебага на фронте
+    // 3) Safe subset для дебага на фронте (без чувствительных данных)
     const ameriaSafe = {
       PaymentID: details?.PaymentID ?? paymentId,
       ResponseCode: details?.ResponseCode,
