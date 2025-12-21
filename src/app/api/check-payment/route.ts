@@ -1,6 +1,14 @@
 // app/api/check-payment/route.ts
 import { NextResponse } from "next/server";
 
+type PaymentStatus = "paid" | "pending" | "failed" | "void" | "refunded" | "unknown";
+
+/* ---------------- SAFE LOG ---------------- */
+
+function devLog(...args: any[]) {
+  if (process.env.NODE_ENV !== "production") console.log(...args);
+}
+
 /* ---------------- AIRTABLE HELPERS ---------------- */
 
 function airtableEnv() {
@@ -8,17 +16,17 @@ function airtableEnv() {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
 
-  console.log("🔎 Airtable ENV check:", {
-    hasApiKey: Boolean(apiKey),
-    baseId,
-    table,
-  });
-
   if (!apiKey || !baseId || !table) {
     return { ok: false as const, apiKey: "", baseId: "", table: "" };
   }
-
   return { ok: true as const, apiKey, baseId, table };
+}
+
+// Экранируем кавычки для Airtable formula
+function escapeAirtableString(value: string) {
+  // Airtable формулы: строки в '...'
+  // экранируем обратный слэш и одинарные кавычки
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
 async function airtableSearchByFormula(formula: string) {
@@ -29,8 +37,7 @@ async function airtableSearchByFormula(formula: string) {
     `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(env.table)}` +
     `?filterByFormula=${encodeURIComponent(formula)}`;
 
-  console.log("📡 Airtable SEARCH url:", url);
-  console.log("🧮 Airtable formula:", formula);
+  devLog("📡 Airtable SEARCH:", { formula });
 
   try {
     const r = await fetch(url, {
@@ -40,16 +47,7 @@ async function airtableSearchByFormula(formula: string) {
     });
 
     const text = await r.text();
-
-    console.log("📬 Airtable SEARCH response:", {
-      ok: r.ok,
-      status: r.status,
-      body: text,
-    });
-
-    if (!r.ok) {
-      return { ok: false as const, reason: "search_failed" as const, text };
-    }
+    if (!r.ok) return { ok: false as const, reason: "search_failed" as const, text };
 
     let json: any;
     try {
@@ -59,59 +57,11 @@ async function airtableSearchByFormula(formula: string) {
     }
 
     const record = json?.records?.[0];
-    if (!record?.id) {
-      console.warn("⚠️ Airtable record NOT FOUND by formula");
-      return { ok: false as const, reason: "not_found" as const, formula };
-    }
+    if (!record?.id) return { ok: false as const, reason: "not_found" as const, formula };
 
-    console.log("✅ Airtable record found:", { recordId: record.id });
     return { ok: true as const, recordId: record.id as string };
-  } catch (err) {
-    console.error("💥 Airtable SEARCH crashed:", err);
+  } catch {
     return { ok: false as const, reason: "search_crashed" as const };
-  }
-}
-
-async function airtableGetRecord(recordId: string) {
-  const env = airtableEnv();
-  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
-
-  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
-    env.table
-  )}/${recordId}`;
-
-  console.log("📡 Airtable GET record url:", url);
-
-  try {
-    const r = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${env.apiKey}` },
-      cache: "no-store",
-    });
-
-    const text = await r.text();
-
-    console.log("📬 Airtable GET record response:", {
-      ok: r.ok,
-      status: r.status,
-      body: text,
-    });
-
-    if (!r.ok) {
-      return { ok: false as const, reason: "get_failed" as const, text };
-    }
-
-    let json: any;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      return { ok: false as const, reason: "get_bad_json" as const, text };
-    }
-
-    return { ok: true as const, record: json };
-  } catch (err) {
-    console.error("💥 Airtable GET crashed:", err);
-    return { ok: false as const, reason: "get_crashed" as const };
   }
 }
 
@@ -119,12 +69,9 @@ async function airtablePatchRecord(recordId: string, fields: Record<string, any>
   const env = airtableEnv();
   if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
-  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
-    env.table
-  )}/${recordId}`;
+  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(env.table)}/${recordId}`;
 
-  console.log("📡 Airtable PATCH url:", url);
-  console.log("📦 Airtable PATCH payload:", fields);
+  devLog("📡 Airtable PATCH:", { recordId, fields });
 
   try {
     const r = await fetch(url, {
@@ -138,20 +85,10 @@ async function airtablePatchRecord(recordId: string, fields: Record<string, any>
     });
 
     const text = await r.text();
+    if (!r.ok) return { ok: false as const, reason: "patch_failed" as const, text };
 
-    console.log("📬 Airtable PATCH response:", {
-      ok: r.ok,
-      status: r.status,
-      body: text,
-    });
-
-    if (!r.ok) {
-      return { ok: false as const, reason: "patch_failed" as const, text };
-    }
-
-    return { ok: true as const, text };
-  } catch (err) {
-    console.error("💥 Airtable PATCH crashed:", err);
+    return { ok: true as const };
+  } catch {
     return { ok: false as const, reason: "patch_crashed" as const };
   }
 }
@@ -164,27 +101,15 @@ async function getAmeriaPaymentDetails(paymentId: string) {
   const Username = process.env.AMERIA_USERNAME;
   const Password = process.env.AMERIA_PASSWORD;
 
-  console.log("🔎 Ameria ENV check:", {
-    base,
-    hasClientId: Boolean(ClientID),
-    hasUsername: Boolean(Username),
-    hasPassword: Boolean(Password),
-  });
-
   if (!base || !ClientID || !Username || !Password) {
     throw new Error("Ameria env vars missing");
   }
 
   const url = `${base}/api/VPOS/GetPaymentDetails`;
+  const body = { ClientID, Username, Password, PaymentID: paymentId };
 
-  const body = {
-    ClientID,
-    Username,
-    Password,
-    PaymentID: paymentId,
-  };
-
-  console.log("📡 Ameria GetPaymentDetails:", { url, body });
+  // ВАЖНО: не логируем Password
+  devLog("📡 Ameria GetPaymentDetails request:", { url, PaymentID: paymentId, ClientID, Username });
 
   const r = await fetch(url, {
     method: "POST",
@@ -194,11 +119,9 @@ async function getAmeriaPaymentDetails(paymentId: string) {
   });
 
   const text = await r.text();
-  console.log("📬 Ameria response:", { ok: r.ok, status: r.status, body: text });
+  devLog("📬 Ameria response meta:", { ok: r.ok, status: r.status, bodyPreview: text.slice(0, 600) });
 
-  if (!r.ok) {
-    throw new Error(`Ameria GetPaymentDetails http error: ${text}`);
-  }
+  if (!r.ok) throw new Error(`Ameria GetPaymentDetails http error: ${text}`);
 
   let data: any;
   try {
@@ -210,112 +133,128 @@ async function getAmeriaPaymentDetails(paymentId: string) {
   return data;
 }
 
-function isPaidAmeria(details: any): boolean {
-  // по твоему реальному JSON:
-  // ResponseCode: "00" и PaymentState: "payment_deposited" и OrderStatus: "2"
-  const rc = String(details?.ResponseCode ?? "").trim();
-  const state = String(details?.PaymentState ?? "").toLowerCase();
-  const orderStatus = String(details?.OrderStatus ?? "").trim();
+/* ---------------- STATUS PARSING ---------------- */
 
-  if (rc === "00") return true;
-  if (state.includes("deposited")) return true;
-  if (orderStatus === "2") return true;
+// Небольшая “витрина” популярных кодов. Можно расширять сколько угодно.
+const RC_MESSAGE: Record<string, string> = {
+  "00": "Одобрено",
+  "0116": "Недостаточно средств на карте",
+  "0101": "Карта просрочена",
+  "0104": "Операция отклонена",
+  "0208": "Карта заблокирована/утеряна",
+  "0907": "Банк-эмитент временно недоступен",
+  "0910": "Техническая ошибка банка",
+};
 
-  return false;
+function parseAmeriaStatus(details: any): {
+  status: PaymentStatus;
+  reasonCode?: string;
+  reasonMessage?: string;
+  paymentState?: string;
+  orderStatus?: number;
+} {
+  const rc = String(details?.ResponseCode ?? "").trim(); // "00" = success
+  const paymentState = String(details?.PaymentState ?? "").trim();
+  const ps = paymentState.toLowerCase();
+
+  const osRaw = details?.OrderStatus;
+  const orderStatus =
+    osRaw === undefined || osRaw === null || osRaw === ""
+      ? undefined
+      : Number(osRaw);
+
+  const reasonMessage = rc ? (RC_MESSAGE[rc] ?? "Отказ/ошибка со стороны банка") : undefined;
+
+  // Финальные успехи
+  if (ps === "payment_deposited" || orderStatus === 2 || rc === "00") {
+    return { status: "paid", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+
+  // Финальные отказы/отмены/возвраты
+  if (ps === "payment_declined" || orderStatus === 6) {
+    return { status: "failed", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+  if (ps === "payment_void" || orderStatus === 3) {
+    return { status: "void", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+  if (ps === "payment_refunded" || orderStatus === 4) {
+    return { status: "refunded", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+
+  // Ожидание
+  if (ps === "payment_started" || orderStatus === 0) {
+    return { status: "pending", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+  if (ps === "payment_approved" || ps === "payment_autoauthorized" || orderStatus === 1 || orderStatus === 5) {
+    return { status: "pending", reasonCode: rc || undefined, reasonMessage, paymentState, orderStatus };
+  }
+
+  // Если есть rc и он НЕ "00" — чаще это не “ждать”, а “failed”
+  if (rc && rc !== "00") {
+    return { status: "failed", reasonCode: rc, reasonMessage, paymentState, orderStatus };
+  }
+
+  return { status: "unknown", paymentState, orderStatus };
 }
 
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
-  console.log("🔥 check-payment POST hit");
-
   try {
     const body = await req.json().catch(() => ({}));
-    console.log("📥 request body:", body);
-
     const paymentId = String(body?.paymentId ?? "").trim();
     if (!paymentId) {
-      console.warn("⚠️ paymentId missing");
-      return NextResponse.json({ error: "paymentId required" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "paymentId required" }, { status: 400 });
     }
 
-    // 1) спросить Ameria
+    // 1) Ameria
     const details = await getAmeriaPaymentDetails(paymentId);
-    console.log("✅ Ameria details parsed:", details);
+    const parsed = parseAmeriaStatus(details);
 
-    const paid = isPaidAmeria(details);
-    console.log("💡 isPaidAmeria:", paid);
+    // 2) Airtable обновляем ТОЛЬКО при paid
+    let airtableUpdate: any = { ok: false, skipped: true };
 
-    // 2) найти запись в Airtable (с fallback-стратегиями)
-    // ВАЖНО: имя поля должно совпадать с Airtable колонкой
-    const pid = String(paymentId).trim();
-    // // экранируем одинарные кавычки, чтобы Airtable формула не ломалась
-    // const pidEsc = pid.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-    
-    // строгое сравнение строк
-    const formulas = [`{paymentId}='${pid}'`];
+    if (parsed.status === "paid") {
+      const pidEsc = escapeAirtableString(paymentId);
+      const formula = `{paymentId}='${pidEsc}'`;
 
+      const found = await airtableSearchByFormula(formula);
 
-    let found: any = null;
-    for (const f of formulas) {
-      const r = await airtableSearchByFormula(f);
-      if (r.ok) {
-        found = { ...r, formula: f };
-        break;
+      if (found.ok) {
+        const patch = await airtablePatchRecord(found.recordId, { Status: "paid" });
+        airtableUpdate = { ok: patch.ok, recordId: found.recordId, reason: patch.ok ? undefined : patch.reason };
       } else {
-        console.warn("🔁 Search attempt failed:", r);
+        airtableUpdate = { ok: false, recordId: null, reason: found.reason };
       }
     }
 
-    if (!found?.ok) {
-      console.warn("❌ Airtable record NOT FOUND by any formula");
-      return NextResponse.json({
-        ok: true,
-        paid,
-        status: paid ? "paid" : "pending",
-        airtable: { ok: false, reason: "not_found" },
-        ameria: details,
-      });
-    }
+    // 3) Safe subset для дебага на фронте
+    const ameriaSafe = {
+      PaymentID: details?.PaymentID ?? paymentId,
+      ResponseCode: details?.ResponseCode,
+      PaymentState: details?.PaymentState,
+      OrderStatus: details?.OrderStatus,
+      Amount: details?.Amount,
+      ApprovedAmount: details?.ApprovedAmount,
+      DepositedAmount: details?.DepositedAmount,
+      DateTime: details?.DateTime,
+      rrn: details?.rrn,
+    };
 
-    console.log("✅ Airtable matched formula:", found.formula);
-
-    // 3) перед PATCH — прочитаем запись и покажем, какие там вообще поля
-    const before = await airtableGetRecord(found.recordId);
-    if (before.ok) {
-      console.log("🧾 Airtable record BEFORE patch fields keys:", Object.keys(before.record?.fields ?? {}));
-      console.log("🧾 Airtable record BEFORE patch fields:", before.record?.fields ?? {});
-    } else {
-      console.warn("⚠️ Could not GET record before patch:", before);
-    }
-
-    // 4) обновить статус
-    const patchFields: Record<string, any> = paid
-      ? { Status: "paid" }
-      : { Status: "pending" };
-
-    // Paid_time добавляем только если колонка есть — иначе Airtable вернёт 422.
-    // Поэтому ставим мягко: если у тебя колонки нет — просто не добавляй её.
-    // Хочешь — создай колонку Paid_time (date) и раскомментируй строку ниже.
-    // if (paid) patchFields["Paid_time"] = new Date().toISOString();
-
-    const patch = await airtablePatchRecord(found.recordId, patchFields);
-
-    console.log("✅ Patch result:", patch);
-
-    // 5) вернуть нормальный ответ
     return NextResponse.json({
       ok: true,
-      paid,
-      status: paid ? "paid" : "pending",
-      recordId: found.recordId,
-      matchedFormula: found.formula,
-      updated: patch,
+      paymentId,
+      status: parsed.status,
+      reasonCode: parsed.reasonCode,
+      reasonMessage: parsed.reasonMessage,
+      paymentState: parsed.paymentState,
+      orderStatus: parsed.orderStatus,
+      airtable: airtableUpdate,
+      ameria: ameriaSafe,
     });
   } catch (e: any) {
-    console.error("check-payment error:", e);
     return NextResponse.json(
-      { error: "Server error", details: String(e?.message ?? e) },
+      { ok: false, error: "Server error", details: String(e?.message ?? e) },
       { status: 500 }
     );
   }

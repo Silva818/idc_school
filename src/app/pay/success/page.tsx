@@ -1,15 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type CheckPaymentResp =
-  | { ok: true; status?: string; paid?: boolean; recordId?: string }
+  | {
+      ok: true;
+      paymentId?: string;
+      status?: "paid" | "pending" | "failed" | "void" | "refunded" | "unknown";
+      reasonCode?: string;
+      reasonMessage?: string;
+      paymentState?: string;
+      orderStatus?: number;
+      airtable?: any;
+      ameria?: any;
+    }
   | { ok?: boolean; error?: string; details?: string };
 
+function isTerminalStatus(s: string) {
+  return ["paid", "failed", "void", "refunded"].includes(s);
+}
+
 export default function PaySuccessPage() {
-  const [loading, setLoading] = useState(true);
-  const [resp, setResp] = useState<CheckPaymentResp | null>(null);
   const [paymentId, setPaymentId] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [resp, setResp] = useState<CheckPaymentResp | null>(null);
+  const [ticks, setTicks] = useState<number>(0);
+
+  const timerRef = useRef<number | null>(null);
 
   const noRedirect = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -17,9 +34,8 @@ export default function PaySuccessPage() {
     return sp.get("noRedirect") === "1";
   }, []);
 
-  useEffect(() => {
+  const readPaymentId = () => {
     const sp = new URLSearchParams(window.location.search);
-
     const pid =
       sp.get("paymentID") ||
       sp.get("PaymentID") ||
@@ -27,7 +43,46 @@ export default function PaySuccessPage() {
       sp.get("id") ||
       localStorage.getItem("ameriaPaymentId") ||
       "";
+    return pid;
+  };
 
+  const checkOnce = async (pid: string) => {
+    try {
+      setLoading(true);
+
+      const r = await fetch("/api/check-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: pid }),
+        cache: "no-store",
+      });
+
+      const json = (await r.json().catch(() => ({}))) as CheckPaymentResp;
+      setResp(json);
+
+      const s = String((json as any)?.status ?? "").toLowerCase();
+
+      // Если статус финальный — останавливаем polling
+      if (isTerminalStatus(s)) {
+        if (timerRef.current) {
+          window.clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }
+
+      // noRedirect оставляем как debug-флажок (вдруг захочешь автопереходы потом)
+      if (!noRedirect) {
+        // сейчас мы НЕ редиректим никуда — всё показываем на одной странице
+      }
+    } catch (e: any) {
+      setResp({ ok: false, error: e?.message ?? "check-payment failed" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const pid = readPaymentId();
     setPaymentId(pid);
 
     if (!pid) {
@@ -36,49 +91,34 @@ export default function PaySuccessPage() {
       return;
     }
 
-    // На всякий случай фиксируем в localStorage (если пришло из URL)
     localStorage.setItem("ameriaPaymentId", pid);
 
-    const run = async () => {
-      try {
-        setLoading(true);
+    // первая проверка сразу
+    checkOnce(pid);
 
-        const r = await fetch("/api/check-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentId: pid }),
-          cache: "no-store",
-        });
+    // polling каждые 3 сек, пока не станет финальным
+    timerRef.current = window.setInterval(() => {
+      setTicks((t) => t + 1);
+      checkOnce(pid);
+    }, 3000);
 
-        const json = await r.json().catch(() => ({}));
-        setResp(json);
-
-        const s = String((json as any)?.status ?? "").toLowerCase();
-
-        // Если Ameria еще не в deposited/paid — перекидываем на pending
-        if (!noRedirect) {
-          if (s === "pending") {
-            window.location.href = "/pay/pending";
-            return;
-          }
-        }
-      } catch (e: any) {
-        setResp({ ok: false, error: e?.message ?? "check-payment failed" });
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
     };
-
-    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noRedirect]);
 
-  const statusLabel = (() => {
-    const s = String((resp as any)?.status ?? "").toLowerCase();
-    if (s === "paid") return "PAID";
-    if (s === "pending") return "PENDING";
-    if ((resp as any)?.paid === true) return "PAID";
-    if ((resp as any)?.paid === false) return "PENDING";
-    return resp ? "UNKNOWN" : "LOADING";
+  const status = String((resp as any)?.status ?? "").toLowerCase();
+  const reasonCode = String((resp as any)?.reasonCode ?? "").trim();
+  const reasonMessage = String((resp as any)?.reasonMessage ?? "").trim();
+
+  const title = (() => {
+    if (status === "paid") return "Спасибо! Платёж принят";
+    if (status === "pending") return "Платёж обрабатывается";
+    if (status === "failed") return "Платёж не прошёл";
+    if (status === "void") return "Платёж отменён";
+    if (status === "refunded") return "Платёж возвращён";
+    return "Оплата";
   })();
 
   return (
@@ -89,7 +129,7 @@ export default function PaySuccessPage() {
         </p>
 
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
-          Спасибо! Платёж принят
+          {title}
         </h1>
 
         <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-soft px-5 py-6 sm:px-6 sm:py-7">
@@ -102,7 +142,7 @@ export default function PaySuccessPage() {
                 Мы проверяем статус в банке и обновляем покупку в системе.
               </p>
             </>
-          ) : statusLabel === "PAID" ? (
+          ) : status === "paid" ? (
             <>
               <p className="text-white text-base sm:text-lg font-semibold">
                 ✅ Платёж подтверждён
@@ -111,22 +151,55 @@ export default function PaySuccessPage() {
                 Статус покупки обновлён. Если у тебя есть доступ/онбординг — можно переходить дальше.
               </p>
             </>
-          ) : statusLabel === "PENDING" ? (
+          ) : status === "pending" ? (
             <>
               <p className="text-white text-base sm:text-lg font-semibold">
                 ⏳ Платёж в обработке
               </p>
               <p className="mt-2 text-sm text-brand-muted">
-                Иногда банку нужно чуть больше времени. Мы проверим ещё раз.
+                Иногда банку нужно чуть больше времени. Мы проверяем статус автоматически.
               </p>
-              <div className="mt-5">
-                <button
-                  className="rounded-full border border-white/40 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                  onClick={() => window.location.href = "/pay/pending"}
-                >
-                  Перейти на страницу ожидания
-                </button>
-              </div>
+            </>
+          ) : status === "failed" ? (
+            <>
+              <p className="text-white text-base sm:text-lg font-semibold">
+                ❌ Платёж отклонён
+              </p>
+              <p className="mt-2 text-sm text-brand-muted">
+                {reasonMessage
+                  ? `Причина: ${reasonMessage}${reasonCode ? ` (код ${reasonCode})` : ""}.`
+                  : "Банк отклонил операцию. Попробуй ещё раз или используй другую карту."}
+              </p>
+              <p className="mt-2 text-sm text-brand-muted">
+                Если деньги списались — напиши в поддержку, и мы проверим по PaymentID.
+              </p>
+            </>
+          ) : status === "void" ? (
+            <>
+              <p className="text-white text-base sm:text-lg font-semibold">
+                ⚠️ Платёж отменён
+              </p>
+              <p className="mt-2 text-sm text-brand-muted">
+                Операция была отменена. Если хочешь — попробуй оплатить ещё раз.
+              </p>
+            </>
+          ) : status === "refunded" ? (
+            <>
+              <p className="text-white text-base sm:text-lg font-semibold">
+                ↩️ Платёж возвращён
+              </p>
+              <p className="mt-2 text-sm text-brand-muted">
+                Похоже, по операции был выполнен возврат. Если есть вопросы — напиши в поддержку.
+              </p>
+            </>
+          ) : resp && (resp as any)?.error ? (
+            <>
+              <p className="text-white text-base sm:text-lg font-semibold">
+                ⚠️ Не удалось проверить платёж
+              </p>
+              <p className="mt-2 text-sm text-brand-muted">
+                Если деньги списались — ничего страшного: обычно статус подтягивается чуть позже.
+              </p>
             </>
           ) : (
             <>
@@ -149,8 +222,9 @@ export default function PaySuccessPage() {
             <button
               className="rounded-full bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
               onClick={() => window.location.reload()}
+              disabled={loading}
             >
-              Проверить ещё раз
+              {loading ? "Проверяем…" : "Проверить ещё раз"}
             </button>
 
             <a
@@ -167,9 +241,13 @@ export default function PaySuccessPage() {
               Открыть debug return
             </a>
           </div>
+
+          <p className="mt-5 text-[11px] text-brand-muted/80">
+            Автопроверка: {ticks} попыток
+            {isTerminalStatus(status) ? " (остановлено)" : ""}
+          </p>
         </div>
 
-        {/* Тех. детали — оставляем для дебага */}
         {resp && (
           <details className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
             <summary className="cursor-pointer text-sm text-white/90">
