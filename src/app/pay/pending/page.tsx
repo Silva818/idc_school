@@ -14,6 +14,12 @@ export default function PayPendingPage() {
 
   const timerRef = useRef<number | null>(null);
 
+  // NEW: чтобы не было параллельных запросов
+  const inFlightRef = useRef<boolean>(false);
+
+  // NEW: лимит попыток (например ~3 минуты при 3с интервале)
+  const MAX_TICKS = 60;
+
   const noRedirect = useMemo(() => {
     if (typeof window === "undefined") return false;
     const sp = new URLSearchParams(window.location.search);
@@ -33,6 +39,10 @@ export default function PayPendingPage() {
   };
 
   const checkOnce = async (pid: string) => {
+    // NEW: не запускаем новый запрос, пока не завершился предыдущий
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+
     try {
       setLoading(true);
 
@@ -49,7 +59,7 @@ export default function PayPendingPage() {
       const s = String((json as any)?.status ?? "").toLowerCase();
 
       if (!noRedirect) {
-        if (s === "paid") {
+        if (["paid", "declined", "canceled", "refunded", "error"].includes(s)) {
           window.location.href = "/pay/success";
           return;
         }
@@ -57,6 +67,7 @@ export default function PayPendingPage() {
     } catch (e: any) {
       setResp({ ok: false, error: e?.message ?? "check-payment failed" });
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
   };
@@ -79,7 +90,20 @@ export default function PayPendingPage() {
 
     // затем polling
     timerRef.current = window.setInterval(() => {
-      setTicks((t) => t + 1);
+      setTicks((t) => {
+        const next = t + 1;
+
+        // NEW: стопаемся по лимиту
+        if (next >= MAX_TICKS) {
+          if (timerRef.current) window.clearInterval(timerRef.current);
+          return next;
+        }
+
+        return next;
+      });
+
+      // NEW: после лимита больше не дергаем
+      // (здесь используем текущее значение ticks "как есть" — ок для простого стопа)
       checkOnce(pid);
     }, 3000);
 
