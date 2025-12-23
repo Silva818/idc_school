@@ -13,34 +13,34 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
 // отдельные цены для AMD, EUR и USD
 const prices = {
   review: {
-    AMD: { total: 5500, per: 5500 }, // разовый формат
     EUR: { total: 11, per: 11 },
     USD: { total: 11, per: 11 },
+    AMD: { total: 5500, per: 5500 }, // разовый формат
   },
   month: {
-    AMD: { total: 48000, per: 4000 }, // 12 тренировок
     EUR: { total: 108, per: 9 },
     USD: { total: 108, per: 9 },
+    AMD: { total: 48000, per: 4000 }, // 12 тренировок
   },
   slow12: {
-    AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
     EUR: { total: 120, per: 10 },
     USD: { total: 120, per: 10 },
+    AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
   },
   long36: {
-    AMD: { total: 115200, per: 3200 }, // 36 тренировок
     EUR: { total: 252, per: 7 },
     USD: { total: 252, per: 7 },
+    AMD: { total: 115200, per: 3200 }, // 36 тренировок
   },
 } as const;
 
-export type Currency = "AMD" | "EUR" | "USD";
+export type Currency = "EUR" | "USD" | "AMD";
 
 function formatPrice(value: number, currency: Currency) {
   const suffixMap: Record<Currency, string> = {
-    AMD: "֏",
     EUR: "€",
     USD: "$",
+    AMD: "֏",
   };
 
   return `${value.toLocaleString("ru-RU")} ${suffixMap[currency]}`;
@@ -60,11 +60,11 @@ type PricingProps = {
 };
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
-  const [currency, setCurrency] = useState<Currency>("AMD");
+  const [currency, setCurrency] = useState<Currency>("EUR");
 
-  const isAMD = currency === "AMD";
   const isEUR = currency === "EUR";
   const isUSD = currency === "USD";
+  const isAMD = currency === "AMD";
 
   const switchHint =
     currency === "AMD"
