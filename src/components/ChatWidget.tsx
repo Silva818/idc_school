@@ -15,7 +15,7 @@ export function ChatWidget() {
     {
       id: "welcome",
       role: "bot",
-      text: "Привет! Я бот поддержки IDC School. Задай мне вопрос о курсах, оплате или тренировках 🙌",
+      text: "Привет! Я бот поддержки I Do Calisthenics. Задай мне вопрос о курсах, оплате или тренировках 🙌",
     },
   ]);
   const [input, setInput] = useState("");
@@ -152,7 +152,7 @@ export function ChatWidget() {
           </div>
 
           {/* Быстрые подсказки */}
-          {/* {messages.length <= 2 && (
+          {messages.length <= 2 && (
             <div className="px-3 pb-1 sm:px-4 sm:pb-2 text-[10px] sm:text-[11px] text-brand-muted flex flex-wrap gap-2">
               <span>Попробуй спросить:</span>
               {[
@@ -170,7 +170,7 @@ export function ChatWidget() {
                 </button>
               ))}
             </div>
-          )} */}
+          )}
 
           {/* Сообщения */}
           <div className="flex-1 px-3 py-3 sm:px-4 sm:py-4 overflow-y-auto text-[11px] sm:text-xs space-y-2">

@@ -1,5 +1,4 @@
 // src/app/page.tsx
-
 "use client";
 
 import Image from "next/image";
@@ -14,20 +13,13 @@ import {
 import { HowItWorks } from "@/components/HowItWorks";
 import { Courses } from "@/components/Courses";
 import { Pricing, type PurchaseOptions } from "@/components/Pricing";
+import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
 import { Testimonials } from "@/components/Testimonials";
 import { TestSignupButton } from "@/components/TestSignupButton";
 import { courseNames } from "@/data/courses";
-import { ChatWidget } from "@/components/ChatWidget";
 import { Footer } from "@/components/Footer";
-
-// мапа символов валют для модалки покупки
-const currencySymbols: Record<PurchaseOptions["currency"], string> = {
-  AMD: "֏",
-  EUR: "€",
-  USD: "$",
-};
 
 function HowStepCard({
   children,
@@ -77,6 +69,9 @@ function HowStepCard({
 }
 
 export default function HomePage() {
+  /* ---------- Мобильное меню ---------- */
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
   /* ---------- Модалка теста силы ---------- */
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [testContext, setTestContext] = useState<string | undefined>();
@@ -135,17 +130,13 @@ export default function HomePage() {
 
   const [buyFullName, setBuyFullName] = useState("");
   const [buyEmail, setBuyEmail] = useState("");
+  const [buyPhone, setBuyPhone] = useState("");
   const [buyCourse, setBuyCourse] = useState<string>("");
   const [buyAgreed, setBuyAgreed] = useState(false);
   const [isBuySubmitting, setIsBuySubmitting] = useState(false);
 
-  // ✅ добавили состояние для ошибок оплаты
-  const [buyError, setBuyError] = useState("");
-
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
-    // ✅ сбрасываем ошибку при открытии
-    setBuyError("");
     setIsPurchaseModalOpen(true);
   }
 
@@ -157,11 +148,9 @@ export default function HomePage() {
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
-  
+
     setIsBuySubmitting(true);
-    // сбрасываем ошибку перед новым запросом
-    setBuyError("");
-  
+
     try {
       const res = await fetch("/api/create-payment", {
         method: "POST",
@@ -169,6 +158,7 @@ export default function HomePage() {
         body: JSON.stringify({
           fullName: buyFullName,
           email: buyEmail,
+          phone: buyPhone,
           courseName: buyCourse,
           tariffId: purchaseOptions.tariffId,
           tariffLabel: purchaseOptions.tariffLabel,
@@ -176,42 +166,24 @@ export default function HomePage() {
           currency: purchaseOptions.currency,
         }),
       });
-  
-      // читаем ответ как текст, чтобы видеть тело даже при ошибке
-      const text = await res.text();
-  
+
       if (!res.ok) {
-        console.error("Ошибка создания оплаты:", text);
-        setBuyError(text || "Ошибка создания оплаты");
-        return;
-      }
-  
-      const data = JSON.parse(text);
-  
-      if (data.paymentUrl) {
-        // если Ameria вернула paymentId — сохраним на клиенте
-        if (data.paymentId) {
-          localStorage.setItem(
-            "ameriaPaymentId",
-            String(data.paymentId)
-          );
+        console.error("Ошибка создания оплаты", await res.text());
+      } else {
+        const data = await res.json();
+        if (data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+        } else {
+          console.error("paymentUrl не получен из API");
         }
-  
-        window.location.assign(data.paymentUrl);
-        return;
       }
-  
-      console.error("paymentUrl не получен из API", data);
-      setBuyError("paymentUrl не получен из API");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Ошибка запроса (покупка тарифа)", err);
-      setBuyError(err?.message ?? "Ошибка запроса (покупка тарифа)");
     } finally {
       setIsBuySubmitting(false);
     }
   }
-  
-  
+
   /* ---------- Модалка логина (Войти) ---------- */
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -246,64 +218,229 @@ export default function HomePage() {
     }, 400);
   }
 
+  /* ---------- Scroll lock для iOS Safari, чтобы модалки не “уезжали вниз” ---------- */
+  const scrollYRef = useRef(0);
+  const anyModalOpen =
+    isTestModalOpen || isPurchaseModalOpen || isLoginModalOpen;
+
+    useEffect(() => {
+      if (!anyModalOpen) return;
+    
+      scrollYRef.current = window.scrollY || 0;
+    
+      const body = document.body;
+      body.style.position = "fixed";
+      body.style.top = `-${scrollYRef.current}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+      body.style.overflow = "hidden";
+    
+      return () => {
+        const y = scrollYRef.current;
+    
+        body.style.position = "";
+        body.style.top = "";
+        body.style.left = "";
+        body.style.right = "";
+        body.style.width = "";
+        body.style.overflow = "";
+    
+        // 🔥 важно: убрать smooth на миг, иначе будет “пролистывание”
+        const html = document.documentElement;
+        const prev = html.style.scrollBehavior;
+        html.style.scrollBehavior = "auto";
+    
+        // если вдруг браузер чуть “уплыл”, вернём строго
+        window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    
+        // вернуть как было
+        html.style.scrollBehavior = prev;
+      };
+    }, [anyModalOpen]);
+    
+
   return (
     <main className="min-h-screen bg-brand-dark text-white">
-      <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-20">
         {/* Top bar */}
-        <header className="flex items-center justify-between gap-4 mb-10 sm:mb-14">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-2xl bg-brand-blue/80 flex items-center justify-center text-xs font-semibold" />
-            <span className="text-sm sm:text-base font-medium tracking-tight">
-              IDC School
-            </span>
+        <header className="sticky top-0 z-40 mb-8 sm:mb-12 backdrop-blur-md">
+          <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo-idc-white1.svg"
+                alt="I Do Calisthenics"
+                width={150}
+                height={40}
+                className="h-7 w-auto sm:h-8 lg:h-9"
+                priority
+              />
+              <span className="text-base sm:text-lg font-medium tracking-tight">
+                I Do Calisthenics
+              </span>
+            </div>
+
+            {/* Десктоп-навигация */}
+            <nav className="hidden md:flex items-center gap-6 text-sm text-brand-muted">
+              <a href="#how" className="hover:text-white transition-colors">
+                Как это работает
+              </a>
+              <a href="#courses" className="hover:text-white transition-colors">
+                Курсы
+              </a>
+              <a href="#pricing" className="hover:text-white transition-colors">
+                Цены
+              </a>
+              <a href="#about" className="hover:text-white transition-colors">
+                О проекте
+              </a>
+              <a href="#reviews" className="hover:text-white transition-colors">
+                Отзывы
+              </a>
+              <a href="#faq" className="hover:text-white transition-colors">
+                FAQ
+              </a>
+            </nav>
+
+            {/* Кнопка Войти — десктоп */}
+            <button
+              className="hidden md:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
+              type="button"
+              onClick={openLoginModal}
+            >
+              Войти
+            </button>
+
+            {/* Бургер — только мобилка */}
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 md:hidden"
+              onClick={() => setIsMobileNavOpen(true)}
+              aria-label="Открыть меню"
+            >
+              <span className="sr-only">Открыть меню</span>
+              <div className="flex flex-col items-center justify-center gap-1.5">
+                <span className="block h-0.5 w-5 rounded-full bg-white" />
+                <span className="block h-0.5 w-5 rounded-full bg-white" />
+                <span className="block h-0.5 w-5 rounded-full bg-white" />
+              </div>
+            </button>
           </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-sm text-brand-muted">
-            <a href="#how" className="hover:text-white transition-colors">
-              Как это работает
-            </a>
-            <a href="#courses" className="hover:text-white transition-colors">
-              Курсы
-            </a>
-            <a href="#pricing" className="hover:text-white transition-colors">
-              Цены
-            </a>
-            <a href="#faq" className="hover:text-white transition-colors">
-              FAQ
-            </a>
-          </nav>
-
-          <button
-            className="hidden sm:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs sm:text-sm font-medium hover:bg-white/10 transition-colors"
-            type="button"
-            onClick={openLoginModal}
-          >
-            Войти
-          </button>
         </header>
+
+        {/* Мобильное меню */}
+        {isMobileNavOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 md:hidden"
+            onClick={() => setIsMobileNavOpen(false)}
+          >
+            <nav
+              className="absolute left-4 right-4 top-6 rounded-3xl bg-brand-dark border border-white/10 p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <span className="text-base font-medium">Меню</span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="h-10 w-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xl leading-none hover:bg-white/20 transition-colors"
+                  aria-label="Закрыть меню"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2 mb-4 text-[16px]">
+                <a
+                  href="#how"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Как это работает
+                </a>
+                <a
+                  href="#courses"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Курсы
+                </a>
+                <a
+                  href="#pricing"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Цены
+                </a>
+                <a
+                  href="#locations"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Локации
+                </a>
+                <a
+                  href="#about"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  О проекте
+                </a>
+                <a
+                  href="#reviews"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Отзывы
+                </a>
+                <a
+                  href="#faq"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  FAQ
+                </a>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileNavOpen(false);
+                    openTestModal("Моб. меню: Пройти тест силы");
+                  }}
+                  className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
+                >
+                  Пройти тест силы
+                </button>
+              </div>
+            </nav>
+          </div>
+        )}
 
         {/* HERO */}
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center mb-16 lg:mb-24">
           {/* Left side */}
           <div className="space-y-6 sm:space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs sm:text-sm text-brand-muted border border-white/10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[12px] sm:text-sm text-brand-muted border border-white/10">
               <span className="h-2 w-2 rounded-full bg-brand-accent" />
               Онлайн программы по калистенике
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-semibold leading-tight tracking-tight">
+            <h1 className="text-[30px] sm:text-4xl lg:text-6xl font-semibold leading-tight tracking-tight">
               Тренировки с
               <br />
               собственным весом
-              <span className="block text-lg sm:text-xl lg:text-2xl text-brand-accent mt-3 lg:mt-4">
+              <span className="block text-[17px] sm:text-xl lg:text-2xl text-brand-accent mt-3 lg:mt-4">
                 в комфортном темпе и с фокусом на технике
               </span>
             </h1>
 
-            <p className="max-w-xl text-sm sm:text-base text-brand-muted">
-              Учишься технике, набираешь силу и осваиваешь элементы быстрее,
-              чем ты думаешь. Каждая тренировка подстраивается под твой уровень,
-              цели и расписание.
+            <p className="max-w-xl text-[15px] sm:text-base text-brand-muted leading-relaxed">
+              Учишься технике, набираешь силу и осваиваешь элементы шаг за
+              шагом. Каждая тренировка подстраивается под твой уровень, цели и
+              расписание.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
@@ -319,7 +456,7 @@ export default function HomePage() {
               </a>
             </div>
 
-            <div className="flex flex-wrap gap-4 pt-4 text-xs sm:text-sm text-brand-muted">
+            <div className="flex flex-wrap gap-4 pt-4 text-[13px] sm:text-sm text-brand-muted">
               <div className="flex items-center gap-2">
                 <span className="h-6 w-6 rounded-full bg-white/5 flex items-center justify-center text-[11px]">
                   ✔
@@ -383,12 +520,16 @@ export default function HomePage() {
                           Подбери программу под себя
                         </div>
                       </div>
-                      <a
-                        href="#courses"
+                      <button
                         className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors"
+                        onClick={() =>
+                          openTestModal(
+                            "Главный блок: Подбери программу под себя"
+                          )
+                        }
                       >
                         Начать
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -410,22 +551,23 @@ export default function HomePage() {
           onOpenTestModal={openTestModal}
           onOpenPurchaseModal={openPurchaseModal}
         />
-        {/* <About />
-        <Testimonials /> */}
+        <About />
+        <Testimonials />
         <FAQ />
       </div>
 
-      {/* ПОДВАЛ */}
       <Footer />
 
       {/* МОДАЛКА ТЕСТА СИЛЫ */}
       {isTestModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 sm:px-0"
+          className="fixed inset-0 z-50 bg-black/60 p-4 sm:p-0 flex items-center justify-center"
           onClick={closeTestModal}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl"
+            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl
+                       max-h-[calc(100dvh-2rem)] overflow-y-auto
+                       pb-[max(1.25rem,env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -510,11 +652,13 @@ export default function HomePage() {
       {/* МОДАЛКА ПОКУПКИ ТАРИФА */}
       {isPurchaseModalOpen && purchaseOptions && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 sm:px-0"
+          className="fixed inset-0 z-50 bg-black/60 p-4 sm:p-0 flex items-center justify-center"
           onClick={closePurchaseModal}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl"
+            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl
+                       max-h-[calc(100dvh-2rem)] overflow-y-auto
+                       pb-[max(1.25rem,env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -525,7 +669,7 @@ export default function HomePage() {
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
                   Тариф: {purchaseOptions.tariffLabel} ·{" "}
                   {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
-                  {currencySymbols[purchaseOptions.currency]}
+                  {purchaseOptions.currency === "EUR" ? "€" : "$"}
                 </p>
               </div>
 
@@ -570,32 +714,48 @@ export default function HomePage() {
 
               <div className="space-y-1">
                 <label className="text-xs sm:text-sm text-brand-muted">
-                  Курс
+                  Телефон
                 </label>
-
-                <div className="relative">
-                  <select
-                    value={buyCourse}
-                    onChange={(e) => setBuyCourse(e.target.value)}
-                    required
-                    className="w-full rounded-2xl border border-brand-primary/60 bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none"
-                  >
-                    <option value="" disabled>
-                      Выбери курс
-                    </option>
-
-                    {courseNames.map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-brand-muted">
-                    ▾
-                  </span>
-                </div>
+                <input
+                  type="tel"
+                  value={buyPhone}
+                  onChange={(e) => setBuyPhone(e.target.value)}
+                  required
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                  placeholder="+7 900 000-00-00"
+                />
               </div>
+
+              {/* {!purchaseOptions.studioName && (
+                <div className="space-y-1">
+                  <label className="text-xs sm:text-sm text-brand-muted">
+                    Курс
+                  </label>
+
+                  <div className="relative">
+                    <select
+                      value={buyCourse}
+                      onChange={(e) => setBuyCourse(e.target.value)}
+                      required
+                      className="w-full rounded-2xl border border-brand-primary/60 bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none"
+                    >
+                      <option value="" disabled>
+                        Выбери курс
+                      </option>
+
+                      {courseNames.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-brand-muted">
+                      ▾
+                    </span>
+                  </div>
+                </div>
+              )} */}
 
               <label className="flex items-start gap-2 text-[11px] sm:text-xs text-brand-muted">
                 <input
@@ -618,13 +778,6 @@ export default function HomePage() {
                 </span>
               </label>
 
-              {/* ✅ выводим ошибку оплаты прямо в модалке */}
-              {buyError && (
-                <p className="text-[11px] sm:text-xs text-red-300/90 bg-red-500/10 border border-red-500/30 rounded-2xl px-3 py-2">
-                  {buyError}
-                </p>
-              )}
-
               <button
                 type="submit"
                 disabled={isBuySubmitting || !buyAgreed}
@@ -640,11 +793,13 @@ export default function HomePage() {
       {/* МОДАЛКА ЛОГИНА */}
       {isLoginModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 sm:px-0"
+          className="fixed inset-0 z-50 bg-black/60 p-4 sm:p-0 flex items-center justify-center"
           onClick={closeLoginModal}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl"
+            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl
+                       max-h-[calc(100dvh-2rem)] overflow-y-auto
+                       pb-[max(1.25rem,env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -706,7 +861,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={isLoginSubmitting}
-                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-brand-dark disabled:opacity-60 disabled:pointer-events-none hover:bg白 transition-colors"
+                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-brand-dark disabled:opacity-60 disabled:pointer-events-none hover:bg-white transition-colors"
               >
                 {isLoginSubmitting ? "Проверяем…" : "Войти"}
               </button>
@@ -715,7 +870,10 @@ export default function HomePage() {
         </div>
       )}
 
-      <ChatWidget />
+      {/* Десктоп-чат (на мобилке скрыт) */}
+      <div className="hidden md:block">
+        <ChatWidget />
+      </div>
     </main>
   );
 }
