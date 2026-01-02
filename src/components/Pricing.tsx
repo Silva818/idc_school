@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { TestSignupButton } from "@/components/TestSignupButton";
+import { useTranslations } from "next-intl";
 
 function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   return (
@@ -60,18 +61,15 @@ type PricingProps = {
 };
 
 export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
+  const t = useTranslations("home.pricing");
+
   const [currency, setCurrency] = useState<Currency>("EUR");
 
   const isEUR = currency === "EUR";
   const isUSD = currency === "USD";
   const isAMD = currency === "AMD";
 
-  const switchHint =
-    currency === "EUR"
-      ? "Оплата в евро"
-      : currency === "USD"
-      ? "Оплата в долларах"
-      : "Оплата картой в драмах";
+  const switchHint = t(`switchHint.${currency}`);
 
   return (
     <section
@@ -83,16 +81,15 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
         <div className="mb-10 sm:mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
-              Цены
+              {t("kicker")}
             </p>
 
             <h2 className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 leading-tight">
-              Сколько стоят тренировки
+              {t("title")}
             </h2>
 
             <p className="mt-2 max-w-2xl text-[14px] sm:text-base text-brand-muted leading-relaxed">
-              Ты покупаешь блок тренировок, проходишь его в своём темпе, а
-              потом можешь взять следующий. Без подписки и автосписаний.
+              {t("desc")}
             </p>
           </div>
 
@@ -100,7 +97,7 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
           <div className="flex flex-col items-start sm:items-end gap-1.5">
             <div className="flex items-center gap-3">
               <span className="text-[11px] uppercase tracking-[0.16em] text-brand-muted/80">
-                Валюта
+                {t("currencyLabel")}
               </span>
 
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs sm:text-sm">
@@ -148,14 +145,8 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
 
         {/* Две аккуратные колонки с текстом над карточками */}
         <div className="mb-8 sm:mb-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[13px] sm:text-sm text-brand-muted">
-          <span>
-            1 тренировка = персональная программа в приложении + разбор техники
-            по твоим видео.
-          </span>
-          <span className="text-brand-muted/80">
-            Количество тренировок можно использовать в своём темпе, без жёстких
-            сроков.
-          </span>
+          <span>{t("noteLeft")}</span>
+          <span className="text-brand-muted/80">{t("noteRight")}</span>
         </div>
 
         {/* Сетка тарифов */}
@@ -165,37 +156,37 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
             <div>
               <div className="inline-flex items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.16em] text-brand-muted">
                 <StepDot />
-                <span>Шаг 1 · старт · приложение</span>
+                <span>{t("cards.test.step")}</span>
               </div>
 
               <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                Тест силы
+                {t("cards.test.title")}
               </h3>
 
               <p className="text-[15px] font-semibold mb-1">
                 {formatPrice(0, currency)}
               </p>
 
-              <p className="text-[11px] text-brand-muted mb-4">бесплатно</p>
+              <p className="text-[11px] text-brand-muted mb-4">
+                {t("cards.test.free")}
+              </p>
 
               <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                <li>• Доступ к приложению и формату тренировок</li>
-                <li>• Упражнения с объяснением техники</li>
-                <li>• Без оплаты и обязательств</li>
+                <li>• {t("cards.test.bullets.0")}</li>
+                <li>• {t("cards.test.bullets.1")}</li>
+                <li>• {t("cards.test.bullets.2")}</li>
               </ul>
 
               <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                Проходишь тест в удобное время и загружаешь видео в приложение.
+                {t("cards.test.text")}
               </p>
             </div>
 
             <div className="mt-auto pt-4">
               <TestSignupButton
-                label="Пройти тест бесплатно"
+                label={t("cards.test.button")}
                 buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2.5 text-[13px] sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
-                onClick={() =>
-                  onOpenTestModal?.("Блок цен: Тест силы (бесплатно)")
-                }
+                onClick={() => onOpenTestModal?.(t("cards.test.context"))}
               />
             </div>
           </article>
@@ -205,28 +196,30 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
             <div>
               <div className="inline-flex items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.16em] text-brand-muted">
                 <StepDot color="bg-brand-accent" />
-                <span>Разовый формат</span>
+                <span>{t("cards.review.badge")}</span>
               </div>
 
               <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                Разбор техники
+                {t("cards.review.title")}
               </h3>
 
               <p className="text-[15px] font-semibold mb-1">
                 {formatPrice(prices.review[currency].total, currency)}
               </p>
 
-              <p className="text-[11px] text-brand-muted mb-4">разовый формат</p>
+              <p className="text-[11px] text-brand-muted mb-4">
+                {t("cards.review.note")}
+              </p>
 
               <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                <li>• Всё, что в тесте силы</li>
-                <li>• Подробный разбор техники от тренера</li>
-                <li>• Первая тренировка под тебя</li>
-                <li>• Рекомендации по нагрузке на ближайшие недели</li>
+                <li>• {t("cards.review.bullets.0")}</li>
+                <li>• {t("cards.review.bullets.1")}</li>
+                <li>• {t("cards.review.bullets.2")}</li>
+                <li>• {t("cards.review.bullets.3")}</li>
               </ul>
 
               <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                Знакомишься с тренером и начинаешь свой путь в калистенике.
+                {t("cards.review.text")}
               </p>
             </div>
 
@@ -236,13 +229,13 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 onClick={() =>
                   onOpenPurchaseModal?.({
                     tariffId: "review",
-                    tariffLabel: "Разбор техники (1 занятие)",
+                    tariffLabel: t("cards.review.tariffLabel"),
                     amount: prices.review[currency].total,
                     currency,
                   })
                 }
               >
-                Оплатить разбор техники
+                {t("cards.review.button")}
               </button>
             </div>
           </article>
@@ -255,11 +248,11 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
               <div>
                 <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
                   <StepDot color="bg-brand-primary" />
-                  <span>Интенсивный блок</span>
+                  <span>{t("cards.month.badge")}</span>
                 </div>
 
                 <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                  12 тренировок
+                  {t("cards.month.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold mb-1">
@@ -267,19 +260,19 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-4">
-                  {formatPrice(prices.month[currency].per, currency)} за
-                  тренировку
+                  {formatPrice(prices.month[currency].per, currency)}{" "}
+                  {t("cards.month.perLabel")}
                 </p>
 
                 <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                  <li>• Всё, что в тесте силы</li>
-                  <li>• 12 персональных тренировок</li>
-                  <li>• Разбор техники после каждой тренировки</li>
-                  <li>• Можно тренироваться 2–3 раза в неделю</li>
+                  <li>• {t("cards.month.bullets.0")}</li>
+                  <li>• {t("cards.month.bullets.1")}</li>
+                  <li>• {t("cards.month.bullets.2")}</li>
+                  <li>• {t("cards.month.bullets.3")}</li>
                 </ul>
 
                 <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                  Блок, чтобы заметно продвинуться в силе, технике и форме.
+                  {t("cards.month.text")}
                 </p>
               </div>
 
@@ -289,13 +282,13 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                   onClick={() =>
                     onOpenPurchaseModal?.({
                       tariffId: "month",
-                      tariffLabel: "Блок 12 тренировок",
+                      tariffLabel: t("cards.month.tariffLabel"),
                       amount: prices.month[currency].total,
                       currency,
                     })
                   }
                 >
-                  Купить 12 тренировок
+                  {t("cards.month.button")}
                 </button>
               </div>
             </div>
@@ -305,14 +298,14 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
           <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
             <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
               <StepDot color="bg-brand-accent/80" />
-              <span>Спокойный и длинный формат</span>
+              <span>{t("cards.bundle.badge")}</span>
             </div>
 
             {/* верхняя половина — 12 тренировок в спокойном темпе */}
             <div className="flex flex-1 flex-col justify-between pb-4 mb-4 border-b border-white/10">
               <div>
                 <h3 className="text-[15px] sm:text-lg font-semibold mb-2">
-                  12 тренировок — спокойный темп
+                  {t("cards.bundle.slow12.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold text-white">
@@ -320,13 +313,12 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-2">
-                  {formatPrice(prices.slow12[currency].per, currency)} за
-                  тренировку
+                  {formatPrice(prices.slow12[currency].per, currency)}{" "}
+                  {t("cards.bundle.slow12.perLabel")}
                 </p>
 
                 <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  Подойдёт, если хочешь 1–2 тренировки в неделю без гонки и
-                  дедлайнов.
+                  {t("cards.bundle.slow12.text")}
                 </p>
               </div>
 
@@ -335,13 +327,13 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 onClick={() =>
                   onOpenPurchaseModal?.({
                     tariffId: "slow12",
-                    tariffLabel: "12 тренировок — спокойный темп",
+                    tariffLabel: t("cards.bundle.slow12.tariffLabel"),
                     amount: prices.slow12[currency].total,
                     currency,
                   })
                 }
               >
-                Купить спокойный блок (12 трен.)
+                {t("cards.bundle.slow12.button")}
               </button>
             </div>
 
@@ -349,7 +341,7 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
             <div className="flex flex-1 flex-col justify-between pt-2">
               <div>
                 <h3 className="text-[15px] sm:text-base font-semibold mb-1 text-white">
-                  36 тренировок
+                  {t("cards.bundle.long36.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold text-white">
@@ -357,12 +349,12 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-2">
-                  {formatPrice(prices.long36[currency].per, currency)} за
-                  тренировку
+                  {formatPrice(prices.long36[currency].per, currency)}{" "}
+                  {t("cards.bundle.long36.perLabel")}
                 </p>
 
                 <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  Для тех, кто точно остаётся надолго и хочет стабильный рост.
+                  {t("cards.bundle.long36.text")}
                 </p>
               </div>
 
@@ -371,13 +363,13 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
                 onClick={() =>
                   onOpenPurchaseModal?.({
                     tariffId: "long36",
-                    tariffLabel: "36 тренировок",
+                    tariffLabel: t("cards.bundle.long36.tariffLabel"),
                     amount: prices.long36[currency].total,
                     currency,
                   })
                 }
               >
-                Купить 36 тренировок
+                {t("cards.bundle.long36.button")}
               </button>
             </div>
           </article>

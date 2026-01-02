@@ -2,8 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export function Footer() {
+  const t = useTranslations("home.footer");
+
   const startYear = 2018;
   const currentYear = new Date().getFullYear();
   const yearLabel =
@@ -23,11 +26,9 @@ export function Footer() {
       >
         {/* Левая часть — бренд и копирайт */}
         <div className="flex flex-col gap-1 text-center sm:text-left">
-          <span className="font-medium text-white/90">
-            I Do Calisthenics
-          </span>
+          <span className="font-medium text-white/90">I Do Calisthenics</span>
           <span className="text-[11px] text-brand-muted/80">
-            © {yearLabel}. Все права защищены.
+            {t("copyright", { yearLabel })}
           </span>
         </div>
 
@@ -43,19 +44,19 @@ export function Footer() {
             href="/offer"
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
-            Публичная оферта
+            {t("offer")}
           </Link>
           <Link
             href="/consent"
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
-            Согласие на обработку персональных данных
+            {t("consent")}
           </Link>
           <Link
             href="/privacy"
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
-            Политика обработки персональных данных
+            {t("privacy")}
           </Link>
         </nav>
 
@@ -80,7 +81,7 @@ export function Footer() {
               <span className="h-2.5 w-2.5 rounded-[6px] border border-white/80" />
               <span className="absolute top-0.5 right-0.5 h-1 w-1 rounded-full bg-white/90" />
             </span>
-            <span>Instagram</span>
+            <span>{t("instagram")}</span>
           </a>
         </div>
       </div>

@@ -1,27 +1,17 @@
 "use client";
 
-const steps = [
-  {
-    number: "01",
-    title: "Определяем уровень и цели",
-    text: "Проходишь тест силы по нашей инструкции: 5–7 упражнений в зависимости от выбранного курса и доступного инвентаря. Фиксируем текущий уровень и выбираем главную цель.",
-    meta: "Займёт 30–40 минут",
-  },
-  {
-    number: "02",
-    title: "Собираем программу под твой уровень",
-    text: "На основе теста подбираем упражнения и прогрессии под твой уровень, объясняем правильную технику и разбираем частые ошибки.",
-    meta: "Программа на 4–12 недель",
-  },
-  {
-    number: "03",
-    title: "Занимаешься и укрепляешь тело",
-    text: "Выполняешь тренировки по приложению, отмечаешь выполненные сессии и отправляешь видео-отчёты тренеру. Тренер даёт обратную связь и обновляет тренировку под твой прогресс. Видишь, как растёт сила, улучшается техника и цель становится достижимой.",
-    meta: "Обратная связь после каждой тренировки",
-  },
-];
+import {useTranslations} from "next-intl";
 
 export function HowItWorks() {
+  const t = useTranslations("home");
+
+  const steps = t.raw("howItWorks.steps") as Array<{
+    number: string;
+    title: string;
+    text: string;
+    meta: string;
+  }>;
+
   return (
     <section
       id="how"
@@ -35,18 +25,16 @@ export function HowItWorks() {
         {/* заголовок */}
         <div className="mb-10 sm:mb-16 lg:mb-20 max-w-2xl">
           <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
-            Процесс
+            {t("howItWorks.kicker")}
           </p>
+
           <h2 className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4 leading-tight">
-            От теста силы до подтягиваний,
-            <br className="hidden sm:block" /> стойки на руках и выходов силой
+            {t("howItWorks.titleLine1")}
+            <br className="hidden sm:block" /> {t("howItWorks.titleLine2")}
           </h2>
+
           <p className="text-[14px] sm:text-base text-brand-muted leading-relaxed">
-            Каждый элемент разбираем на технику, частые ошибки и понятные
-            прогрессии под твой уровень. Тест силы показывает, где ты сейчас,
-            цель — к какому элементу идёшь, а индивидуальная программа и
-            видео-разборы тренера помогают дойти до целей безопасно и
-            эффективно.
+            {t("howItWorks.desc")}
           </p>
         </div>
 
@@ -59,10 +47,7 @@ export function HowItWorks() {
           {/* сами шаги */}
           <div className="space-y-10 sm:space-y-16 lg:space-y-20">
             {steps.map((step, index) => (
-              <article
-                key={step.number}
-                className="relative pl-14 sm:pl-20"
-              >
+              <article key={step.number} className="relative pl-14 sm:pl-20">
                 {/* точка на линии */}
                 <div className="absolute left-3.5 sm:left-4.5 top-2 flex h-4 w-4 items-center justify-center">
                   <div className="relative h-3 w-3">
@@ -81,7 +66,7 @@ export function HowItWorks() {
                   <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 mb-3">
                     <div className="inline-flex items-center gap-2 text-[12px] sm:text-xs text-brand-muted">
                       <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] uppercase tracking-[0.16em]">
-                        Шаг {index + 1}
+                        {t("howItWorks.stepLabel", { number: index + 1 })}
                       </span>
                     </div>
                     <span className="text-[11px] sm:text-xs text-brand-muted">

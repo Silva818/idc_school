@@ -3,6 +3,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 type FeaturedCoach = {
   id: string;
@@ -95,6 +96,8 @@ const studioPhotos = [
 ];
 
 export function About() {
+  const t = useTranslations("home.about");
+
   const yearsSinceLaunch = useMemo(() => {
     const startYear = 2018;
     const startMonth = 9; // сентябрь
@@ -128,18 +131,18 @@ export function About() {
   const LOCK_THRESHOLD = 10; // когда понять что это горизонтальный жест
 
   function onTouchStart(e: React.TouchEvent<HTMLDivElement>) {
-    const t = e.touches[0];
-    touchStartX.current = t.clientX;
-    touchStartY.current = t.clientY;
+    const t0 = e.touches[0];
+    touchStartX.current = t0.clientX;
+    touchStartY.current = t0.clientY;
     swipeLocked.current = null;
   }
 
   function onTouchMove(e: React.TouchEvent<HTMLDivElement>) {
     if (touchStartX.current == null || touchStartY.current == null) return;
 
-    const t = e.touches[0];
-    const dx = t.clientX - touchStartX.current;
-    const dy = t.clientY - touchStartY.current;
+    const t0 = e.touches[0];
+    const dx = t0.clientX - touchStartX.current;
+    const dy = t0.clientY - touchStartY.current;
 
     // определяем направление жеста, чтобы не ломать вертикальный скролл страницы
     if (!swipeLocked.current) {
@@ -157,9 +160,9 @@ export function About() {
   function onTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
     if (touchStartX.current == null || touchStartY.current == null) return;
 
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartX.current;
-    const dy = t.clientY - touchStartY.current;
+    const t0 = e.changedTouches[0];
+    const dx = t0.clientX - touchStartX.current;
+    const dy = t0.clientY - touchStartY.current;
 
     // если это был вертикальный жест — ничего не делаем
     if (swipeLocked.current === "y") {
@@ -189,15 +192,13 @@ export function About() {
         {/* Заголовок */}
         <div className="mb-8 sm:mb-10 max-w-4xl">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
-            О проекте
+            {t("kicker")}
           </p>
           <h2 className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4">
-            От студии к цифровой системе
+            {t("title")}
           </h2>
           <p className="text-[15px] sm:text-base text-brand-muted leading-relaxed">
-            I Do Calisthenics — школа калистеники, которая выросла из студии в
-            Москве в систему тренировок с собственным весом для людей по всему
-            миру. Мы совмещаем опыт живых тренировок и удобство приложения.
+            {t("lead")}
           </p>
         </div>
 
@@ -206,25 +207,16 @@ export function About() {
           {/* История и миссия */}
           <div className="space-y-5 text-[15px] sm:text-base text-brand-muted leading-relaxed">
             <p>
-              Первую студию мы открыли более{" "}
-              <span className="font-semibold text-white">{yearsSinceLaunch}</span>{" "}
-              лет назад. За это время обучили тысячи людей: разбирали технику по
-              шагам, подбирали прогрессии и находили подход к каждому ученику —
-              чтобы движение становилось понятным и доступным.
+              {t("story.p1_prefix")}{" "}
+              <span className="font-semibold text-white">
+                {t("story.p1_years", { years: yearsSinceLaunch })}
+              </span>{" "}
+              {t("story.p1_suffix")}
             </p>
-            <p>
-              Сейчас этот опыт переехал в цифровой формат. Всё, что мы
-              отрабатывали руками и глазами в залах, стало системой: понятные
-              шаги от базовых движений к сложным элементам.
-            </p>
-            <p>
-              Онлайн для нас — не компромисс, а продолжение того, что работает.
-              Можно заниматься из любой точки мира: дома, на турнике во дворе
-              или в зале.
-            </p>
+            <p>{t("story.p2")}</p>
+            <p>{t("story.p3")}</p>
             <p className="pt-3 border-t border-white/5 text-[15px] sm:text-base">
-              Наша миссия — помогать людям становиться сильнее, свободнее и
-              увереннее.
+              {t("story.mission")}
             </p>
           </div>
 
@@ -232,12 +224,10 @@ export function About() {
           <div className="space-y-4">
             <div className="rounded-3xl border border-white/10 bg-white/5 px-5 py-5 sm:px-6 sm:py-6 backdrop-blur-sm">
               <p className="text-xs font-medium uppercase tracking-[0.16em] text-brand-muted mb-2">
-                Калистеника для каждого
+                {t("gallery.kicker")}
               </p>
               <p className="text-[13px] sm:text-sm text-brand-muted mb-3 leading-relaxed">
-                Калистеника объединяет людей разного возраста и уровня — тех,
-                кто хочет стать сильнее или освоить элементы, о которых давно
-                мечтал.
+                {t("gallery.desc")}
               </p>
 
               <div
@@ -249,7 +239,7 @@ export function About() {
               >
                 <Image
                   src={studioPhotos[photoIndex]}
-                  alt="Групповая тренировка I Do Calisthenics"
+                  alt={t("gallery.imageAlt")}
                   fill
                   className="object-cover"
                   sizes="(min-width: 1024px) 380px, 100vw"
@@ -267,7 +257,7 @@ export function About() {
                       type="button"
                       onClick={handlePrev}
                       className="absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white text-lg backdrop-blur-sm hover:bg-black/70 transition-colors"
-                      aria-label="Предыдущее фото"
+                      aria-label={t("gallery.prevAria")}
                     >
                       ‹
                     </button>
@@ -275,7 +265,7 @@ export function About() {
                       type="button"
                       onClick={handleNext}
                       className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white text-lg backdrop-blur-sm hover:bg-black/70 transition-colors"
-                      aria-label="Следующее фото"
+                      aria-label={t("gallery.nextAria")}
                     >
                       ›
                     </button>

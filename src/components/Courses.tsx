@@ -2,12 +2,15 @@
 "use client";
 
 import { TestSignupButton } from "@/components/TestSignupButton";
+import { useTranslations } from "next-intl";
 
 type CoursesProps = {
   onOpenTestModal?: (context?: string) => void;
 };
 
 export function Courses({ onOpenTestModal }: CoursesProps) {
+  const t = useTranslations("home.courses");
+
   return (
     <section
       id="courses"
@@ -18,27 +21,23 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
         <div className="flex flex-col gap-4 mb-8 sm:mb-10">
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white shadow-sm border border-black/5 px-3 py-1.5 text-xs sm:text-[13px] text-gray-600">
             <span className="h-2 w-2 rounded-full bg-brand-accent" />
-            <span>Онлайн программы для зала и дома</span>
+            <span>{t("badge")}</span>
           </div>
 
           <div className="max-w-3xl">
             <h2 className="text-3xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3">
-              Цели и программы
+              {t("title")}
             </h2>
             <p className="text-base sm:text-base text-gray-600 leading-relaxed">
-              Выбирай направление, которое тебе сейчас ближе — в любой момент
-              ты можешь переключиться на другой курс. Программа гибко
-              подстраивается под твой уровень и интересы.
+              {t("desc")}
             </p>
           </div>
         </div>
 
         {/* Подпись про скролл */}
         <div className="flex items-center justify-between text-[12px] sm:text-xs text-gray-500 mb-3 sm:mb-4">
-          <span>Пролистай вправо, чтобы увидеть все программы.</span>
-          <span className="hidden sm:inline">
-            Любой курс можно адаптировать под твой стартовый уровень.
-          </span>
+          <span>{t("scrollHint")}</span>
+          <span className="hidden sm:inline">{t("scrollNote")}</span>
         </div>
 
         {/* Горизонтальный скролл с карточками */}
@@ -59,116 +58,91 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
               <div className="flex items-center justify-between gap-2 mb-3 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-gray-50 border border-black/10 px-3 py-1 text-gray-600">
                   <span className="h-2 w-2 rounded-full bg-brand-accent" />
-                  Лёгкий старт · Для начинающих
+                  {t("cards.light.badge")}
                 </span>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
-                Calisthenics Light
+                {t("cards.light.title")}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                Мягкий вход в тренировки, если давно не занимался или много
-                сидишь за компьютером. Без выгорания и «убойных» схем.
+                {t("cards.light.desc")}
               </p>
 
               <ul className="mb-4 space-y-1.5 text-sm text-gray-600">
-                <li>• 20–30 минут без инвентаря</li>
-                <li>• Спина, плечи, кор и ноги</li>
-                <li>• Фундамент для подтягиваний и стойки</li>
+                <li>• {t("cards.light.features.0")}</li>
+                <li>• {t("cards.light.features.1")}</li>
+                <li>• {t("cards.light.features.2")}</li>
               </ul>
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label="Пройти тест силы"
+                  label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.("Курс: Calisthenics Light")
-                  }
+                  onClick={() => onOpenTestModal?.(t("cards.light.context"))}
                 />
               </div>
             </article>
 
             {/* 2. Super Calisthenics */}
-            <article
-              className="
-                snap-start flex flex-col shrink-0
-                w-[86%] sm:w-[60%] lg:w-[40%]
-                rounded-3xl bg-white border border-black/5 shadow-sm
-                p-5 sm:p-6
-                transition-all duration-300 ease-out
-                hover:-translate-y-1 hover:shadow-xl hover:border-brand-primary/50
-              "
-            >
+            <article className="snap-start flex flex-col shrink-0 w-[86%] sm:w-[60%] lg:w-[40%] rounded-3xl bg-white border border-black/5 shadow-sm p-5 sm:p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-brand-primary/50">
               <div className="flex items-center justify-between gap-2 mb-3 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-gray-50 border border-black/10 px-3 py-1 text-gray-600">
                   <span className="h-2 w-2 rounded-full bg-brand-blue" />
-                  Стать сильнее · Любой уровень
+                  {t("cards.super.badge")}
                 </span>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
-                Super Calisthenics
+                {t("cards.super.title")}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                Главный курс, если хочешь просто стать сильным: всё тело,
-                прогресс в подтягиваниях, стойке и базовых элементах.
+                {t("cards.super.desc")}
               </p>
 
               <ul className="mb-4 space-y-1.5 text-sm text-gray-600">
-                <li>• 45–60 минут, нужен турник</li>
-                <li>• Баланс тяги, жима и кора</li>
-                <li>• Обучение любому элементу</li>
+                <li>• {t("cards.super.features.0")}</li>
+                <li>• {t("cards.super.features.1")}</li>
+                <li>• {t("cards.super.features.2")}</li>
               </ul>
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label="Пройти тест силы"
+                  label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.("Курс: Super Calisthenics")
-                  }
+                  onClick={() => onOpenTestModal?.(t("cards.super.context"))}
                 />
               </div>
             </article>
 
             {/* 3. Подтягивания для девушек */}
-            <article
-              className="
-                snap-start flex flex-col shrink-0
-                w-[86%] sm:w-[60%] lg:w-[40%]
-                rounded-3xl bg-white border border-black/5 shadow-sm
-                p-5 sm:p-6
-                transition-all duration-300 ease-out
-                hover:-translate-y-1 hover:shadow-xl hover:border-brand-primary/50
-              "
-            >
+            <article className="snap-start flex flex-col shrink-0 w-[86%] sm:w-[60%] lg:w-[40%] rounded-3xl bg-white border border-black/5 shadow-sm p-5 sm:p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-brand-primary/50">
               <div className="flex items-center justify-between gap-2 mb-3 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-gray-50 border border-black/10 px-3 py-1 text-gray-600">
                   <span className="h-2 w-2 rounded-full bg-brand-blue" />
-                  Обучиться подтягиваниям · Любой уровень
+                  {t("cards.pullupsGirls.badge")}
                 </span>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
-                Подтягивания для девушек
+                {t("cards.pullupsGirls.title")}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                Цель — первое уверенное подтягивание. Без стресса, сравнений и
-                комментариев «это не для тебя».
+                {t("cards.pullupsGirls.desc")}
               </p>
 
               <ul className="mb-4 space-y-1.5 text-sm text-gray-600">
-                <li>• 45–60 минут, нужен турник</li>
-                <li>• Пошаговый путь от 0 → 1 и дальше</li>
-                <li>• Super Calisthenics с выбранной целью</li>
+                <li>• {t("cards.pullupsGirls.features.0")}</li>
+                <li>• {t("cards.pullupsGirls.features.1")}</li>
+                <li>• {t("cards.pullupsGirls.features.2")}</li>
               </ul>
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label="Пройти тест силы"
+                  label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
                   onClick={() =>
-                    onOpenTestModal?.("Курс: Подтягивания для девушек")
+                    onOpenTestModal?.(t("cards.pullupsGirls.context"))
                   }
                 />
               </div>
@@ -188,31 +162,28 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
               <div className="flex items-center justify-between gap-2 mb-3 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-gray-50 border border-black/10 px-3 py-1 text-gray-600">
                   <span className="h-2 w-2 rounded-full bg-brand-primary" />
-                  Научиться стоять на руках · Любой уровень
+                  {t("cards.handstand.badge")}
                 </span>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
-                Стойка на руках
+                {t("cards.handstand.title")}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                От «никогда не стоял у стены» до уверенного баланса. Работаем
-                над мобильностью, силой и чувством позиции.
+                {t("cards.handstand.desc")}
               </p>
 
               <ul className="mb-4 space-y-1.5 text-sm text-gray-600">
-                <li>• 30–40 минут без инвентаря</li>
-                <li>• Подготовка плеч, запястий и кора</li>
-                <li>• Изучение техники баланса</li>
+                <li>• {t("cards.handstand.features.0")}</li>
+                <li>• {t("cards.handstand.features.1")}</li>
+                <li>• {t("cards.handstand.features.2")}</li>
               </ul>
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label="Пройти тест силы"
+                  label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.("Курс: Стойка на руках")
-                  }
+                  onClick={() => onOpenTestModal?.(t("cards.handstand.context"))}
                 />
               </div>
             </article>
@@ -231,31 +202,29 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
               <div className="flex items-center justify-between gap-2 mb-3 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-gray-50 border border-black/10 px-3 py-1 text-gray-600">
                   <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  Добавить строгие движения · Для продвинутых
+                  {t("cards.crossfit.badge")}
                 </span>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
-                Калистеника для кроссфитеров
+                {t("cards.crossfit.title")}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                Если хочешь к киппингу добавить уверенные строгие движения:
-                подтягивания, отжимания в стойке и выходы — без потери техники
-                и плеч.
+                {t("cards.crossfit.desc")}
               </p>
 
               <ul className="mb-4 space-y-1.5 text-sm text-gray-600">
-                <li>• 60–80 минут на тренировку, нужен турник</li>
-                <li>• Сила лопаток и корпуса под гимнастику</li>
-                <li>• Строгие подтягивания и HSPU</li>
+                <li>• {t("cards.crossfit.features.0")}</li>
+                <li>• {t("cards.crossfit.features.1")}</li>
+                <li>• {t("cards.crossfit.features.2")}</li>
               </ul>
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label="Пройти тест силы"
+                  label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
                   onClick={() =>
-                    onOpenTestModal?.("Курс: Калистеника для кроссфитеров")
+                    onOpenTestModal?.(t("cards.crossfit.context"))
                   }
                 />
               </div>

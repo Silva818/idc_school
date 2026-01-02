@@ -16,24 +16,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "IDC School",
   description:
-    "Тренировки с собственным весом в комфортном темпе и с фокусом на технике.",
+    "Bodyweight training in a comfortable pace with a focus on technique.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="ru" className="bg-brand-dark">
+    <html className="bg-brand-dark">
       <body
         className={`
-          ${geistSans.variable} 
-          ${geistMono.variable} 
-          antialiased 
-          min-h-screen 
-          bg-brand-dark 
-          text-white 
+          ${geistSans.variable}
+          ${geistMono.variable}
+          antialiased
+          min-h-screen
+          bg-brand-dark
+          text-white
           overflow-x-hidden
         `}
       >
