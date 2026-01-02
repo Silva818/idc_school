@@ -35,12 +35,12 @@ export default function OfferPage() {
             онлайн физкультурных, физкультурно-оздоровительных и иных услуг в рамках проекта IDC School,
             информация о которых размещена на сайте{" "}
             <a
-              href="https://idcschool.com/"
+              href="https://idocalisthenics.com/"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://idcschool.com/
+              https://idocalisthenics.com/
             </a>{" "}
             {/* и в чат-боте{" "}
             <a
@@ -566,7 +566,7 @@ export default function OfferPage() {
 
 <p>
   9. Оферта, выраженная в соглашении, вступает в силу с момента размещения в сети Интернет по адресу
-  https://idcschool.com/public_offer и действует до момента отзыва оферты Исполнителем.
+  https://idocalisthenics.com/public_offer и действует до момента отзыва оферты Исполнителем.
 </p>
 
 <p>

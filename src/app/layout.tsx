@@ -14,10 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IDC School",
+  title: {
+    default: "I Do Calisthenics",
+    template: "%s · I Do Calisthenics",
+  },
   description:
     "Bodyweight training in a comfortable pace with a focus on technique.",
 };
+
 
 export default function RootLayout({
   children,

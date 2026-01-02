@@ -32,12 +32,12 @@ export default function ConsentPage() {
           <p>
             Отправляя заявку или регистрируясь на сайте{" "}
             <a
-              href="https://idcschool.com"
+              href="https://idocalisthenics.com"
               target="_blank"
               rel="noreferrer"
               className="text-white underline decoration-dotted"
             >
-              https://idcschool.com/
+              https://idocalisthenics.com/
             </a>{" "}
       
             Пользователь подтверждает согласие на обработку своих персональных
