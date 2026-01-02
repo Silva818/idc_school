@@ -2,24 +2,35 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 
+const LOCALES = ["en", "ru"] as const;
+type Locale = (typeof LOCALES)[number];
+
+function isLocale(value: string): value is Locale {
+  return (LOCALES as readonly string[]).includes(value);
+}
+
 export default async function LocaleLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: "en" | "ru" }>;
+  params: Promise<{ locale: string }>;
 }) {
-  // ✅ ВАЖНО: params — это Promise
   const { locale } = await params;
 
-  // фиксируем локаль для текущего запроса
-  setRequestLocale(locale);
+  const safeLocale: Locale = isLocale(locale) ? locale : "en";
 
-  const messages = await getMessages({ locale });
+  setRequestLocale(safeLocale);
+
+  const messages = await getMessages({ locale: safeLocale });
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider locale={safeLocale} messages={messages}>
       {children}
     </NextIntlClientProvider>
   );
+}
+
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
 }
