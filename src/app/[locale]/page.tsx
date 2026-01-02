@@ -467,49 +467,42 @@ export default function HomePage() {
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.how")}
+                  {t("header.nav.how")}
                 </a>
                 <a
                   href="#courses"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.courses")}
+                  {t("header.nav.courses")}
                 </a>
                 <a
                   href="#pricing"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.pricing")}
-                </a>
-                <a
-                  href="#locations"
-                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
-                >
-                  {t("mobileMenu.locations")}
+                  {t("header.nav.pricing")}
                 </a>
                 <a
                   href="#about"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.about")}
+                  {t("header.nav.about")}
                 </a>
                 <a
                   href="#reviews"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.reviews")}
+                  {t("header.nav.reviews")}
                 </a>
                 <a
                   href="#faq"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
-                  {t("mobileMenu.faq")}
+                  {t("header.nav.faq")}
                 </a>
               </div>
 
@@ -518,7 +511,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => {
                     setIsMobileNavOpen(false);
-                    openTestModal(t("contexts.mobileMenuStrengthTest"));
+                    openTestModal(t("contexts.headerStrengthTest"));
                   }}
                   className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
                 >
