@@ -1,6 +1,7 @@
 // src/app/[locale]/layout.tsx
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 
 const LOCALES = ["en", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -17,16 +18,14 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-
   const safeLocale: Locale = isLocale(locale) ? locale : "en";
 
   setRequestLocale(safeLocale);
-
   const messages = await getMessages({ locale: safeLocale });
 
   return (
     <NextIntlClientProvider locale={safeLocale} messages={messages}>
-      {children}
+      <Suspense fallback={null}>{children}</Suspense>
     </NextIntlClientProvider>
   );
 }
