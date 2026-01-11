@@ -31,49 +31,69 @@ function airtableBaseUrl(env: { baseId: string; table: string }) {
   )}`;
 }
 
-async function airtableFindByPaymentId(paymentId: string) {
+/**
+ * Airtable formula string escaping:
+ * - В Airtable строки можно писать в двойных кавычках.
+ * - Двойные кавычки внутри строки нужно экранировать обратным слэшем: \"
+ */
+function airtableEscapeForDoubleQuotes(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+async function airtableFindByPaymentId(paymentIdRaw: string) {
   const env = airtableEnv();
   if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
-  // В Airtable формула: {id_payment} = "xxxx"
-  // ВАЖНО: id_payment должен быть реально таким названием поля в таблице
-  const filter = `({id_payment} = "${paymentId}")`;
-  const url = `${airtableBaseUrl(env)}?maxRecords=1&filterByFormula=${encodeURIComponent(
-    filter
-  )}`;
+  const paymentId = airtableEscapeForDoubleQuotes(paymentIdRaw);
 
-  try {
+  // ✅ 1) Самый надёжный вариант: приводим поле к строке через конкатенацию
+  // ({id_payment}&"") гарантирует string compare даже если поле number.
+  const filter1 = `(({id_payment}&"") = "${paymentId}")`;
+
+  // ✅ 2) На всякий случай — “прямое” сравнение (если поле точно строковое)
+  const filter2 = `({id_payment} = "${paymentId}")`;
+
+  const tryFetch = async (filterByFormula: string) => {
+    const url = `${airtableBaseUrl(
+      env
+    )}?pageSize=1&maxRecords=1&filterByFormula=${encodeURIComponent(
+      filterByFormula
+    )}`;
+
     const r = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${env.apiKey}`,
-      },
+      headers: { Authorization: `Bearer ${env.apiKey}` },
       cache: "no-store",
     });
 
     const text = await r.text();
-
     if (!r.ok) {
       return {
         ok: false as const,
         reason: "find_failed" as const,
         status: r.status,
         text,
+        filterByFormula,
       };
     }
 
-    let json: any = null;
+    let json: any;
     try {
       json = JSON.parse(text);
     } catch {
-      return { ok: false as const, reason: "find_bad_json" as const, text };
+      return { ok: false as const, reason: "find_bad_json" as const, text, filterByFormula };
     }
 
     const rec = Array.isArray(json?.records) ? json.records[0] : null;
-    return { ok: true as const, record: rec ?? null, raw: json };
-  } catch (err) {
-    console.error("💥 Airtable FIND crashed:", err);
-    return { ok: false as const, reason: "find_crashed" as const };
-  }
+    return { ok: true as const, record: rec ?? null, raw: json, filterByFormula };
+  };
+
+  // Сначала пробуем string-coerce (на практике решает 90% кейсов)
+  const a = await tryFetch(filter1);
+  if (a.ok && a.record?.id) return a;
+
+  // Потом пробуем прямое сравнение (вдруг поле реально текстовое)
+  const b = await tryFetch(filter2);
+  return b;
 }
 
 async function airtableUpdateRecord(recordId: string, fields: Record<string, any>) {
@@ -108,7 +128,7 @@ async function airtableUpdateRecord(recordId: string, fields: Record<string, any
     try {
       json = JSON.parse(text);
     } catch {
-      // не критично
+      // ok
     }
 
     return { ok: true as const, record: json ?? text };
@@ -150,7 +170,7 @@ async function airtableCreateRecord(fields: Record<string, any>) {
     try {
       json = JSON.parse(text);
     } catch {
-      // не критично
+      // ok
     }
 
     return { ok: true as const, record: json ?? text };
@@ -306,12 +326,14 @@ export async function POST(req: Request) {
       return NextResponse.json(baseResponse);
     }
 
-    // ✅ Правильно: обновляем существующую запись created → paid
+    // ✅ Обновляем существующую запись created → paid
     const found = await airtableFindByPaymentId(paymentId);
 
     if (found.ok && found.record?.id) {
       const upd = await airtableUpdateRecord(found.record.id, {
         Status: "paid",
+        // Если хочешь — можно добавить Paid_time
+        // Paid_time: new Date().toISOString(),
       });
 
       return NextResponse.json({
@@ -320,12 +342,13 @@ export async function POST(req: Request) {
           action: "updated",
           found: true,
           recordId: found.record.id,
+          usedFilter: (found as any).filterByFormula,
           result: upd,
         },
       });
     }
 
-    // Если не нашли (или поиск упал) — создаём запись, чтобы не потерять оплату
+    // Если не нашли — создаём запись, чтобы не потерять оплату (но теперь это должно быть редкостью)
     const create = await airtableCreateRecord({
       id_payment: paymentId,
       Status: "paid",
