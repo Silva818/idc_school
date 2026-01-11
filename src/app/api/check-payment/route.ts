@@ -48,10 +48,10 @@ async function airtableFindByPaymentId(paymentIdRaw: string) {
 
   // ✅ 1) Самый надёжный вариант: приводим поле к строке через конкатенацию
   // ({id_payment}&"") гарантирует string compare даже если поле number.
-  const filter1 = `(({id_payment}&"") = "${paymentId}")`;
+  const filter1 = `(LOWER({id_payment}&"") = "${paymentId}")`;
 
   // ✅ 2) На всякий случай — “прямое” сравнение (если поле точно строковое)
-  const filter2 = `({id_payment} = "${paymentId}")`;
+  const filter2 = `(LOWER({id_payment}) = "${paymentId}")`;
 
   const tryFetch = async (filterByFormula: string) => {
     const url = `${airtableBaseUrl(
