@@ -1,30 +1,58 @@
-// src/app/[locale]/pay/success/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type CheckPaymentResp =
-  | { ok: true; status?: string; paid?: boolean; recordId?: string }
-  | { ok?: boolean; error?: string; details?: string };
+  | {
+      ok: true;
+      status?: string;
+      paid?: boolean;
+      bank?: {
+        status?: string;
+        code?: string;
+        reason?: string;
+        paymentState?: string;
+        orderStatus?: string;
+      };
+    }
+  | { ok?: boolean; error?: string; details?: string; bank?: any };
 
 function useLocalePrefix() {
   const pathname = usePathname();
   return pathname.startsWith("/ru") ? "/ru" : "";
 }
 
+function mapAmeriaDeclineReason(codeRaw: string | undefined, t: (k: string) => string) {
+  const code = String(codeRaw ?? "").trim();
+
+  // самые частые / понятные пользователю
+  if (code === "0116") return t("declineReasons.notEnoughMoney");
+  if (code === "0101") return t("declineReasons.expiredCard");
+  if (code === "071015") return t("declineReasons.wrongCardData");
+  if (code === "0100" || code === "0104" || code === "0125") return t("declineReasons.cardDeclined");
+  if (code === "02001") return t("declineReasons.fraud");
+  if (code === "0151018" || code === "0151019" || code === "0-1") return t("declineReasons.processingTimeout");
+  if (code === "0-2007") return t("declineReasons.paymentTimeLimit");
+  if (code === "0-2013") return t("declineReasons.attemptsExpired");
+  if (code === "02003") return t("declineReasons.sslRestricted");
+
+  // дефолт
+  return t("declineReasons.generic");
+}
+
 export default function PaySuccessPage() {
+  const t = useTranslations("pay");
   const pref = useLocalePrefix();
+  const searchParams = useSearchParams();
+
+  const debug = useMemo(() => searchParams?.get("debug") === "1", [searchParams]);
+  const noRedirect = useMemo(() => searchParams?.get("noRedirect") === "1", [searchParams]);
 
   const [loading, setLoading] = useState(true);
   const [resp, setResp] = useState<CheckPaymentResp | null>(null);
   const [paymentId, setPaymentId] = useState<string>("");
-
-  const noRedirect = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const sp = new URLSearchParams(window.location.search);
-    return sp.get("noRedirect") === "1";
-  }, []);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -40,10 +68,7 @@ export default function PaySuccessPage() {
 
     if (!pid) {
       setLoading(false);
-      setResp({
-        ok: false,
-        error: "paymentId не найден (ни в URL, ни в localStorage)",
-      });
+      setResp({ ok: false, error: t("errors.noPaymentId") });
       return;
     }
 
@@ -63,167 +88,131 @@ export default function PaySuccessPage() {
         setResp(json);
 
         const s = String((json as any)?.status ?? "").toLowerCase();
-
-        // ✅ учитываем локаль
         if (!noRedirect && s === "pending") {
-          window.location.href = `${pref}/pay/pending`;
+          // у нас /pay — НЕ i18n, редиректим туда
+          window.location.href = "/pay/pending";
           return;
         }
       } catch (e: any) {
-        setResp({ ok: false, error: e?.message ?? "check-payment failed" });
+        setResp({ ok: false, error: e?.message ?? t("errors.checkFailed") });
       } finally {
         setLoading(false);
       }
     };
 
     run();
-  }, [noRedirect, pref]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noRedirect]);
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();
-
     if (s === "paid") return "PAID";
     if (s === "pending") return "PENDING";
     if (s === "declined") return "DECLINED";
     if (s === "canceled") return "CANCELED";
     if (s === "refunded") return "REFUNDED";
     if (s === "error") return "ERROR";
-
     if ((resp as any)?.paid === true) return "PAID";
     if ((resp as any)?.paid === false) return "PENDING";
-
     return resp ? "UNKNOWN" : "LOADING";
   })();
+
+  const title =
+    statusLabel === "PAID"
+      ? t("titles.paid")
+      : statusLabel === "PENDING"
+      ? t("titles.pending")
+      : statusLabel === "DECLINED"
+      ? t("titles.declined")
+      : statusLabel === "CANCELED"
+      ? t("titles.canceled")
+      : statusLabel === "REFUNDED"
+      ? t("titles.refunded")
+      : statusLabel === "ERROR"
+      ? t("titles.error")
+      : t("titles.unknown");
+
+  const subtitle = (() => {
+    if (loading) return t("subtitles.loading");
+
+    if (statusLabel === "PAID") return t("subtitles.paid");
+    if (statusLabel === "PENDING") return t("subtitles.pending");
+
+    if (statusLabel === "DECLINED") {
+      const code = (resp as any)?.bank?.code;
+      return mapAmeriaDeclineReason(code, t);
+    }
+
+    if (statusLabel === "CANCELED") return t("subtitles.canceled");
+    if (statusLabel === "REFUNDED") return t("subtitles.refunded");
+    if (statusLabel === "ERROR") return t("subtitles.error");
+
+    return t("subtitles.unknown");
+  })();
+
+  const showDebug = debug || noRedirect;
 
   return (
     <main className="min-h-screen bg-[#050816] flex items-center justify-center">
       <div className="w-full max-w-md px-4">
         <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-soft px-6 py-8 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
-            Оплата
+            {t("labels.payment")}
           </p>
 
-          <h1 className="text-2xl font-semibold tracking-tight text-white mb-6">
-            {statusLabel === "PAID"
-              ? "Спасибо! Платёж принят"
-              : statusLabel === "PENDING"
-              ? "Оплата в обработке"
-              : statusLabel === "DECLINED"
-              ? "Платёж отклонён"
-              : statusLabel === "CANCELED"
-              ? "Платёж отменён"
-              : statusLabel === "REFUNDED"
-              ? "Платёж возвращён"
-              : statusLabel === "ERROR"
-              ? "Ошибка платежа"
-              : "Статус оплаты"}
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-4">
+            {title}
           </h1>
 
-          {loading ? (
-            <>
-              <p className="text-white text-base font-semibold">
-                ⏳ Подтверждаем платёж…
-              </p>
-              <p className="mt-2 text-sm text-brand-muted">
-                Мы проверяем статус в банке
-              </p>
-            </>
-          ) : statusLabel === "PAID" ? (
-            <>
-              <p className="text-white text-base font-semibold">
-                ✅ Платёж подтверждён
-              </p>
-              <p className="mt-2 text-sm text-brand-muted">
-                Статус покупки успешно обновлён
-              </p>
-            </>
-          ) : statusLabel === "PENDING" ? (
-            <>
-              <p className="text-white text-base font-semibold">
-                ⏳ Платёж в обработке
-              </p>
-              <p className="mt-2 text-sm text-brand-muted">
-                Банку нужно немного больше времени
-              </p>
-              <button
-                className="mt-4 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors w-full"
-                onClick={() => (window.location.href = `${pref}/pay/pending`)}
-              >
-                Перейти на страницу ожидания
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-white text-base font-semibold">
-                {statusLabel === "DECLINED"
-                  ? "❌ Платёж отклонён"
-                  : statusLabel === "CANCELED"
-                  ? "🛑 Платёж отменён"
-                  : statusLabel === "REFUNDED"
-                  ? "💸 Платёж возвращён"
-                  : statusLabel === "ERROR"
-                  ? "⚠️ Ошибка при обработке платежа"
-                  : "⚠️ Не удалось подтвердить"}
-              </p>
-
-              <p className="mt-2 text-sm text-brand-muted">
-                {(() => {
-                  const bank = (resp as any)?.bank;
-                  const code = bank?.code ? `Код: ${bank.code}. ` : "";
-                  const reason =
-                    bank?.reason ||
-                    (resp as any)?.details ||
-                    (resp as any)?.error ||
-                    "";
-
-                  if (reason) return `${code}${reason}`;
-                  return "Если деньги списались — статус может появиться позже.";
-                })()}
-              </p>
-            </>
-          )}
-
-          {!!paymentId && (
-            <p className="mt-6 text-xs text-brand-muted break-all">
-              PaymentID:{" "}
-              <span className="text-white font-semibold">{paymentId}</span>
-            </p>
-          )}
+          <p className="text-sm text-brand-muted">{subtitle}</p>
 
           <div className="mt-6 flex flex-col gap-3">
-            <button
-              className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
-              onClick={() => window.location.reload()}
-            >
-              Проверить ещё раз
-            </button>
+            {(statusLabel === "DECLINED" || statusLabel === "CANCELED" || statusLabel === "ERROR") && (
+              <a
+                href={`${pref}/#pricing`}
+                className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
+              >
+                {t("actions.tryAgain")}
+              </a>
+            )}
 
             <a
               href={`${pref}/#pricing`}
               className="rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
             >
-              Вернуться на сайт
+              {t("actions.backToSite")}
             </a>
 
-            <a
-              href="/pay/ameria/return?noRedirect=1"
-              className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-brand-muted hover:bg-white/5 transition-colors"
-            >
-              Debug return
-            </a>
+            {/* оставить для тебя как есть */}
+            {showDebug ? (
+              <a
+                href="/pay/ameria/return?noRedirect=1"
+                className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-brand-muted hover:bg-white/5 transition-colors"
+              >
+                Debug return
+              </a>
+            ) : null}
           </div>
+
+          {/* PaymentID — только в debug */}
+          {showDebug && !!paymentId ? (
+            <p className="mt-6 text-xs text-brand-muted break-all">
+              PaymentID: <span className="text-white font-semibold">{paymentId}</span>
+            </p>
+          ) : null}
         </div>
 
-        {resp && (
+        {/* Тех. детали — только в debug */}
+        {showDebug && resp ? (
           <details className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
             <summary className="cursor-pointer text-sm text-white/90 text-center">
-              Технические детали
+              {t("labels.techDetails")}
             </summary>
             <pre className="mt-3 text-xs text-white/80 whitespace-pre-wrap">
               {JSON.stringify(resp, null, 2)}
             </pre>
           </details>
-        )}
+        ) : null}
       </div>
     </main>
   );

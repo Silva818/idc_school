@@ -379,8 +379,51 @@
   "consent": "Consent to personal data processing",
   "privacy": "Personal data processing policy",
   "instagram": "Instagram"
-}
-
+},
+  "pay": {
+    "labels": {
+      "payment": "Payment",
+      "techDetails": "Technical details"
+    },
+    "titles": {
+      "paid": "Thank you! Payment received",
+      "pending": "Payment is processing",
+      "declined": "Payment declined",
+      "canceled": "Payment canceled",
+      "refunded": "Payment refunded",
+      "error": "Payment error",
+      "unknown": "Payment status"
+    },
+    "subtitles": {
+      "loading": "Checking status with the bank…",
+      "paid": "Access will be enabled shortly. We’ll contact you by email.",
+      "pending": "The bank needs a bit more time. Status usually updates within a couple of minutes.",
+      "canceled": "Looks like the payment was canceled. You can try again.",
+      "refunded": "Funds will be returned to your card. Timing depends on your bank.",
+      "error": "We couldn’t retrieve the transaction status. Please refresh in a minute.",
+      "unknown": "We couldn’t determine the status. Please refresh the page."
+    },
+    "declineReasons": {
+      "notEnoughMoney": "Insufficient funds. Try another card or top up your balance.",
+      "expiredCard": "Your card has expired. Check the date or use another card.",
+      "wrongCardData": "Please double-check card number, expiry date and CVC.",
+      "cardDeclined": "Your bank declined the transaction. Try another card or contact your bank.",
+      "fraud": "Declined for security reasons. Try another card or contact your bank.",
+      "processingTimeout": "Technical timeout. Please try again later.",
+      "paymentTimeLimit": "Payment session expired. Please start again.",
+      "attemptsExpired": "Too many attempts. Please wait a bit and try again.",
+      "sslRestricted": "This payment method is currently unavailable. Try another option or contact support.",
+      "generic": "The bank declined the payment. Try another card or try again later."
+    },
+    "actions": {
+      "tryAgain": "Try again",
+      "backToSite": "Back to site"
+    },
+    "errors": {
+      "noPaymentId": "Payment identifier not found.",
+      "checkFailed": "Failed to check payment status."
+    }
+  }
 
 
       }
