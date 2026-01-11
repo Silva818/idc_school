@@ -24,21 +24,24 @@ function useLocalePrefix() {
   return pathname.startsWith("/ru") ? "/ru" : "";
 }
 
-function mapAmeriaDeclineReason(codeRaw: string | undefined, t: (k: string) => string) {
+function mapAmeriaDeclineReason(
+  codeRaw: string | undefined,
+  t: (k: string) => string
+) {
   const code = String(codeRaw ?? "").trim();
 
-  // самые частые / понятные пользователю
   if (code === "0116") return t("declineReasons.notEnoughMoney");
   if (code === "0101") return t("declineReasons.expiredCard");
   if (code === "071015") return t("declineReasons.wrongCardData");
-  if (code === "0100" || code === "0104" || code === "0125") return t("declineReasons.cardDeclined");
+  if (code === "0100" || code === "0104" || code === "0125")
+    return t("declineReasons.cardDeclined");
   if (code === "02001") return t("declineReasons.fraud");
-  if (code === "0151018" || code === "0151019" || code === "0-1") return t("declineReasons.processingTimeout");
+  if (code === "0151018" || code === "0151019" || code === "0-1")
+    return t("declineReasons.processingTimeout");
   if (code === "0-2007") return t("declineReasons.paymentTimeLimit");
   if (code === "0-2013") return t("declineReasons.attemptsExpired");
   if (code === "02003") return t("declineReasons.sslRestricted");
 
-  // дефолт
   return t("declineReasons.generic");
 }
 
@@ -47,8 +50,14 @@ export default function PaySuccessPage() {
   const pref = useLocalePrefix();
   const searchParams = useSearchParams();
 
-  const debug = useMemo(() => searchParams?.get("debug") === "1", [searchParams]);
-  const noRedirect = useMemo(() => searchParams?.get("noRedirect") === "1", [searchParams]);
+  const debug = useMemo(
+    () => searchParams?.get("debug") === "1",
+    [searchParams]
+  );
+  const noRedirect = useMemo(
+    () => searchParams?.get("noRedirect") === "1",
+    [searchParams]
+  );
 
   const [loading, setLoading] = useState(true);
   const [resp, setResp] = useState<CheckPaymentResp | null>(null);
@@ -89,8 +98,8 @@ export default function PaySuccessPage() {
 
         const s = String((json as any)?.status ?? "").toLowerCase();
         if (!noRedirect && s === "pending") {
-          // у нас /pay — НЕ i18n, редиректим туда
-          window.location.href = "/pay/pending";
+          // ✅ редиректим на локальную pending
+          window.location.href = `${pref}/pay/pending`;
           return;
         }
       } catch (e: any) {
@@ -101,8 +110,7 @@ export default function PaySuccessPage() {
     };
 
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noRedirect]);
+  }, [noRedirect, pref, t]);
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();
@@ -167,7 +175,9 @@ export default function PaySuccessPage() {
           <p className="text-sm text-brand-muted">{subtitle}</p>
 
           <div className="mt-6 flex flex-col gap-3">
-            {(statusLabel === "DECLINED" || statusLabel === "CANCELED" || statusLabel === "ERROR") && (
+            {(statusLabel === "DECLINED" ||
+              statusLabel === "CANCELED" ||
+              statusLabel === "ERROR") && (
               <a
                 href={`${pref}/#pricing`}
                 className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
@@ -183,10 +193,9 @@ export default function PaySuccessPage() {
               {t("actions.backToSite")}
             </a>
 
-            {/* оставить для тебя как есть */}
             {showDebug ? (
               <a
-                href="/pay/ameria/return?noRedirect=1"
+                href={`${pref}/pay/ameria/return?noRedirect=1`}
                 className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-brand-muted hover:bg-white/5 transition-colors"
               >
                 Debug return
@@ -194,15 +203,14 @@ export default function PaySuccessPage() {
             ) : null}
           </div>
 
-          {/* PaymentID — только в debug */}
           {showDebug && !!paymentId ? (
             <p className="mt-6 text-xs text-brand-muted break-all">
-              PaymentID: <span className="text-white font-semibold">{paymentId}</span>
+              PaymentID:{" "}
+              <span className="text-white font-semibold">{paymentId}</span>
             </p>
           ) : null}
         </div>
 
-        {/* Тех. детали — только в debug */}
         {showDebug && resp ? (
           <details className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
             <summary className="cursor-pointer text-sm text-white/90 text-center">
