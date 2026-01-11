@@ -1,23 +1,29 @@
+// src/app/[locale]/pay/pending/page.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type CheckPaymentResp =
   | { ok: true; status?: string; paid?: boolean; recordId?: string }
   | { ok?: boolean; error?: string; details?: string };
 
+function useLocalePrefix() {
+  const pathname = usePathname();
+  return pathname.startsWith("/ru") ? "/ru" : "";
+}
+
 export default function PayPendingPage() {
+  const pref = useLocalePrefix();
+
   const [paymentId, setPaymentId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [resp, setResp] = useState<CheckPaymentResp | null>(null);
   const [ticks, setTicks] = useState<number>(0);
 
   const timerRef = useRef<number | null>(null);
-
-  // NEW: чтобы не было параллельных запросов
   const inFlightRef = useRef<boolean>(false);
 
-  // NEW: лимит попыток (например ~3 минуты при 3с интервале)
   const MAX_TICKS = 60;
 
   const noRedirect = useMemo(() => {
@@ -28,18 +34,17 @@ export default function PayPendingPage() {
 
   const readPaymentId = () => {
     const sp = new URLSearchParams(window.location.search);
-    const pid =
+    return (
       sp.get("paymentID") ||
       sp.get("PaymentID") ||
       sp.get("paymentId") ||
       sp.get("id") ||
       localStorage.getItem("ameriaPaymentId") ||
-      "";
-    return pid;
+      ""
+    );
   };
 
   const checkOnce = async (pid: string) => {
-    // NEW: не запускаем новый запрос, пока не завершился предыдущий
     if (inFlightRef.current) return;
     inFlightRef.current = true;
 
@@ -60,7 +65,7 @@ export default function PayPendingPage() {
 
       if (!noRedirect) {
         if (["paid", "declined", "canceled", "refunded", "error"].includes(s)) {
-          window.location.href = "/pay/success";
+          window.location.href = `${pref}/pay/success`;
           return;
         }
       }
@@ -78,32 +83,27 @@ export default function PayPendingPage() {
 
     if (!pid) {
       setLoading(false);
-      setResp({ ok: false, error: "paymentId не найден (ни в URL, ни в localStorage)" });
+      setResp({
+        ok: false,
+        error: "paymentId не найден (ни в URL, ни в localStorage)",
+      });
       return;
     }
 
-    // на всякий случай фиксируем
     localStorage.setItem("ameriaPaymentId", pid);
 
-    // первая проверка сразу
     checkOnce(pid);
 
-    // затем polling
     timerRef.current = window.setInterval(() => {
       setTicks((t) => {
         const next = t + 1;
-
-        // NEW: стопаемся по лимиту
         if (next >= MAX_TICKS) {
           if (timerRef.current) window.clearInterval(timerRef.current);
           return next;
         }
-
         return next;
       });
 
-      // NEW: после лимита больше не дергаем
-      // (здесь используем текущее значение ticks "как есть" — ок для простого стопа)
       checkOnce(pid);
     }, 3000);
 
@@ -111,7 +111,7 @@ export default function PayPendingPage() {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noRedirect]);
+  }, [noRedirect, pref]);
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();
@@ -137,7 +137,8 @@ export default function PayPendingPage() {
         <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-soft px-5 py-6 sm:px-6 sm:py-7">
           {paymentId ? (
             <p className="text-xs sm:text-sm text-brand-muted">
-              PaymentID: <span className="text-white font-semibold">{paymentId}</span>
+              PaymentID:{" "}
+              <span className="text-white font-semibold">{paymentId}</span>
             </p>
           ) : null}
 
@@ -148,7 +149,7 @@ export default function PayPendingPage() {
                   ✅ Платёж подтверждён
                 </p>
                 <p className="mt-2 text-sm text-brand-muted">
-                  Сейчас перенаправим на страницу успеха.
+                  Сейчас перенаправим на страницу результата.
                 </p>
               </>
             ) : statusLabel === "ERROR" ? (
@@ -157,8 +158,8 @@ export default function PayPendingPage() {
                   ⚠️ Не удалось проверить платёж
                 </p>
                 <p className="mt-2 text-sm text-brand-muted">
-                  Попробуй ещё раз через минуту. Если деньги списались — статус обычно
-                  подтягивается чуть позже.
+                  Попробуй ещё раз через минуту. Если деньги списались — статус
+                  обычно подтягивается чуть позже.
                 </p>
               </>
             ) : (
@@ -167,7 +168,8 @@ export default function PayPendingPage() {
                   ⏳ Ждём подтверждение банка…
                 </p>
                 <p className="mt-2 text-sm text-brand-muted">
-                  Мы автоматически проверяем статус каждые несколько секунд и обновляем покупку в Airtable.
+                  Мы автоматически проверяем статус каждые несколько секунд и
+                  обновляем покупку в Airtable.
                 </p>
               </>
             )}
@@ -183,7 +185,7 @@ export default function PayPendingPage() {
             </button>
 
             <a
-              href="/#pricing"
+              href={`${pref}/#pricing`}
               className="rounded-full border border-white/40 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
             >
               Вернуться на сайт
@@ -202,7 +204,6 @@ export default function PayPendingPage() {
           </p>
         </div>
 
-        {/* Тех. детали — оставляем для дебага */}
         {resp && (
           <details className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
             <summary className="cursor-pointer text-sm text-white/90">

@@ -29,9 +29,13 @@ export function LanguageSwitcher() {
   const withQuery = (url: string) => (query ? `${url}?${query}` : url);
 
   const go = (nextLocale: Locale) => {
+    // ставим cookie на год
+    document.cookie = `NEXT_LOCALE=${nextLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  
     const nextPath = buildPathForLocale(pathWithoutLocale, nextLocale);
     router.replace(withQuery(nextPath));
   };
+  
 
   return (
     <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1">

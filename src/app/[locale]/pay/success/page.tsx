@@ -1,12 +1,21 @@
+// src/app/[locale]/pay/success/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type CheckPaymentResp =
   | { ok: true; status?: string; paid?: boolean; recordId?: string }
   | { ok?: boolean; error?: string; details?: string };
 
+function useLocalePrefix() {
+  const pathname = usePathname();
+  return pathname.startsWith("/ru") ? "/ru" : "";
+}
+
 export default function PaySuccessPage() {
+  const pref = useLocalePrefix();
+
   const [loading, setLoading] = useState(true);
   const [resp, setResp] = useState<CheckPaymentResp | null>(null);
   const [paymentId, setPaymentId] = useState<string>("");
@@ -49,12 +58,15 @@ export default function PaySuccessPage() {
           body: JSON.stringify({ paymentId: pid }),
           cache: "no-store",
         });
+
         const json = await r.json().catch(() => ({}));
         setResp(json);
 
         const s = String((json as any)?.status ?? "").toLowerCase();
+
+        // ✅ учитываем локаль
         if (!noRedirect && s === "pending") {
-          window.location.href = "/pay/pending";
+          window.location.href = `${pref}/pay/pending`;
           return;
         }
       } catch (e: any) {
@@ -65,24 +77,23 @@ export default function PaySuccessPage() {
     };
 
     run();
-  }, [noRedirect]);
+  }, [noRedirect, pref]);
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();
-  
+
     if (s === "paid") return "PAID";
     if (s === "pending") return "PENDING";
     if (s === "declined") return "DECLINED";
     if (s === "canceled") return "CANCELED";
     if (s === "refunded") return "REFUNDED";
     if (s === "error") return "ERROR";
-  
+
     if ((resp as any)?.paid === true) return "PAID";
     if ((resp as any)?.paid === false) return "PENDING";
-  
+
     return resp ? "UNKNOWN" : "LOADING";
   })();
-  
 
   return (
     <main className="min-h-screen bg-[#050816] flex items-center justify-center">
@@ -93,21 +104,20 @@ export default function PaySuccessPage() {
           </p>
 
           <h1 className="text-2xl font-semibold tracking-tight text-white mb-6">
-  {statusLabel === "PAID"
-    ? "Спасибо! Платёж принят"
-    : statusLabel === "PENDING"
-    ? "Оплата в обработке"
-    : statusLabel === "DECLINED"
-    ? "Платёж отклонён"
-    : statusLabel === "CANCELED"
-    ? "Платёж отменён"
-    : statusLabel === "REFUNDED"
-    ? "Платёж возвращён"
-    : statusLabel === "ERROR"
-    ? "Ошибка платежа"
-    : "Статус оплаты"}
-</h1>
-
+            {statusLabel === "PAID"
+              ? "Спасибо! Платёж принят"
+              : statusLabel === "PENDING"
+              ? "Оплата в обработке"
+              : statusLabel === "DECLINED"
+              ? "Платёж отклонён"
+              : statusLabel === "CANCELED"
+              ? "Платёж отменён"
+              : statusLabel === "REFUNDED"
+              ? "Платёж возвращён"
+              : statusLabel === "ERROR"
+              ? "Ошибка платежа"
+              : "Статус оплаты"}
+          </h1>
 
           {loading ? (
             <>
@@ -137,41 +147,40 @@ export default function PaySuccessPage() {
               </p>
               <button
                 className="mt-4 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors w-full"
-                onClick={() => (window.location.href = "/pay/pending")}
+                onClick={() => (window.location.href = `${pref}/pay/pending`)}
               >
                 Перейти на страницу ожидания
               </button>
             </>
           ) : (
             <>
-            <p className="text-white text-base font-semibold">
-              {statusLabel === "DECLINED"
-                ? "❌ Платёж отклонён"
-                : statusLabel === "CANCELED"
-                ? "🛑 Платёж отменён"
-                : statusLabel === "REFUNDED"
-                ? "💸 Платёж возвращён"
-                : statusLabel === "ERROR"
-                ? "⚠️ Ошибка при обработке платежа"
-                : "⚠️ Не удалось подтвердить"}
-            </p>
-          
-            <p className="mt-2 text-sm text-brand-muted">
-              {(() => {
-                const bank = (resp as any)?.bank;
-                const code = bank?.code ? `Код: ${bank.code}. ` : "";
-                const reason =
-                  bank?.reason ||
-                  (resp as any)?.details ||
-                  (resp as any)?.error ||
-                  "";
-          
-                if (reason) return `${code}${reason}`;
-                return "Если деньги списались — статус может появиться позже.";
-              })()}
-            </p>
-          </>
-          
+              <p className="text-white text-base font-semibold">
+                {statusLabel === "DECLINED"
+                  ? "❌ Платёж отклонён"
+                  : statusLabel === "CANCELED"
+                  ? "🛑 Платёж отменён"
+                  : statusLabel === "REFUNDED"
+                  ? "💸 Платёж возвращён"
+                  : statusLabel === "ERROR"
+                  ? "⚠️ Ошибка при обработке платежа"
+                  : "⚠️ Не удалось подтвердить"}
+              </p>
+
+              <p className="mt-2 text-sm text-brand-muted">
+                {(() => {
+                  const bank = (resp as any)?.bank;
+                  const code = bank?.code ? `Код: ${bank.code}. ` : "";
+                  const reason =
+                    bank?.reason ||
+                    (resp as any)?.details ||
+                    (resp as any)?.error ||
+                    "";
+
+                  if (reason) return `${code}${reason}`;
+                  return "Если деньги списались — статус может появиться позже.";
+                })()}
+              </p>
+            </>
           )}
 
           {!!paymentId && (
@@ -190,7 +199,7 @@ export default function PaySuccessPage() {
             </button>
 
             <a
-              href="/#pricing"
+              href={`${pref}/#pricing`}
               className="rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
             >
               Вернуться на сайт

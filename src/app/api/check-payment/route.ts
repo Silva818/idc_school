@@ -1,3 +1,4 @@
+// src/app/api/check-payment/route.ts
 import { NextResponse } from "next/server";
 
 /* ---------------- AIRTABLE HELPERS ---------------- */
@@ -24,15 +25,104 @@ function airtableEnv() {
   };
 }
 
-async function airtableCreateRecord(fields: Record<string, any>) {
-  const env = airtableEnv();
-  if (!env.ok) {
-    return { ok: false as const, reason: "env_missing" as const };
-  }
-
-  const url = `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
+function airtableBaseUrl(env: { baseId: string; table: string }) {
+  return `https://api.airtable.com/v0/${env.baseId}/${encodeURIComponent(
     env.table
   )}`;
+}
+
+async function airtableFindByPaymentId(paymentId: string) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
+
+  // В Airtable формула: {id_payment} = "xxxx"
+  // ВАЖНО: id_payment должен быть реально таким названием поля в таблице
+  const filter = `({id_payment} = "${paymentId}")`;
+  const url = `${airtableBaseUrl(env)}?maxRecords=1&filterByFormula=${encodeURIComponent(
+    filter
+  )}`;
+
+  try {
+    const r = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${env.apiKey}`,
+      },
+      cache: "no-store",
+    });
+
+    const text = await r.text();
+
+    if (!r.ok) {
+      return {
+        ok: false as const,
+        reason: "find_failed" as const,
+        status: r.status,
+        text,
+      };
+    }
+
+    let json: any = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return { ok: false as const, reason: "find_bad_json" as const, text };
+    }
+
+    const rec = Array.isArray(json?.records) ? json.records[0] : null;
+    return { ok: true as const, record: rec ?? null, raw: json };
+  } catch (err) {
+    console.error("💥 Airtable FIND crashed:", err);
+    return { ok: false as const, reason: "find_crashed" as const };
+  }
+}
+
+async function airtableUpdateRecord(recordId: string, fields: Record<string, any>) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
+
+  const url = `${airtableBaseUrl(env)}/${encodeURIComponent(recordId)}`;
+
+  try {
+    const r = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${env.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+      cache: "no-store",
+    });
+
+    const text = await r.text();
+
+    if (!r.ok) {
+      return {
+        ok: false as const,
+        reason: "update_failed" as const,
+        status: r.status,
+        text,
+      };
+    }
+
+    let json: any = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      // не критично
+    }
+
+    return { ok: true as const, record: json ?? text };
+  } catch (err) {
+    console.error("💥 Airtable UPDATE crashed:", err);
+    return { ok: false as const, reason: "update_crashed" as const };
+  }
+}
+
+async function airtableCreateRecord(fields: Record<string, any>) {
+  const env = airtableEnv();
+  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
+
+  const url = airtableBaseUrl(env);
 
   try {
     const r = await fetch(url, {
@@ -48,14 +138,19 @@ async function airtableCreateRecord(fields: Record<string, any>) {
     const text = await r.text();
 
     if (!r.ok) {
-      return { ok: false as const, reason: "create_failed" as const, text };
+      return {
+        ok: false as const,
+        reason: "create_failed" as const,
+        status: r.status,
+        text,
+      };
     }
 
     let json: any = null;
     try {
       json = JSON.parse(text);
     } catch {
-      // не критично, но вернём текст
+      // не критично
     }
 
     return { ok: true as const, record: json ?? text };
@@ -211,9 +306,26 @@ export async function POST(req: Request) {
       return NextResponse.json(baseResponse);
     }
 
-    // ✅ Вместо поиска+PATCH: создаём новую запись со статусом paid
-    // Минимально обязательное: id_payment + Status
-    // Если хочешь — можно расширить набор полей, но я тут делаю только по вопросу.
+    // ✅ Правильно: обновляем существующую запись created → paid
+    const found = await airtableFindByPaymentId(paymentId);
+
+    if (found.ok && found.record?.id) {
+      const upd = await airtableUpdateRecord(found.record.id, {
+        Status: "paid",
+      });
+
+      return NextResponse.json({
+        ...baseResponse,
+        airtable: {
+          action: "updated",
+          found: true,
+          recordId: found.record.id,
+          result: upd,
+        },
+      });
+    }
+
+    // Если не нашли (или поиск упал) — создаём запись, чтобы не потерять оплату
     const create = await airtableCreateRecord({
       id_payment: paymentId,
       Status: "paid",
@@ -221,7 +333,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ...baseResponse,
-      airtable: create,
+      airtable: {
+        action: "created",
+        found: false,
+        find: found,
+        result: create,
+      },
     });
   } catch (e: any) {
     console.error("check-payment error:", e);
