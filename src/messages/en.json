@@ -399,9 +399,8 @@
     },
     "telegram": {
       "title": "Connect your Telegram account",
-      "desc": "To track your workout balance, access materials, and chat with your coach — connect our Telegram bot.",
-      "button": "Open Telegram bot",
-      "noToken": "Link token is not available yet. Please refresh the page in a minute."
+      "desc": "To track your workout balance — connect our Telegram bot.",
+      "button": "Open Telegram bot"
     },
     "actions": {
       "tryAgain": "Try again",

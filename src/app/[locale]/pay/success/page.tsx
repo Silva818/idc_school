@@ -194,12 +194,6 @@ export default function PaySuccessPage() {
                 {t("telegram.button")}
               </a>
 
-              {!tgToken ? (
-                <p className="mt-3 text-xs text-brand-muted">
-                  {t("telegram.noToken")}
-                </p>
-              ) : null}
-
               {showDebug && tgToken ? (
                 <p className="mt-3 text-[11px] text-brand-muted break-all">
                   tg_link_token:{" "}
