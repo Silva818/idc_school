@@ -1,385 +1,367 @@
 {
-    "common": {
-      "lang_en": "EN",
-      "lang_ru": "RU"
-    },
-
-      "home": {
-        "header": {
-          "nav": {
-            "how": "How it works",
-            "courses": "Courses",
-            "pricing": "Pricing",
-            "about": "About",
-            "reviews": "Reviews",
-            "faq": "FAQ"
-          },
-          "login": "Log in",
-          "openMenu": "Open menu",
-          "menuTitle": "Menu",
-          "closeMenu": "Close menu",
-          "takeStrengthTest": "Take the strength test",
-          "locations": "Locations"
-        },
-    
-        "hero": {
-          "badge": "Online calisthenics programs",
-          "titleLine1": "Bodyweight",
-          "titleLine2": "training",
-          "subtitle": "at a comfortable pace with a strong focus on technique",
-          "desc": "Learn proper technique, build strength, and master skills step by step. Every workout adapts to your level, goals, and schedule.",
-          "ctaCourses": "View courses",
-          "benefitPlan": "personal plan tailored to your goals",
-          "benefitChat": "support chat",
-          "nextStepLabel": "Your next step",
-          "nextStepTitle": "Find the right program for you",
-          "start": "Start",
-          "cardWorkoutsTitle": "Workouts per week",
-          "cardWorkoutsValue": "2–3",
-          "cardWorkoutsNote": "ideal for progress and recovery",
-          "cardProgressTitle": "Noticeable progress in",
-          "cardProgressValue": "3–4 weeks",
-          "cardProgressNote": "strength and technique growth"
-        },
-    
-        "modals": {
-          "strengthTest": {
-            "title": "Sign up for the strength test",
-            "close": "Close form",
-            "fullNameLabel": "Full name",
-            "fullNamePlaceholder": "For example: Anna Ivanova",
-            "emailLabel": "Email",
-            "phoneLabel": "Phone",
-            "phoneWillBeSentAs": "Will be sent as:",
-            "customDialPlaceholder": "+1",
-            "phonePlaceholderGeneric": "Number",
-            "courseLabel": "Course",
-            "coursePlaceholder": "Choose a course",
-            "agreeTextPrefix": "I agree with the",
-            "privacyPolicy": "privacy policy",
-            "agreeDot": ".",
-            "submitSending": "Sending...",
-            "submit": "Submit"
-          },
-    
-          "purchase": {
-            "title": "Workout block payment",
-            "close": "Close payment",
-            "tariff": "Plan",
-            "fullNameLabel": "Full name",
-            "fullNamePlaceholder": "For example: Anna Ivanova",
-            "emailLabel": "Email",
-            "phoneLabel": "Phone",
-            "courseLabel": "Course",
-            "coursePlaceholder": "Choose a course",
-            "agreeTextPrefix": "I agree with the",
-            "privacyPolicy": "privacy policy",
-            "andPaymentTerms": "and the payment terms.",
-            "submitGoing": "Redirecting to payment...",
-            "submit": "Proceed to payment"
-          },
-    
-          "login": {
-            "title": "Log in to your account",
-            "desc": "The app account is currently in development. This login form is a demo.",
-            "close": "Close login form",
-            "emailLabel": "Email",
-            "passwordLabel": "Password",
-            "passwordPlaceholder": "Password",
-            "message": "Your account is currently in development. We'll email you when the app becomes available.",
-            "submitChecking": "Checking…",
-            "submit": "Log in"
-          }
-        },
-    
-        "countries": {
-          "RU": { "label": "Russia", "placeholder": "900 000-00-00" },
-          "AM": { "label": "Armenia", "placeholder": "77 123 456" },
-          "GB": { "label": "UK", "placeholder": "7400 000000" },
-          "US": { "label": "USA", "placeholder": "201 555 0123" },
-          "BY": { "label": "Belarus", "placeholder": "29 123 45 67" },
-          "KZ": { "label": "Kazakhstan", "placeholder": "701 000 0000" },
-          "UA": { "label": "Ukraine", "placeholder": "50 000 0000" },
-          "ES": { "label": "Spain", "placeholder": "612 345 678" },
-          "DE": { "label": "Germany", "placeholder": "1512 3456789" },
-          "FR": { "label": "France", "placeholder": "6 12 34 56 78" },
-          "OTHER": { "label": "Other", "placeholder": "Enter number" }
-        },
-    
-        "contexts": {
-          "headerStrengthTest": "Mobile menu: Strength test",
-          "heroStrengthTest": "Hero section: Strength test",
-          "heroStart": "Hero section: Find your program",
-          "pricingStrengthTest": "Pricing section: Strength test"
-        },
-        "howItWorks": {
-          "kicker": "Process",
-          "titleLine1": "From the strength test to pull-ups,",
-          "titleLine2": "handstands, and muscle-ups",
-          "desc": "We break each skill down into technique, common mistakes, and clear progressions for your current level. The strength test shows where you are now, your goal defines what you’re working toward, and your personalized program plus coach video reviews help you reach it safely and effectively.",
-          "stepLabel": "Step {number}",
-          "steps": [
-            {
-              "number": "01",
-              "title": "Define your level and goals",
-              "text": "You take our strength test: 5–7 exercises depending on the course you choose and the equipment you have. We lock in your current level and pick the main goal.",
-              "meta": "Takes 30–40 minutes"
-            },
-            {
-              "number": "02",
-              "title": "Build a program for your level",
-              "text": "Based on your test, we choose the right exercises and progressions, explain proper technique, and go through common mistakes.",
-              "meta": "A 4–12 week plan"
-            },
-            {
-              "number": "03",
-              "title": "Train and build a stronger body",
-              "text": "You follow workouts in the app, mark completed sessions, and send video check-ins to your coach. The coach gives feedback and updates your training as you progress. You’ll see your strength grow, your technique improve, and your goal become achievable.",
-              "meta": "Feedback after every workout"
-            }
-          ]
-        },
-        "courses": {
-  "badge": "Online programs for gym and home",
-  "title": "Goals and programs",
-  "desc": "Choose the direction that fits you best right now — you can switch to another course at any time. The program adapts flexibly to your level and interests.",
-  "scrollHint": "Swipe right to see all programs.",
-  "scrollNote": "Any course can be adapted to your starting level.",
-  "testButton": "Take the strength test",
-
-  "cards": {
-    "light": {
-      "badge": "Easy start · For beginners",
-      "title": "Calisthenics Light",
-      "desc": "A gentle way back into training if you haven’t worked out in a while or spend a lot of time at a computer. No burnout, no “killer” routines.",
-      "features": [
-        "20–30 minutes, no equipment",
-        "Back, shoulders, core, and legs",
-        "Foundation for pull-ups and handstands"
-      ],
-      "context": "Course: Calisthenics Light"
-    },
-    "super": {
-      "badge": "Get stronger · Any level",
-      "title": "Super Calisthenics",
-      "desc": "The main course if you simply want to get strong: full body work, progress in pull-ups, handstands, and core basics.",
-      "features": [
-        "45–60 minutes, pull-up bar needed",
-        "Balanced pull, push, and core",
-        "Learn any skill"
-      ],
-      "context": "Course: Super Calisthenics"
-    },
-    "pullupsGirls": {
-      "badge": "Learn pull-ups · Any level",
-      "title": "Pull-ups for girls",
-      "desc": "The goal is your first confident pull-up. No stress, no comparisons, and no “this isn’t for you” comments.",
-      "features": [
-        "45–60 minutes, pull-up bar needed",
-        "Step-by-step path from 0 → 1 and beyond",
-        "Super Calisthenics with your chosen goal"
-      ],
-      "context": "Course: Pull-ups for girls"
-    },
-    "handstand": {
-      "badge": "Learn to handstand · Any level",
-      "title": "Handstand",
-      "desc": "From “never held a wall handstand” to confident balance. We build mobility, strength, and body position awareness.",
-      "features": [
-        "30–40 minutes, no equipment",
-        "Prepare shoulders, wrists, and core",
-        "Balance technique training"
-      ],
-      "context": "Course: Handstand"
-    },
-    "crossfit": {
-      "badge": "Add strict skills · Advanced",
-      "title": "Calisthenics for CrossFitters",
-      "desc": "If you want to add confident strict movements to your kipping: pull-ups, handstand push-ups, and muscle-ups — without sacrificing technique or shoulders.",
-      "features": [
-        "60–80 minutes per workout, pull-up bar needed",
-        "Scapular and core strength for gymnastics",
-        "Strict pull-ups and HSPU"
-      ],
-      "context": "Course: Calisthenics for CrossFitters"
-    }
-  }
-}, "pricing": {
-  "kicker": "Pricing",
-  "title": "How much training costs",
-  "desc": "You buy a workout block, complete it at your own pace, and then take the next one. No subscription and no auto-charges.",
-
-  "currencyLabel": "Currency",
-  "switchHint": {
-    "EUR": "Pay in euros",
-    "USD": "Pay in dollars",
-    "AMD": "Pay by card in drams"
+  "common": {
+    "lang_en": "EN",
+    "lang_ru": "RU"
   },
-
-  "noteLeft": "1 workout = a personalized plan in the app + technique review based on your videos.",
-  "noteRight": "You can use the workouts at your own pace, with no strict deadlines.",
-
-  "cards": {
-    "test": {
-      "step": "Step 1 · start · app",
-      "title": "Strength test",
-      "free": "free",
-      "bullets": [
-        "Access to the app and the training format",
-        "Exercises with technique explanations",
-        "No payment and no obligations"
-      ],
-      "text": "Take the test when it’s convenient and upload your videos in the app.",
-      "button": "Take the free test",
-      "context": "Pricing: Strength test (free)"
-    },
-
-    "review": {
-      "badge": "One-time",
-      "title": "Technique review",
-      "note": "one-time",
-      "bullets": [
-        "Everything included in the strength test",
-        "Detailed technique review from the coach",
-        "Your first workout tailored to you",
-        "Load recommendations for the next weeks"
-      ],
-      "text": "Meet the coach and start your calisthenics journey.",
-      "button": "Pay for technique review",
-      "tariffLabel": "Technique review (1 session)"
-    },
-
-    "month": {
-      "badge": "Intensive block",
-      "title": "12 workouts",
-      "perLabel": "per workout",
-      "bullets": [
-        "Everything included in the strength test",
-        "12 personalized workouts",
-        "Technique review after each workout",
-        "Train 2–3 times per week"
-      ],
-      "text": "A block to noticeably improve strength, technique, and physique.",
-      "button": "Buy 12 workouts",
-      "tariffLabel": "12-workout block"
-    },
-
-    "bundle": {
-      "badge": "Easy pace and long format",
-
-      "slow12": {
-        "title": "12 workouts — easy pace",
-        "perLabel": "per workout",
-        "text": "Great if you want 1–2 workouts per week with no rush or deadlines.",
-        "button": "Buy easy block (12 w.)",
-        "tariffLabel": "12 workouts — easy pace"
+  "home": {
+    "header": {
+      "nav": {
+        "how": "How it works",
+        "courses": "Courses",
+        "pricing": "Pricing",
+        "about": "About",
+        "reviews": "Reviews",
+        "faq": "FAQ"
       },
-
-      "long36": {
-        "title": "36 workouts",
-        "perLabel": "per workout",
-        "text": "For those who are staying long-term and want steady progress.",
-        "button": "Buy 36 workouts",
-        "tariffLabel": "36 workouts"
+      "login": "Log in",
+      "openMenu": "Open menu",
+      "menuTitle": "Menu",
+      "closeMenu": "Close menu",
+      "takeStrengthTest": "Take the strength test",
+      "locations": "Locations"
+    },
+    "hero": {
+      "badge": "Online calisthenics programs",
+      "titleLine1": "Bodyweight",
+      "titleLine2": "training",
+      "subtitle": "at a comfortable pace with a strong focus on technique",
+      "desc": "Learn proper technique, build strength, and master skills step by step. Every workout adapts to your level, goals, and schedule.",
+      "ctaCourses": "View courses",
+      "benefitPlan": "personal plan tailored to your goals",
+      "benefitChat": "support chat",
+      "nextStepLabel": "Your next step",
+      "nextStepTitle": "Find the right program for you",
+      "start": "Start",
+      "cardWorkoutsTitle": "Workouts per week",
+      "cardWorkoutsValue": "2–3",
+      "cardWorkoutsNote": "ideal for progress and recovery",
+      "cardProgressTitle": "Noticeable progress in",
+      "cardProgressValue": "3–4 weeks",
+      "cardProgressNote": "strength and technique growth"
+    },
+    "modals": {
+      "strengthTest": {
+        "title": "Sign up for the strength test",
+        "close": "Close form",
+        "fullNameLabel": "Full name",
+        "fullNamePlaceholder": "For example: Anna Ivanova",
+        "emailLabel": "Email",
+        "phoneLabel": "Phone",
+        "phoneWillBeSentAs": "Will be sent as:",
+        "customDialPlaceholder": "+1",
+        "phonePlaceholderGeneric": "Number",
+        "courseLabel": "Course",
+        "coursePlaceholder": "Choose a course",
+        "agreeTextPrefix": "I agree with the",
+        "privacyPolicy": "privacy policy",
+        "agreeDot": ".",
+        "submitSending": "Sending...",
+        "submit": "Submit"
+      },
+      "purchase": {
+        "title": "Workout block payment",
+        "close": "Close payment",
+        "tariff": "Plan",
+        "fullNameLabel": "Full name",
+        "fullNamePlaceholder": "For example: Anna Ivanova",
+        "emailLabel": "Email",
+        "phoneLabel": "Phone",
+        "courseLabel": "Course",
+        "coursePlaceholder": "Choose a course",
+        "agreeTextPrefix": "I agree with the",
+        "privacyPolicy": "privacy policy",
+        "andPaymentTerms": "and the payment terms.",
+        "submitGoing": "Redirecting to payment...",
+        "submit": "Proceed to payment"
+      },
+      "login": {
+        "title": "Log in to your account",
+        "desc": "The app account is currently in development. This login form is a demo.",
+        "close": "Close login form",
+        "emailLabel": "Email",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Password",
+        "message": "Your account is currently in development. We'll email you when the app becomes available.",
+        "submitChecking": "Checking…",
+        "submit": "Log in"
       }
+    },
+    "countries": {
+      "RU": { "label": "Russia", "placeholder": "900 000-00-00" },
+      "AM": { "label": "Armenia", "placeholder": "77 123 456" },
+      "GB": { "label": "UK", "placeholder": "7400 000000" },
+      "US": { "label": "USA", "placeholder": "201 555 0123" },
+      "BY": { "label": "Belarus", "placeholder": "29 123 45 67" },
+      "KZ": { "label": "Kazakhstan", "placeholder": "701 000 0000" },
+      "UA": { "label": "Ukraine", "placeholder": "50 000 0000" },
+      "ES": { "label": "Spain", "placeholder": "612 345 678" },
+      "DE": { "label": "Germany", "placeholder": "1512 3456789" },
+      "FR": { "label": "France", "placeholder": "6 12 34 56 78" },
+      "OTHER": { "label": "Other", "placeholder": "Enter number" }
+    },
+    "contexts": {
+      "headerStrengthTest": "Mobile menu: Strength test",
+      "heroStrengthTest": "Hero section: Strength test",
+      "heroStart": "Hero section: Find your program",
+      "pricingStrengthTest": "Pricing section: Strength test"
+    },
+    "howItWorks": {
+      "kicker": "Process",
+      "titleLine1": "From the strength test to pull-ups,",
+      "titleLine2": "handstands, and muscle-ups",
+      "desc": "We break each skill down into technique, common mistakes, and clear progressions for your current level. The strength test shows where you are now, your goal defines what you’re working toward, and your personalized program plus coach video reviews help you reach it safely and effectively.",
+      "stepLabel": "Step {number}",
+      "steps": [
+        {
+          "number": "01",
+          "title": "Define your level and goals",
+          "text": "You take our strength test: 5–7 exercises depending on the course you choose and the equipment you have. We lock in your current level and pick the main goal.",
+          "meta": "Takes 30–40 minutes"
+        },
+        {
+          "number": "02",
+          "title": "Build a program for your level",
+          "text": "Based on your test, we choose the right exercises and progressions, explain proper technique, and go through common mistakes.",
+          "meta": "A 4–12 week plan"
+        },
+        {
+          "number": "03",
+          "title": "Train and build a stronger body",
+          "text": "You follow workouts in the app, mark completed sessions, and send video check-ins to your coach. The coach gives feedback and updates your training as you progress. You’ll see your strength grow, your technique improve, and your goal become achievable.",
+          "meta": "Feedback after every workout"
+        }
+      ]
+    },
+    "courses": {
+      "badge": "Online programs for gym and home",
+      "title": "Goals and programs",
+      "desc": "Choose the direction that fits you best right now — you can switch to another course at any time. The program adapts flexibly to your level and interests.",
+      "scrollHint": "Swipe right to see all programs.",
+      "scrollNote": "Any course can be adapted to your starting level.",
+      "testButton": "Take the strength test",
+      "cards": {
+        "light": {
+          "badge": "Easy start · For beginners",
+          "title": "Calisthenics Light",
+          "desc": "A gentle way back into training if you haven’t worked out in a while or spend a lot of time at a computer. No burnout, no “killer” routines.",
+          "features": [
+            "20–30 minutes, no equipment",
+            "Back, shoulders, core, and legs",
+            "Foundation for pull-ups and handstands"
+          ],
+          "context": "Course: Calisthenics Light"
+        },
+        "super": {
+          "badge": "Get stronger · Any level",
+          "title": "Super Calisthenics",
+          "desc": "The main course if you simply want to get strong: full body work, progress in pull-ups, handstands, and core basics.",
+          "features": [
+            "45–60 minutes, pull-up bar needed",
+            "Balanced pull, push, and core",
+            "Learn any skill"
+          ],
+          "context": "Course: Super Calisthenics"
+        },
+        "pullupsGirls": {
+          "badge": "Learn pull-ups · Any level",
+          "title": "Pull-ups for girls",
+          "desc": "The goal is your first confident pull-up. No stress, no comparisons, and no “this isn’t for you” comments.",
+          "features": [
+            "45–60 minutes, pull-up bar needed",
+            "Step-by-step path from 0 → 1 and beyond",
+            "Super Calisthenics with your chosen goal"
+          ],
+          "context": "Course: Pull-ups for girls"
+        },
+        "handstand": {
+          "badge": "Learn to handstand · Any level",
+          "title": "Handstand",
+          "desc": "From “never held a wall handstand” to confident balance. We build mobility, strength, and body position awareness.",
+          "features": [
+            "30–40 minutes, no equipment",
+            "Prepare shoulders, wrists, and core",
+            "Balance technique training"
+          ],
+          "context": "Course: Handstand"
+        },
+        "crossfit": {
+          "badge": "Add strict skills · Advanced",
+          "title": "Calisthenics for CrossFitters",
+          "desc": "If you want to add confident strict movements to your kipping: pull-ups, handstand push-ups, and muscle-ups — without sacrificing technique or shoulders.",
+          "features": [
+            "60–80 minutes per workout, pull-up bar needed",
+            "Scapular and core strength for gymnastics",
+            "Strict pull-ups and HSPU"
+          ],
+          "context": "Course: Calisthenics for CrossFitters"
+        }
+      }
+    },
+    "pricing": {
+      "kicker": "Pricing",
+      "title": "How much training costs",
+      "desc": "You buy a workout block, complete it at your own pace, and then take the next one. No subscription and no auto-charges.",
+      "currencyLabel": "Currency",
+      "switchHint": {
+        "EUR": "Pay in euros",
+        "USD": "Pay in dollars",
+        "AMD": "Pay by card in drams"
+      },
+      "noteLeft": "1 workout = a personalized plan in the app + technique review based on your videos.",
+      "noteRight": "You can use the workouts at your own pace, with no strict deadlines.",
+      "cards": {
+        "test": {
+          "step": "Step 1 · start · app",
+          "title": "Strength test",
+          "free": "free",
+          "bullets": [
+            "Access to the app and the training format",
+            "Exercises with technique explanations",
+            "No payment and no obligations"
+          ],
+          "text": "Take the test when it’s convenient and upload your videos in the app.",
+          "button": "Take the free test",
+          "context": "Pricing: Strength test (free)"
+        },
+        "review": {
+          "badge": "One-time",
+          "title": "Technique review",
+          "note": "one-time",
+          "bullets": [
+            "Everything included in the strength test",
+            "Detailed technique review from the coach",
+            "Your first workout tailored to you",
+            "Load recommendations for the next weeks"
+          ],
+          "text": "Meet the coach and start your calisthenics journey.",
+          "button": "Pay for technique review",
+          "tariffLabel": "Technique review (1 session)"
+        },
+        "month": {
+          "badge": "Intensive block",
+          "title": "12 workouts",
+          "perLabel": "per workout",
+          "bullets": [
+            "Everything included in the strength test",
+            "12 personalized workouts",
+            "Technique review after each workout",
+            "Train 2–3 times per week"
+          ],
+          "text": "A block to noticeably improve strength, technique, and physique.",
+          "button": "Buy 12 workouts",
+          "tariffLabel": "12-workout block"
+        },
+        "bundle": {
+          "badge": "Easy pace and long format",
+          "slow12": {
+            "title": "12 workouts — easy pace",
+            "perLabel": "per workout",
+            "text": "Great if you want 1–2 workouts per week with no rush or deadlines.",
+            "button": "Buy easy block (12 w.)",
+            "tariffLabel": "12 workouts — easy pace"
+          },
+          "long36": {
+            "title": "36 workouts",
+            "perLabel": "per workout",
+            "text": "For those who are staying long-term and want steady progress.",
+            "button": "Buy 36 workouts",
+            "tariffLabel": "36 workouts"
+          }
+        }
+      }
+    },
+    "about": {
+      "kicker": "About",
+      "title": "From a studio to a digital system",
+      "lead": "I Do Calisthenics is a calisthenics school that grew from a studio in Moscow into a bodyweight training system for people all over the world. We combine the experience of in-person coaching with the convenience of an app.",
+      "story": {
+        "p1_prefix": "We opened our first studio more than",
+        "p1_years": "{years}",
+        "p1_suffix": "years ago. Since then, we’ve coached thousands of people: breaking down technique step by step, selecting progressions, and finding the right approach for every athlete—so movement becomes clear and accessible.",
+        "p2": "Now that experience has moved into a digital format. Everything we used to coach hands-on in the gym has become a system: clear steps from basic movements to advanced skills.",
+        "p3": "For us, online isn’t a compromise—it’s a continuation of what works. You can train from anywhere in the world: at home, on a bar in your yard, or in the gym.",
+        "mission": "Our mission is to help people become stronger, freer, and more confident."
+      },
+      "gallery": {
+        "kicker": "Calisthenics for everyone",
+        "desc": "Calisthenics brings together people of different ages and levels—those who want to get stronger or learn skills they’ve been dreaming about for a long time.",
+        "imageAlt": "I Do Calisthenics group training",
+        "prevAria": "Previous photo",
+        "nextAria": "Next photo"
+      }
+    },
+    "testimonials": {
+      "kicker": "Reviews",
+      "title": "What students say",
+      "desc": "Below are a few reviews from people who have already taken the strength test, received a technique review, and are training with our system.",
+      "badge": "Reviews from Instagram",
+      "list": [
+        {
+          "id": "t1",
+          "name": "Katya (kat.garina)",
+          "tag": "Online · Pull-ups for girls",
+          "text": "I followed the account for a long time and hesitated: would online training actually bring progress, and how would I combine it with regular strength workouts at the gym. Two months ago I decided to try — and it turned out to be the best decision. I started calisthenics from zero, and two months is of course not enough to talk about incredible progress, but even now I can see that I feel and control my body better, and because of that my strength numbers in the gym improved too. I like that the exercises are varied and there’s always a small step forward. Special thanks to Dasha for clear technique explanations, support, and patient answers to my million questions 🫶🏻 I dream of visiting an offline session the next time I travel to Russia!",
+          "source": "Instagram",
+          "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
+        },
+        {
+          "id": "t2",
+          "name": "Zhenya (mequinte)",
+          "tag": "Online · Pull-ups for girls",
+          "text": "I’ve always been into sports, but lately I had limited time and got bored of doing standard exercises/programs. For a year now I’ve been training calisthenics with you and it exceeded all my expectations! My strength has increased a lot, and at the same time I became more flexible, solid, and enduring. My body settled into a nice shape, even though I didn’t lose much weight (because I refuse to go on a strict diet). Coach Dasha often sends extra videos to explain unclear details. We set shared goals and work towards them. And of course, what’s very important to me — I can train when it’s convenient for ME. Love you! Wishing you many years of success! ❤️",
+          "source": "Instagram",
+          "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
+        },
+        {
+          "id": "t3",
+          "name": "Inna (easy_inna_)",
+          "tag": "Online · Calisthenics light",
+          "text": "Hello! I’ve been training for the third month — since January. I decided to try and unexpectedly found the perfect format for myself: I train when it’s convenient, and the need to send reports keeps me disciplined) Every workout has different exercises — it’s really interesting. At first it was quite easy, now they adjusted the load and many exercises are already challenging, which is exciting) And there is progress, of course — it’s a great feeling when you get stronger and an exercise becomes easier! My goal is to learn pull-ups with my own bodyweight by summer, and I feel like I’m already confidently halfway there)",
+          "source": "Instagram",
+          "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
+        }
+      ]
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Frequently asked questions",
+      "desc": "If you still have doubts, there’s probably an answer here. If not, you can always ask the coach a question before you start.",
+      "items": [
+        {
+          "question": "Is this suitable if I’ve never trained before?",
+          "answer": "Yes. We start with a strength test and simple exercises to understand your level. The program scales to you: from the most basic movements to skills. No “compare to norms” — we only compare you today with you in a few weeks."
+        },
+        {
+          "question": "How long does one workout take?",
+          "answer": "On average 30–60 minutes depending on the format and your level. For beginner programs it’s closer to 30–40 minutes. You can train at home, outdoors, or in a gym—whatever feels more comfortable."
+        },
+        {
+          "question": "Do I need a pull-up bar or a gym?",
+          "answer": "At the very beginning you can train without a gym: some programs are designed for home workouts. But to progress in pull-ups and skills, a pull-up bar or access to a playground is still needed. We’ll tell you the minimal setup worth starting with."
+        },
+        {
+          "question": "How does the coach give feedback on technique?",
+          "answer": "You record one set on video and upload it to the app. The coach watches, points out mistakes, gives comments and corrections. Based on that, they build your next workout or adjust the current block so you progress safely."
+        },
+        {
+          "question": "What if I miss workouts or fall out of schedule?",
+          "answer": "That’s normal—life doesn’t always fit a perfect plan. If you miss something, you just return to the program where you left off. The coach can adapt the plan to your new reality: reduce volume, change frequency, or rebuild the week."
+        },
+        {
+          "question": "Can I change the course or goal during a training block?",
+          "answer": "Yes. You buy a training block, not a rigid commitment to one course. If during the process you want to shift focus—for example from pull-ups to a handstand—discuss it with the coach and they’ll adapt the program."
+        }
+      ],
+      "cta": "Still unsure where to start? Try the free strength test — it’s a safe way to understand your level and the training format."
+    },
+    "footer": {
+      "copyright": "© {yearLabel}. All rights reserved.",
+      "offer": "Public offer",
+      "consent": "Consent to personal data processing",
+      "privacy": "Personal data processing policy",
+      "instagram": "Instagram"
     }
-  }
-},
-"about": {
-  "kicker": "About",
-  "title": "From a studio to a digital system",
-  "lead": "I Do Calisthenics is a calisthenics school that grew from a studio in Moscow into a bodyweight training system for people all over the world. We combine the experience of in-person coaching with the convenience of an app.",
-
-  "story": {
-    "p1_prefix": "We opened our first studio more than",
-    "p1_years": "{years}",
-    "p1_suffix": "years ago. Since then, we’ve coached thousands of people: breaking down technique step by step, selecting progressions, and finding the right approach for every athlete—so movement becomes clear and accessible.",
-
-    "p2": "Now that experience has moved into a digital format. Everything we used to coach hands-on in the gym has become a system: clear steps from basic movements to advanced skills.",
-    "p3": "For us, online isn’t a compromise—it’s a continuation of what works. You can train from anywhere in the world: at home, on a bar in your yard, or in the gym.",
-    "mission": "Our mission is to help people become stronger, freer, and more confident."
   },
-
-  "gallery": {
-    "kicker": "Calisthenics for everyone",
-    "desc": "Calisthenics brings together people of different ages and levels—those who want to get stronger or learn skills they’ve been dreaming about for a long time.",
-    "imageAlt": "I Do Calisthenics group training",
-    "prevAria": "Previous photo",
-    "nextAria": "Next photo"
-  }
-},
-
-"testimonials": {
-  "kicker": "Reviews",
-  "title": "What students say",
-  "desc": "Below are a few reviews from people who have already taken the strength test, received a technique review, and are training with our system.",
-  "badge": "Reviews from Instagram",
-  "list": [
-    {
-      "id": "t1",
-      "name": "Katya (kat.garina)",
-      "tag": "Online · Pull-ups for girls",
-      "text": "I followed the account for a long time and hesitated: would online training actually bring progress, and how would I combine it with regular strength workouts at the gym. Two months ago I decided to try — and it turned out to be the best decision. I started calisthenics from zero, and two months is of course not enough to talk about incredible progress, but even now I can see that I feel and control my body better, and because of that my strength numbers in the gym improved too. I like that the exercises are varied and there’s always a small step forward. Special thanks to Dasha for clear technique explanations, support, and patient answers to my million questions 🫶🏻 I dream of visiting an offline session the next time I travel to Russia!",
-      "source": "Instagram",
-      "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
-    },
-    {
-      "id": "t2",
-      "name": "Zhenya (mequinte)",
-      "tag": "Online · Pull-ups for girls",
-      "text": "I’ve always been into sports, but lately I had limited time and got bored of doing standard exercises/programs. For a year now I’ve been training calisthenics with you and it exceeded all my expectations! My strength has increased a lot, and at the same time I became more flexible, solid, and enduring. My body settled into a nice shape, even though I didn’t lose much weight (because I refuse to go on a strict diet). Coach Dasha often sends extra videos to explain unclear details. We set shared goals and work towards them. And of course, what’s very important to me — I can train when it’s convenient for ME. Love you! Wishing you many years of success! ❤️",
-      "source": "Instagram",
-      "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
-    },
-    {
-      "id": "t3",
-      "name": "Inna (easy_inna_)",
-      "tag": "Online · Calisthenics light",
-      "text": "Hello! I’ve been training for the third month — since January. I decided to try and unexpectedly found the perfect format for myself: I train when it’s convenient, and the need to send reports keeps me disciplined) Every workout has different exercises — it’s really interesting. At first it was quite easy, now they adjusted the load and many exercises are already challenging, which is exciting) And there is progress, of course — it’s a great feeling when you get stronger and an exercise becomes easier! My goal is to learn pull-ups with my own bodyweight by summer, and I feel like I’m already confidently halfway there)",
-      "source": "Instagram",
-      "url": "https://www.instagram.com/p/DIB_beJiU6f/?igsh=MWpsenA0MXJuMnJs"
-    }
-  ]
-},
-"faq": {
-  "kicker": "FAQ",
-  "title": "Frequently asked questions",
-  "desc": "If you still have doubts, there’s probably an answer here. If not, you can always ask the coach a question before you start.",
-  "items": [
-    {
-      "question": "Is this suitable if I’ve never trained before?",
-      "answer": "Yes. We start with a strength test and simple exercises to understand your level. The program scales to you: from the most basic movements to skills. No “compare to norms” — we only compare you today with you in a few weeks."
-    },
-    {
-      "question": "How long does one workout take?",
-      "answer": "On average 30–60 minutes depending on the format and your level. For beginner programs it’s closer to 30–40 minutes. You can train at home, outdoors, or in a gym—whatever feels more comfortable."
-    },
-    {
-      "question": "Do I need a pull-up bar or a gym?",
-      "answer": "At the very beginning you can train without a gym: some programs are designed for home workouts. But to progress in pull-ups and skills, a pull-up bar or access to a playground is still needed. We’ll tell you the minimal setup worth starting with."
-    },
-    {
-      "question": "How does the coach give feedback on technique?",
-      "answer": "You record one set on video and upload it to the app. The coach watches, points out mistakes, gives comments and corrections. Based on that, they build your next workout or adjust the current block so you progress safely."
-    },
-    {
-      "question": "What if I miss workouts or fall out of schedule?",
-      "answer": "That’s normal—life doesn’t always fit a perfect plan. If you miss something, you just return to the program where you left off. The coach can adapt the plan to your new reality: reduce volume, change frequency, or rebuild the week."
-    },
-    {
-      "question": "Can I change the course or goal during a training block?",
-      "answer": "Yes. You buy a training block, not a rigid commitment to one course. If during the process you want to shift focus—for example from pull-ups to a handstand—discuss it with the coach and they’ll adapt the program."
-    }
-  ],
-  "cta": "Still unsure where to start? Try the free strength test — it’s a safe way to understand your level and the training format."
-},
-"footer": {
-  "copyright": "© {yearLabel}. All rights reserved.",
-  "offer": "Public offer",
-  "consent": "Consent to personal data processing",
-  "privacy": "Personal data processing policy",
-  "instagram": "Instagram"
-},
   "pay": {
     "labels": {
       "payment": "Payment",
@@ -415,16 +397,21 @@
       "sslRestricted": "This payment method is currently unavailable. Try another option or contact support.",
       "generic": "The bank declined the payment. Try another card or try again later."
     },
+    "telegram": {
+      "title": "Connect your Telegram account",
+      "desc": "To track your workout balance, access materials, and chat with your coach — connect our Telegram bot.",
+      "button": "Open Telegram bot",
+      "noToken": "Link token is not available yet. Please refresh the page in a minute."
+    },
     "actions": {
       "tryAgain": "Try again",
-      "backToSite": "Back to site"
+      "backToSite": "Back to site",
+      "checkAgain": "Check again",
+      "openTelegram": "Open Telegram bot"
     },
     "errors": {
       "noPaymentId": "Payment identifier not found.",
       "checkFailed": "Failed to check payment status."
     }
   }
-
-
-      }
-    }
+}

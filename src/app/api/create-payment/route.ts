@@ -152,6 +152,12 @@ async function sendPurchaseToAirtable(fields: Record<string, any>) {
   }
 }
 
+/* ---------------- TG TOKEN ---------------- */
+
+function makeTelegramLinkToken() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
@@ -188,10 +194,7 @@ export async function POST(req: Request) {
         tariffId,
       });
 
-      return NextResponse.json(
-        { error: "Не хватает данных" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Не хватает данных" }, { status: 400 });
     }
 
     const lessonsByTariff: Record<string, number> = {
@@ -202,6 +205,9 @@ export async function POST(req: Request) {
     };
 
     const lessons = lessonsByTariff[tariffId] ?? 1;
+
+    // ✅ NEW: токен создаём сразу при создании оплаты и пишем в Airtable
+    const tgToken = makeTelegramLinkToken();
 
     /* ---------- RUB ---------- */
     if (currency === "RUB") {
@@ -226,21 +232,22 @@ export async function POST(req: Request) {
         Currency: currency,
         Tag: tariffId,
         Status: "created",
+        tg_link_token: tgToken, // ✅ NEW
       });
 
-      return NextResponse.json({ paymentUrl, paymentId });
+      return NextResponse.json({ paymentUrl, paymentId, tgToken }); // ✅ NEW (удобно для фронта)
     }
 
     /* ---------- AMERIA ---------- */
     const descriptionByTariff: Record<string, string> = {
-      review: "IDC School - 1 lesson",
-      month: "IDC School - 12 lessons (4 weeks)",
-      slow12: "IDC School - 12 lessons (8 weeks)",
-      long36: "IDC School - 36 lessons",
+      review: "I Do Calisthenics - 1 lesson",
+      month: "I Do Calisthenics - 12 lessons (4 weeks)",
+      slow12: "I Do Calisthenics - 12 lessons (8 weeks)",
+      long36: "I Do Calisthenics - 36 lessons",
     };
 
     const description =
-      descriptionByTariff[tariffId] ?? `IDC School - ${tariffId}`;
+      descriptionByTariff[tariffId] ?? `I Do Calisthenics - ${tariffId}`;
 
     const opaque = JSON.stringify({
       tariffId,
@@ -284,9 +291,10 @@ export async function POST(req: Request) {
       Currency: currency,
       Tag: tariffId,
       Status: "created",
+      tg_link_token: tgToken, // ✅ NEW
     });
 
-    return NextResponse.json({ paymentUrl, paymentId, orderId });
+    return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken }); // ✅ NEW (удобно для фронта)
   } catch (e: any) {
     console.error("create-payment error:", e);
     return NextResponse.json(

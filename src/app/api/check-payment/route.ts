@@ -80,7 +80,12 @@ async function airtableFindByPaymentId(paymentIdRaw: string) {
     try {
       json = JSON.parse(text);
     } catch {
-      return { ok: false as const, reason: "find_bad_json" as const, text, filterByFormula };
+      return {
+        ok: false as const,
+        reason: "find_bad_json" as const,
+        text,
+        filterByFormula,
+      };
     }
 
     const rec = Array.isArray(json?.records) ? json.records[0] : null;
@@ -96,7 +101,10 @@ async function airtableFindByPaymentId(paymentIdRaw: string) {
   return b;
 }
 
-async function airtableUpdateRecord(recordId: string, fields: Record<string, any>) {
+async function airtableUpdateRecord(
+  recordId: string,
+  fields: Record<string, any>
+) {
   const env = airtableEnv();
   if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
@@ -330,14 +338,17 @@ export async function POST(req: Request) {
     const found = await airtableFindByPaymentId(paymentId);
 
     if (found.ok && found.record?.id) {
+      const tgToken =
+        String((found.record?.fields as any)?.tg_link_token ?? "").trim() || null;
+
       const upd = await airtableUpdateRecord(found.record.id, {
         Status: "paid",
-        // Если хочешь — можно добавить Paid_time
         // Paid_time: new Date().toISOString(),
       });
 
       return NextResponse.json({
         ...baseResponse,
+        tgToken, // ✅ NEW: возвращаем токен на фронт
         airtable: {
           action: "updated",
           found: true,
@@ -356,6 +367,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ...baseResponse,
+      tgToken: null, // ✅ NEW: токена нет, потому что запись была создана fallback-ом
       airtable: {
         action: "created",
         found: false,
