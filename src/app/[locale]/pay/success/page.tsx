@@ -46,7 +46,7 @@ function mapAmeriaDeclineReason(
 }
 
 export default function PaySuccessPage() {
-  const t = useTranslations("pay");
+  const t = useTranslations("home.pay");
   const pref = useLocalePrefix();
   const searchParams = useSearchParams();
 
@@ -110,7 +110,7 @@ export default function PaySuccessPage() {
     };
 
     run();
-  }, [noRedirect, pref, t]);
+  }, [noRedirect]);
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();
