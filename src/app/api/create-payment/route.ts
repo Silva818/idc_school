@@ -67,8 +67,10 @@ async function initAmeriaPayment(params: {
 
   const orderId = makeOrderId();
 
-  // ✅ ВАЖНО: делаем возврат с учётом языка сайта
-  const backURL = `${appBase}/pay/ameria/return?locale=${encodeURIComponent(params.locale)}`;
+  // ✅ ВАЖНО: возвращаемся с явным locale (банк этот параметр реально возвращает обратно)
+  const backURL = `${appBase}/pay/ameria/return?locale=${encodeURIComponent(
+    params.locale
+  )}`;
 
   const body = {
     ClientID,
@@ -95,7 +97,7 @@ async function initAmeriaPayment(params: {
     throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
   }
 
-  // ✅ Язык страницы банка тоже ставим динамически
+  // ✅ Если банк игнорирует lang — это не ломает; но на всякий оставим.
   const paymentUrl =
     `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
     `&lang=${encodeURIComponent(params.locale)}`;
@@ -189,11 +191,15 @@ export async function POST(req: Request) {
       tariffId: string;
       tariffLabel: string;
       courseName?: string;
-      locale?: Locale; // ✅ NEW
+      locale?: Locale;
     };
 
-    // ✅ безопасно нормализуем язык
-    const safeLocale: Locale = locale === "ru" ? "ru" : "en";
+    // ✅ FIX: если вдруг фронт не прислал locale, страхуемся по referer
+    const referer = req.headers.get("referer") || "";
+    const inferredLocale: Locale = referer.includes("/ru") ? "ru" : "en";
+
+    const safeLocale: Locale =
+      locale === "ru" ? "ru" : locale === "en" ? "en" : inferredLocale;
 
     if (!amount || !currency || !email || !fullName || !tariffId) {
       console.warn("⚠️ Missing fields:", {
@@ -233,7 +239,7 @@ export async function POST(req: Request) {
         Tag: tariffId,
         Status: "created",
         tg_link_token: tgToken,
-        locale: safeLocale, // ✅ NEW (необязательно, но полезно)
+        locale: safeLocale,
       });
 
       return NextResponse.json({ paymentUrl, paymentId, tgToken });
@@ -250,7 +256,6 @@ export async function POST(req: Request) {
     const description =
       descriptionByTariff[tariffId] ?? `I Do Calisthenics - ${tariffId}`;
 
-    // ✅ добавили locale в opaque
     const opaque = JSON.stringify({
       tariffId,
       email,
@@ -263,7 +268,7 @@ export async function POST(req: Request) {
       currency: currency as Exclude<Currency, "RUB">,
       description,
       opaque,
-      locale: safeLocale, // ✅ NEW
+      locale: safeLocale,
     });
 
     await sendPurchaseToAirtable({
@@ -276,7 +281,7 @@ export async function POST(req: Request) {
       Tag: tariffId,
       Status: "created",
       tg_link_token: tgToken,
-      locale: safeLocale, // ✅ NEW
+      locale: safeLocale,
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });

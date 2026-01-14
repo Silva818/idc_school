@@ -3,6 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 const LOCALES = new Set(["en", "ru"]);
 
+function parseLocaleFromQuery(req: NextRequest): "en" | "ru" | null {
+  const sp = req.nextUrl.searchParams;
+
+  // ✅ банк возвращает то, что было в BackURL (?locale=ru|en)
+  const v =
+    sp.get("locale") ||
+    sp.get("lang") ||
+    sp.get("language") ||
+    "";
+
+  const norm = String(v).trim().toLowerCase();
+  if (norm === "ru") return "ru";
+  if (norm === "en") return "en";
+  return null;
+}
+
 function parseLocaleFromOpaque(req: NextRequest): "en" | "ru" | null {
   const sp = req.nextUrl.searchParams;
   const raw = sp.get("opaque");
@@ -33,8 +49,9 @@ function parseLocaleFromAcceptLanguage(req: NextRequest): "en" | "ru" | null {
 }
 
 function pickLocale(req: NextRequest): "en" | "ru" {
-  // ✅ ВАЖНО: сначала opaque (источник истины), потом cookie/headers
+  // ✅ FIX: сначала query (BackURL locale), потом opaque, потом cookie/headers
   return (
+    parseLocaleFromQuery(req) ||
     parseLocaleFromOpaque(req) ||
     parseLocaleFromCookie(req) ||
     parseLocaleFromAcceptLanguage(req) ||
@@ -79,7 +96,6 @@ export async function GET(req: NextRequest) {
   if (responseCode) target.searchParams.set("responseCode", responseCode);
   if (orderId) target.searchParams.set("orderId", orderId);
 
-  // ✅ Фиксируем cookie языком ИЗ opaque/cookie/headers (не из query банка)
   const res = NextResponse.redirect(target);
   res.cookies.set("NEXT_LOCALE", locale, {
     path: "/",
