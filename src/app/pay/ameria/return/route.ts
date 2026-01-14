@@ -3,20 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 const LOCALES = new Set(["en", "ru"]);
 
-function parseLocaleFromQuery(req: NextRequest): "en" | "ru" | null {
+function parseLocaleFromOpaque(req: NextRequest): "en" | "ru" | null {
   const sp = req.nextUrl.searchParams;
+  const raw = sp.get("opaque");
+  if (!raw) return null;
 
-  // поддержим несколько вариантов на всякий
-  const v =
-    sp.get("locale") ||
-    sp.get("lang") ||
-    sp.get("language") ||
-    "";
-
-  const norm = String(v).trim().toLowerCase();
-  if (norm === "ru") return "ru";
-  if (norm === "en") return "en";
-  return null;
+  try {
+    const obj = JSON.parse(raw);
+    const v = String(obj?.locale ?? "").trim().toLowerCase();
+    if (v === "ru") return "ru";
+    if (v === "en") return "en";
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function parseLocaleFromCookie(req: NextRequest): "en" | "ru" | null {
@@ -33,8 +33,9 @@ function parseLocaleFromAcceptLanguage(req: NextRequest): "en" | "ru" | null {
 }
 
 function pickLocale(req: NextRequest): "en" | "ru" {
+  // ✅ ВАЖНО: сначала opaque (источник истины), потом cookie/headers
   return (
-    parseLocaleFromQuery(req) ||
+    parseLocaleFromOpaque(req) ||
     parseLocaleFromCookie(req) ||
     parseLocaleFromAcceptLanguage(req) ||
     "en"
@@ -70,7 +71,6 @@ export async function GET(req: NextRequest) {
   const locale = pickLocale(req);
   const base = `${req.nextUrl.origin}${prefix(locale)}`;
 
-  // куда редиректим
   const target = paymentId
     ? new URL(`${base}/pay/success`)
     : new URL(`${base}/pay/pending`);
@@ -79,11 +79,11 @@ export async function GET(req: NextRequest) {
   if (responseCode) target.searchParams.set("responseCode", responseCode);
   if (orderId) target.searchParams.set("orderId", orderId);
 
-  // ✅ важно: зафиксировать язык cookie'й, чтобы дальше success/pending точно знали язык
+  // ✅ Фиксируем cookie языком ИЗ opaque/cookie/headers (не из query банка)
   const res = NextResponse.redirect(target);
   res.cookies.set("NEXT_LOCALE", locale, {
     path: "/",
-    maxAge: 60 * 60 * 24 * 365, // 1 год
+    maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
   });
 
