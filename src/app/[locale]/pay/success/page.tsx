@@ -10,6 +10,7 @@ type CheckPaymentResp =
       status?: string;
       paid?: boolean;
       tgToken?: string | null;
+      locale?: "en" | "ru"; // ✅ optional (на будущее, если вернёшь из /api/check-payment)
       bank?: {
         status?: string;
         code?: string;
@@ -24,6 +25,7 @@ type CheckPaymentResp =
       details?: string;
       bank?: any;
       tgToken?: string | null;
+      locale?: "en" | "ru"; // ✅ optional
     };
 
 function useLocalePrefix() {
@@ -31,15 +33,20 @@ function useLocalePrefix() {
   return pathname.startsWith("/ru") ? "/ru" : "";
 }
 
-function mapAmeriaDeclineReason(codeRaw: string | undefined, t: (k: string) => string) {
+function mapAmeriaDeclineReason(
+  codeRaw: string | undefined,
+  t: (k: string) => string
+) {
   const code = String(codeRaw ?? "").trim();
 
   if (code === "0116") return t("declineReasons.notEnoughMoney");
   if (code === "0101") return t("declineReasons.expiredCard");
   if (code === "071015") return t("declineReasons.wrongCardData");
-  if (code === "0100" || code === "0104" || code === "0125") return t("declineReasons.cardDeclined");
+  if (code === "0100" || code === "0104" || code === "0125")
+    return t("declineReasons.cardDeclined");
   if (code === "02001") return t("declineReasons.fraud");
-  if (code === "0151018" || code === "0151019" || code === "0-1") return t("declineReasons.processingTimeout");
+  if (code === "0151018" || code === "0151019" || code === "0-1")
+    return t("declineReasons.processingTimeout");
   if (code === "0-2007") return t("declineReasons.paymentTimeLimit");
   if (code === "0-2013") return t("declineReasons.attemptsExpired");
   if (code === "02003") return t("declineReasons.sslRestricted");
@@ -52,8 +59,14 @@ export default function PaySuccessPage() {
   const pref = useLocalePrefix();
   const searchParams = useSearchParams();
 
-  const debug = useMemo(() => searchParams?.get("debug") === "1", [searchParams]);
-  const noRedirect = useMemo(() => searchParams?.get("noRedirect") === "1", [searchParams]);
+  const debug = useMemo(
+    () => searchParams?.get("debug") === "1",
+    [searchParams]
+  );
+  const noRedirect = useMemo(
+    () => searchParams?.get("noRedirect") === "1",
+    [searchParams]
+  );
 
   const [loading, setLoading] = useState(true);
   const [resp, setResp] = useState<CheckPaymentResp | null>(null);
@@ -83,6 +96,7 @@ export default function PaySuccessPage() {
     const run = async () => {
       try {
         setLoading(true);
+
         const r = await fetch("/api/check-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -196,15 +210,16 @@ export default function PaySuccessPage() {
 
               {showDebug && tgToken ? (
                 <p className="mt-3 text-[11px] text-brand-muted break-all">
-                  tg_link_token:{" "}
-                  <span className="text-white/90">{tgToken}</span>
+                  tg_link_token: <span className="text-white/90">{tgToken}</span>
                 </p>
               ) : null}
             </div>
           ) : null}
 
           <div className="mt-6 flex flex-col gap-3">
-            {(statusLabel === "DECLINED" || statusLabel === "CANCELED" || statusLabel === "ERROR") && (
+            {(statusLabel === "DECLINED" ||
+              statusLabel === "CANCELED" ||
+              statusLabel === "ERROR") && (
               <a
                 href={`${pref}/#pricing`}
                 className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"

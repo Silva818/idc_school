@@ -5,8 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 type CheckPaymentResp =
-  | { ok: true; status?: string; paid?: boolean; recordId?: string }
-  | { ok?: boolean; error?: string; details?: string };
+  | {
+      ok: true;
+      status?: string;
+      paid?: boolean;
+      recordId?: string;
+      locale?: "en" | "ru";
+    }
+  | { ok?: boolean; error?: string; details?: string; locale?: "en" | "ru" };
 
 function useLocalePrefix() {
   const pathname = usePathname();
@@ -191,8 +197,9 @@ export default function PayPendingPage() {
               Вернуться на сайт
             </a>
 
+            {/* ✅ FIX: ссылка тоже должна быть локализована */}
             <a
-              href="/pay/ameria/return?noRedirect=1"
+              href={`${pref}/pay/ameria/return?noRedirect=1`}
               className="rounded-full border border-white/20 px-4 py-2 text-xs sm:text-sm font-semibold text-brand-muted hover:bg-white/5 transition-colors"
             >
               Открыть debug return

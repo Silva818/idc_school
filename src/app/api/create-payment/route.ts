@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 type Currency = "RUB" | "AMD" | "EUR" | "USD";
+type Locale = "en" | "ru";
 
 /* ---------------- ROBOKASSA ---------------- */
 
@@ -52,6 +53,7 @@ async function initAmeriaPayment(params: {
   currency: Exclude<Currency, "RUB">;
   description: string;
   opaque?: string;
+  locale: Locale;
 }) {
   const base = process.env.AMERIA_VPOS_BASE?.replace(/\/+$/, "");
   const ClientID = process.env.AMERIA_CLIENT_ID;
@@ -64,7 +66,9 @@ async function initAmeriaPayment(params: {
   }
 
   const orderId = makeOrderId();
-  const backURL = `${appBase}/pay/ameria/return`;
+
+  // ✅ ВАЖНО: делаем возврат с учётом языка сайта
+  const backURL = `${appBase}/pay/ameria/return?locale=${encodeURIComponent(params.locale)}`;
 
   const body = {
     ClientID,
@@ -91,9 +95,10 @@ async function initAmeriaPayment(params: {
     throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
   }
 
-  const paymentUrl = `${base}/Payments/Pay?id=${encodeURIComponent(
-    data.PaymentID
-  )}&lang=ru`;
+  // ✅ Язык страницы банка тоже ставим динамически
+  const paymentUrl =
+    `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
+    `&lang=${encodeURIComponent(params.locale)}`;
 
   return { paymentUrl, paymentId: data.PaymentID, orderId };
 }
@@ -175,6 +180,7 @@ export async function POST(req: Request) {
       tariffId,
       tariffLabel,
       courseName,
+      locale,
     } = body as {
       amount: number;
       currency: Currency;
@@ -183,7 +189,11 @@ export async function POST(req: Request) {
       tariffId: string;
       tariffLabel: string;
       courseName?: string;
+      locale?: Locale; // ✅ NEW
     };
+
+    // ✅ безопасно нормализуем язык
+    const safeLocale: Locale = locale === "ru" ? "ru" : "en";
 
     if (!amount || !currency || !email || !fullName || !tariffId) {
       console.warn("⚠️ Missing fields:", {
@@ -206,22 +216,12 @@ export async function POST(req: Request) {
 
     const lessons = lessonsByTariff[tariffId] ?? 1;
 
-    // ✅ NEW: токен создаём сразу при создании оплаты и пишем в Airtable
     const tgToken = makeTelegramLinkToken();
 
     /* ---------- RUB ---------- */
     if (currency === "RUB") {
       const paymentId = Date.now();
       const paymentUrl = generateRoboPaymentLink(paymentId, amount, email);
-
-      console.log("📝 preparing Airtable fields (RUB)", {
-        email,
-        fullName,
-        amount,
-        lessons,
-        currency,
-        tariffId,
-      });
 
       await sendPurchaseToAirtable({
         email: email,
@@ -232,10 +232,11 @@ export async function POST(req: Request) {
         Currency: currency,
         Tag: tariffId,
         Status: "created",
-        tg_link_token: tgToken, // ✅ NEW
+        tg_link_token: tgToken,
+        locale: safeLocale, // ✅ NEW (необязательно, но полезно)
       });
 
-      return NextResponse.json({ paymentUrl, paymentId, tgToken }); // ✅ NEW (удобно для фронта)
+      return NextResponse.json({ paymentUrl, paymentId, tgToken });
     }
 
     /* ---------- AMERIA ---------- */
@@ -249,37 +250,20 @@ export async function POST(req: Request) {
     const description =
       descriptionByTariff[tariffId] ?? `I Do Calisthenics - ${tariffId}`;
 
+    // ✅ добавили locale в opaque
     const opaque = JSON.stringify({
       tariffId,
       email,
       currency,
-    });
-
-    console.log("🏦 Init Ameria payment:", {
-      amount,
-      currency,
-      description,
-      opaque,
+      locale: safeLocale,
     });
 
     const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
       amount,
-      currency,
+      currency: currency as Exclude<Currency, "RUB">,
       description,
       opaque,
-    });
-
-    console.log("✅ Ameria init ok:", { paymentId, orderId, paymentUrl });
-
-    console.log("📝 preparing Airtable fields (AMERIA)", {
-      email,
-      fullName,
-      amount,
-      lessons,
-      currency,
-      tariffId,
-      paymentId,
-      orderId,
+      locale: safeLocale, // ✅ NEW
     });
 
     await sendPurchaseToAirtable({
@@ -291,10 +275,11 @@ export async function POST(req: Request) {
       Currency: currency,
       Tag: tariffId,
       Status: "created",
-      tg_link_token: tgToken, // ✅ NEW
+      tg_link_token: tgToken,
+      locale: safeLocale, // ✅ NEW
     });
 
-    return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken }); // ✅ NEW (удобно для фронта)
+    return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });
   } catch (e: any) {
     console.error("create-payment error:", e);
     return NextResponse.json(
