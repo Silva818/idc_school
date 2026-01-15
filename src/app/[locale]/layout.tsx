@@ -10,15 +10,16 @@ function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
+type LayoutProps = {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const safeLocale: Locale = isLocale(locale) ? locale : "en";
+  params: Promise<{ locale?: string }>;
+};
+
+export default async function LocaleLayout({ children, params }: LayoutProps) {
+  const resolved = await params;
+  const rawLocale = (resolved?.locale ?? "en").toLowerCase();
+
+  const safeLocale: Locale = isLocale(rawLocale) ? rawLocale : "en";
 
   setRequestLocale(safeLocale);
   const messages = await getMessages({ locale: safeLocale });
