@@ -1,25 +1,13 @@
-// src/app/[locale]/consent/page.tsx
+// src/app/consent/page.tsx
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-const LOCALES = ["ru"] as const;
+export const dynamic = "force-static";
 
-// ВАЖНО: в [locale] нам нужен только ru-роут, потому что en без префикса
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return LOCALES.map((locale) => ({ locale }));
-}
-
-type Props = {
-  params: { locale: string };
-};
-
-export default async function ConsentPage({ params }: Props) {
-  const locale = params.locale === "ru" ? "ru" : "en";
-
+export default async function ConsentPage() {
+  // Default locale = EN (у тебя так настроено в middleware)
   const t = await getTranslations({
-    locale,
+    locale: "en",
     namespace: "legal.consent",
   });
 
@@ -38,7 +26,7 @@ export default async function ConsentPage({ params }: Props) {
           </div>
 
           <Link
-            href="/ru"
+            href="/"
             className="text-[11px] sm:text-xs text-brand-muted hover:text-white transition-colors underline underline-offset-4 decoration-dotted"
           >
             {t("backHome")}
