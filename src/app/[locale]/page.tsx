@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/[locale]/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type FormEvent,
+  type FormEvent, 
 } from "react";
 
 import { HowItWorks } from "@/components/HowItWorks";
@@ -22,6 +22,8 @@ import { courseNames } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+
 
 function HowStepCard({
   children,
@@ -148,6 +150,8 @@ function guessCountryIso(): string {
 
 export default function HomePage() {
   const t = useTranslations("home");
+  const pathname = usePathname();
+  const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -277,6 +281,7 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          locale: activeLocale,
           fullName: buyFullName,
           email: buyEmail,
           phone: buildE164(dialToSend, buyPhoneNational),
