@@ -1,9 +1,16 @@
 // src/app/[locale]/consent/page.tsx
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
-export default function ConsentPage() {
-  const t = useTranslations("legal.consent");
+type Props = {
+  params: { locale: string };
+};
+
+export default async function ConsentPage({ params }: Props) {
+  const t = await getTranslations("legal.consent");
+
+  // Чтобы ссылка "На главную" в RU вела на /ru, а в EN — на /
+  const homeHref = params.locale === "ru" ? "/ru" : "/";
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
@@ -20,7 +27,7 @@ export default function ConsentPage() {
           </div>
 
           <Link
-            href="/"
+            href={homeHref}
             className="text-[11px] sm:text-xs text-brand-muted hover:text-white transition-colors underline underline-offset-4 decoration-dotted"
           >
             {t("backHome")}
