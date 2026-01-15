@@ -5,11 +5,9 @@ import { getTranslations } from "next-intl/server";
 export const dynamic = "force-static";
 
 export default async function ConsentPage() {
-  // Default locale = EN (у тебя так настроено в middleware)
-  const t = await getTranslations({
-    locale: "en",
-    namespace: "legal.consent",
-  });
+  // ВАЖНО: НЕ задаём locale вручную.
+  // next-intl возьмёт его из middleware ( /consent -> en, /ru/consent -> ru )
+  const t = await getTranslations("legal.consent");
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
