@@ -10,19 +10,16 @@ export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
 }
 
-export default async function ConsentPage({
-  params,
-}: {
-  params: { locale: string };
-}) {
-  const locale = params.locale === "ru" ? "ru" : "en";
+export default async function ConsentPage(props: PageProps<"/[locale]/consent">) {
+  const { locale } = await props.params;
+  const safeLocale = locale === "ru" ? "ru" : "en";
 
   const t = await getTranslations({
-    locale,
+    locale: safeLocale,
     namespace: "legal.consent",
   });
 
-  const homeHref = locale === "ru" ? "/ru" : "/";
+  const homeHref = safeLocale === "ru" ? "/ru" : "/";
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
