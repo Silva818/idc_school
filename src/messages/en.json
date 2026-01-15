@@ -412,5 +412,28 @@
       "noPaymentId": "Payment identifier not found.",
       "checkFailed": "Failed to check payment status."
     }
+  },
+
+  "legal": {
+    "consent": {
+      "meta": "Document",
+      "title": "Consent to Personal Data Processing",
+      "backHome": "← Back to home",
+      "heading": "Consent to Personal Data Processing",
+      "p1": {
+        "prefix": "By submitting an application or registering on the website",
+        "siteHref": "https://idocalisthenics.com",
+        "siteText": "https://idocalisthenics.com/",
+        "suffix": "the User confirms their consent to the processing of their personal data by Individual Entrepreneur Ambartsumyan Sirvard Sergeevna (hereinafter — the Operator, Tax ID: 26913722) for the purpose of responding to requests and providing services to the User."
+      },
+      "p2": "The User grants consent to the Operator to perform automated and non-automated processing, including collection, recording, systematization, accumulation, storage, clarification (updating, modification), use, and transfer (provision, access) of the following personal data:",
+      "list": {
+        "fullName": "Full name",
+        "email": "Email address",
+        "phone": "Phone number / messenger"
+      },
+      "p3": "The User’s consent remains valid until it is withdrawn by sending a written request to the Operator’s email address OV.SHATVORYAN@GMAIL.COM, or until the purposes of personal data processing have been achieved—whichever occurs earlier.",
+      "p4": "If the User withdraws consent to personal data processing, the Operator may continue processing personal data without the data subject’s consent where there are legal grounds, including those specified in items 2–11 of Part 1 of Article 6, Part 2 of Article 10, and Part 2 of Article 11 of Federal Law No. 152-FZ “On Personal Data” dated 27.07.2006."
+    }
   }
 }

@@ -3,9 +3,14 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
   const t = useTranslations("home.footer");
+  const pathname = usePathname();
+
+  // Если ты используешь схему: EN = /, RU = /ru
+  const localePrefix = pathname.startsWith("/ru") ? "/ru" : "";
 
   const startYear = 2018;
   const currentYear = new Date().getFullYear();
@@ -41,19 +46,19 @@ export function Footer() {
           "
         >
           <Link
-            href="/offer"
+            href={`${localePrefix}/offer`}
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
             {t("offer")}
           </Link>
           <Link
-            href="/consent"
+            href={`${localePrefix}/consent`}
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
             {t("consent")}
           </Link>
           <Link
-            href="/privacy"
+            href={`${localePrefix}/privacy`}
             className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
           >
             {t("privacy")}
