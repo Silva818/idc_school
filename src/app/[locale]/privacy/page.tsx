@@ -49,30 +49,10 @@ export default async function PrivacyPage(props: PrivacyPageProps) {
           </Link>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-black/30 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 text-[13px] sm:text-sm leading-relaxed text-brand-muted space-y-4">
-          <p>
-            {t("p1.prefix")}{" "}
-            <a
-              href={t("p1.siteHref")}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white underline decoration-dotted"
-            >
-              {t("p1.siteText")}
-            </a>{" "}
-            {t("p1.suffix")}
-          </p>
-
-          <p>{t("p2")}</p>
-
-          <ul className="list-disc list-inside ml-4 space-y-1">
-            <li>{t("list.fullName")}</li>
-            <li>{t("list.email")}</li>
-            <li>{t("list.phone")}</li>
-          </ul>
-
-          <p>{t("p3")}</p>
-          <p>{t("p4")}</p>
+        <section className="rounded-3xl border border-white/10 bg-black/30 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 text-[13px] sm:text-sm leading-relaxed text-brand-muted">
+          <div className="whitespace-pre-wrap">
+            {t("content")}
+          </div>
         </section>
       </div>
     </main>
