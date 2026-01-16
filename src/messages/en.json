@@ -434,6 +434,25 @@
       },
       "p3": "The User’s consent remains valid until it is withdrawn by sending a written request to the Operator’s email address OV.SHATVORYAN@GMAIL.COM, or until the purposes of personal data processing have been achieved—whichever occurs earlier.",
       "p4": "If the User withdraws consent to personal data processing, the Operator may continue processing personal data without the data subject’s consent where there are legal grounds, including those specified in items 2–11 of Part 1 of Article 6, Part 2 of Article 10, and Part 2 of Article 11 of Federal Law No. 152-FZ “On Personal Data” dated 27.07.2006."
+    },
+    "privacy": {
+      "meta": "Document",
+      "title": "Personal Data Processing Policy",
+      "backHome": "← Back to home",
+      "p1": {
+        "prefix": "By submitting an application or registering on the website",
+        "siteHref": "https://idocalisthenics.com",
+        "siteText": "https://idocalisthenics.com/",
+        "suffix": "the User confirms their consent to the processing of their personal data by Individual Entrepreneur Ambartsumyan Sirvard Sergeevna (hereinafter — the Operator, Tax ID: 26913722) for the purpose of responding to requests and providing services to the User."
+      },
+      "p2": "The User grants consent to the Operator to perform automated and non-automated processing, including collection, recording, systematization, accumulation, storage, clarification (updating, modification), use, and transfer (provision, access) of the following personal data:",
+      "list": {
+        "fullName": "Full name",
+        "email": "Email address",
+        "phone": "Phone number / messenger"
+      },
+      "p3": "This consent remains valid until the purposes of personal data processing are achieved or until it is withdrawn by the User by sending a written notice to the Operator at: info@idocalisthenics.com.",
+      "p4": "The User is informed that, under the laws of the Republic of Armenia, the Operator may continue processing personal data without the User’s consent when such processing is provided by law, is necessary for the performance of a contract to which the User is a party, or for the protection of the legitimate interests of the Operator or third parties."
     }
   }
 }
