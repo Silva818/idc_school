@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type FormEvent, 
+  type FormEvent,
 } from "react";
 
 import { HowItWorks } from "@/components/HowItWorks";
@@ -23,7 +23,6 @@ import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-
 
 function HowStepCard({
   children,
@@ -101,18 +100,73 @@ function digitsOnly(v: string) {
 function buildE164(dial: string, national: string) {
   const d = dial.startsWith("+") ? dial : `+${dial}`;
   const n = digitsOnly(national);
+  // если dial пустой/невалидный — просто вернём "как есть", валидация ниже не даст отправить
   return `${d}${n}`;
 }
 
-function isLikelyValidPhone(national: string) {
-  return digitsOnly(national).length >= 6;
-}
+/**
+ * БАЗОВАЯ валидация длины номера по стране (national part).
+ * Это не идеальная библиотечная проверка, но решает вашу проблему:
+ * "не дописал цифру / лишняя цифра" — покажем ошибку и не отправим.
+ */
+const PHONE_LENGTH_RULES: Record<
+  string,
+  { min: number; max: number }
+> = {
+  RU: { min: 10, max: 10 }, // +7 9xx xxx-xx-xx
+  KZ: { min: 10, max: 10 }, // +7 7xx xxx xxxx
+  BY: { min: 9, max: 9 }, // +375 29 xxx xx xx
+  UA: { min: 9, max: 9 }, // +380 50 xxx xxxx
+  AM: { min: 8, max: 8 }, // +374 77 xxx xxx
+  US: { min: 10, max: 10 }, // +1 201 555 0123
+  GB: { min: 10, max: 10 }, // +44 7400 000000 (без лидирующего 0)
+  ES: { min: 9, max: 9 }, // +34 612 345 678
+  DE: { min: 10, max: 11 }, // у DE часто 10–11 (очень упрощённо)
+  FR: { min: 9, max: 9 }, // +33 6 12 34 56 78 (без лидирующего 0)
+  OTHER: { min: 6, max: 15 }, // общий диапазон
+};
 
 function isLikelyValidDial(dial: string) {
   const d = dial.trim();
   if (!d) return false;
   if (!d.startsWith("+")) return false;
   return digitsOnly(d).length >= 1;
+}
+
+function validatePhoneByCountry(args: {
+  iso: string;
+  dial: string;
+  national: string;
+  locale: "ru" | "en";
+}) {
+  const { iso, dial, national, locale } = args;
+
+  const texts =
+    locale === "ru"
+      ? {
+          dialError: "Проверьте код страны (например, +34).",
+          phoneError: "Проверьте номер телефона — похоже, не хватает цифр или есть лишние.",
+        }
+      : {
+          dialError: "Please check the country code (for example, +34).",
+          phoneError: "Please check your phone number — it looks incomplete or has extra digits.",
+        };
+
+  const nationalDigits = digitsOnly(national);
+  const rule = PHONE_LENGTH_RULES[iso] ?? PHONE_LENGTH_RULES.OTHER;
+
+  // Для OTHER дополнительно проверяем dial
+  if (iso === "OTHER") {
+    if (!isLikelyValidDial(dial)) {
+      return { dialError: texts.dialError as string, phoneError: "" };
+    }
+  }
+
+  if (nationalDigits.length < rule.min || nationalDigits.length > rule.max) {
+    return { dialError: "", phoneError: texts.phoneError as string };
+  }
+
+  return { dialError: "", phoneError: "" };
 }
 
 function countryToDial(iso: string) {
@@ -171,27 +225,60 @@ export default function HomePage() {
   const [testAgreed, setTestAgreed] = useState(false);
   const [isTestSubmitting, setIsTestSubmitting] = useState(false);
 
+  // ✅ Ошибки валидации телефона (тест)
+  const [testPhoneError, setTestPhoneError] = useState("");
+  const [testDialError, setTestDialError] = useState("");
+  const [testPhoneTouched, setTestPhoneTouched] = useState(false);
+
   function openTestModal(context?: string, opts?: { needsCourse?: boolean }) {
     setTestContext(context);
     setTestNeedsCourse(!!opts?.needsCourse);
     if (opts?.needsCourse) setTestCourse("");
     setIsTestModalOpen(true);
+
+    // reset ошибок
+    setTestPhoneError("");
+    setTestDialError("");
+    setTestPhoneTouched(false);
   }
 
   function closeTestModal() {
     if (isTestSubmitting) return;
     setIsTestModalOpen(false);
     setTestNeedsCourse(false);
+
+    // reset ошибок
+    setTestPhoneError("");
+    setTestDialError("");
+    setTestPhoneTouched(false);
+  }
+
+  function validateTestPhoneAndSetErrors() {
+    const dialToCheck = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
+    const { dialError, phoneError } = validatePhoneByCountry({
+      iso: testCountryIso,
+      dial: dialToCheck,
+      national: testPhoneNational,
+      locale: activeLocale,
+    });
+
+    setTestDialError(dialError);
+    setTestPhoneError(phoneError);
+
+    return !dialError && !phoneError;
   }
 
   async function handleTestSubmit(e: FormEvent) {
     e.preventDefault();
     if (!testAgreed || isTestSubmitting) return;
 
-    const dialToSend = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
-    if (testCountryIso === "OTHER" && !isLikelyValidDial(testCustomDial)) return;
+    setTestPhoneTouched(true);
 
-    if (!isLikelyValidPhone(testPhoneNational)) return;
+    // ✅ Перед отправкой — жёсткая проверка
+    const isPhoneOk = validateTestPhoneAndSetErrors();
+    if (!isPhoneOk) return;
+
+    const dialToSend = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
     if (testNeedsCourse && !testCourse) return;
 
     setIsTestSubmitting(true);
@@ -220,6 +307,11 @@ export default function HomePage() {
         setTestNeedsCourse(false);
         setTestPhoneNational("");
         setTestCustomDial("+");
+
+        // reset ошибок
+        setTestPhoneError("");
+        setTestDialError("");
+        setTestPhoneTouched(false);
       }
     } catch (err) {
       console.error("Ошибка запроса (тест силы)", err);
@@ -244,6 +336,11 @@ export default function HomePage() {
   const [buyAgreed, setBuyAgreed] = useState(false);
   const [isBuySubmitting, setIsBuySubmitting] = useState(false);
 
+  // ✅ Ошибки валидации телефона (покупка)
+  const [buyPhoneError, setBuyPhoneError] = useState("");
+  const [buyDialError, setBuyDialError] = useState("");
+  const [buyPhoneTouched, setBuyPhoneTouched] = useState(false);
+
   useEffect(() => {
     const iso = guessCountryIso();
     const dial = countryToDial(iso);
@@ -258,21 +355,49 @@ export default function HomePage() {
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
     setIsPurchaseModalOpen(true);
+
+    // reset ошибок
+    setBuyPhoneError("");
+    setBuyDialError("");
+    setBuyPhoneTouched(false);
   }
 
   function closePurchaseModal() {
     if (isBuySubmitting) return;
     setIsPurchaseModalOpen(false);
+
+    // reset ошибок
+    setBuyPhoneError("");
+    setBuyDialError("");
+    setBuyPhoneTouched(false);
+  }
+
+  function validateBuyPhoneAndSetErrors() {
+    const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
+    const { dialError, phoneError } = validatePhoneByCountry({
+      iso: buyCountryIso,
+      dial: dialToCheck,
+      national: buyPhoneNational,
+      locale: activeLocale,
+    });
+
+    setBuyDialError(dialError);
+    setBuyPhoneError(phoneError);
+
+    return !dialError && !phoneError;
   }
 
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
 
-    const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
-    if (buyCountryIso === "OTHER" && !isLikelyValidDial(buyCustomDial)) return;
+    setBuyPhoneTouched(true);
 
-    if (!isLikelyValidPhone(buyPhoneNational)) return;
+    // ✅ Перед отправкой — жёсткая проверка
+    const isPhoneOk = validateBuyPhoneAndSetErrors();
+    if (!isPhoneOk) return;
+
+    const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
     setIsBuySubmitting(true);
 
@@ -375,6 +500,31 @@ export default function HomePage() {
       html.style.scrollBehavior = prev;
     };
   }, [anyModalOpen]);
+
+  // ✅ Вспомогательные флаги валидности (для disabled на кнопках — чтобы точно “не давало отправить”)
+  const isTestPhoneValidNow = (() => {
+    if (!testPhoneNational) return false;
+    const dialToCheck = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
+    const { dialError, phoneError } = validatePhoneByCountry({
+      iso: testCountryIso,
+      dial: dialToCheck,
+      national: testPhoneNational,
+      locale: activeLocale,
+    });
+    return !dialError && !phoneError;
+  })();
+
+  const isBuyPhoneValidNow = (() => {
+    if (!buyPhoneNational) return false;
+    const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
+    const { dialError, phoneError } = validatePhoneByCountry({
+      iso: buyCountryIso,
+      dial: dialToCheck,
+      national: buyPhoneNational,
+      locale: activeLocale,
+    });
+    return !dialError && !phoneError;
+  })();
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
@@ -728,18 +878,40 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={testCustomDial}
-                      onChange={(e) => setTestCustomDial(e.target.value)}
+                      onChange={(e) => {
+                        setTestCustomDial(e.target.value);
+                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setTestPhoneTouched(true);
+                        validateTestPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!testDialError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        testDialError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={t("modals.strengthTest.customDialPlaceholder")}
                     />
                     <input
                       type="tel"
                       inputMode="tel"
                       value={testPhoneNational}
-                      onChange={(e) => setTestPhoneNational(e.target.value)}
+                      onChange={(e) => {
+                        setTestPhoneNational(e.target.value);
+                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setTestPhoneTouched(true);
+                        validateTestPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!testPhoneError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        testPhoneError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={t("modals.strengthTest.phonePlaceholder")}
                     />
                   </div>
@@ -752,6 +924,14 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setTestCountryIso(iso);
                         setTestDialCode(dial);
+
+                        // при смене страны — пере-валидируем, если уже трогали поле
+                        if (testPhoneTouched) {
+                          setTimeout(() => validateTestPhoneAndSetErrors(), 0);
+                        } else {
+                          setTestPhoneError("");
+                          setTestDialError("");
+                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -766,9 +946,20 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={testPhoneNational}
-                      onChange={(e) => setTestPhoneNational(e.target.value)}
+                      onChange={(e) => {
+                        setTestPhoneNational(e.target.value);
+                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setTestPhoneTouched(true);
+                        validateTestPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!testPhoneError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        testPhoneError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === testCountryIso)
                           ?.placeholder ?? t("modals.strengthTest.phonePlaceholder")
@@ -786,6 +977,13 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setTestCountryIso(iso);
                         setTestDialCode(dial);
+
+                        if (testPhoneTouched) {
+                          setTimeout(() => validateTestPhoneAndSetErrors(), 0);
+                        } else {
+                          setTestPhoneError("");
+                          setTestDialError("");
+                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -796,6 +994,12 @@ export default function HomePage() {
                       ))}
                     </select>
                   </div>
+                )}
+
+                {(testDialError || testPhoneError) && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {testDialError || testPhoneError}
+                  </p>
                 )}
 
                 <p className="text-[11px] text-brand-muted">
@@ -864,7 +1068,12 @@ export default function HomePage() {
 
               <button
                 type="submit"
-                disabled={isTestSubmitting || !testAgreed}
+                disabled={
+                  isTestSubmitting ||
+                  !testAgreed ||
+                  !isTestPhoneValidNow ||
+                  (testNeedsCourse && !testCourse)
+                }
                 className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
               >
                 {isTestSubmitting
@@ -950,18 +1159,40 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={buyCustomDial}
-                      onChange={(e) => setBuyCustomDial(e.target.value)}
+                      onChange={(e) => {
+                        setBuyCustomDial(e.target.value);
+                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setBuyPhoneTouched(true);
+                        validateBuyPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!buyDialError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyDialError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={t("modals.purchase.customDialPlaceholder")}
                     />
                     <input
                       type="tel"
                       inputMode="tel"
                       value={buyPhoneNational}
-                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      onChange={(e) => {
+                        setBuyPhoneNational(e.target.value);
+                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setBuyPhoneTouched(true);
+                        validateBuyPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!buyPhoneError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyPhoneError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={t("modals.purchase.phonePlaceholder")}
                     />
                   </div>
@@ -974,6 +1205,13 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setBuyCountryIso(iso);
                         setBuyDialCode(dial);
+
+                        if (buyPhoneTouched) {
+                          setTimeout(() => validateBuyPhoneAndSetErrors(), 0);
+                        } else {
+                          setBuyPhoneError("");
+                          setBuyDialError("");
+                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -988,9 +1226,20 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={buyPhoneNational}
-                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      onChange={(e) => {
+                        setBuyPhoneNational(e.target.value);
+                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
+                      }}
+                      onBlur={() => {
+                        setBuyPhoneTouched(true);
+                        validateBuyPhoneAndSetErrors();
+                      }}
                       required
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      aria-invalid={!!buyPhoneError}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyPhoneError ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === buyCountryIso)
                           ?.placeholder ?? t("modals.purchase.phonePlaceholder")
@@ -1008,6 +1257,13 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setBuyCountryIso(iso);
                         setBuyDialCode(dial);
+
+                        if (buyPhoneTouched) {
+                          setTimeout(() => validateBuyPhoneAndSetErrors(), 0);
+                        } else {
+                          setBuyPhoneError("");
+                          setBuyDialError("");
+                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -1018,6 +1274,12 @@ export default function HomePage() {
                       ))}
                     </select>
                   </div>
+                )}
+
+                {(buyDialError || buyPhoneError) && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyDialError || buyPhoneError}
+                  </p>
                 )}
               </div>
 
@@ -1073,7 +1335,7 @@ export default function HomePage() {
 
               <button
                 type="submit"
-                disabled={isBuySubmitting || !buyAgreed}
+                disabled={isBuySubmitting || !buyAgreed || !isBuyPhoneValidNow || !buyCourse}
                 className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
               >
                 {isBuySubmitting
