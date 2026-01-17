@@ -1,6 +1,49 @@
 // src/app/api/check-payment/route.ts
 import { NextResponse } from "next/server";
 
+/* ---------------- TELEGRAM HELPERS ---------------- */
+
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+function escapeTgHtml(s: string) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+async function sendTelegramMessage(text: string) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.warn("⚠️ Telegram config missing");
+    return { ok: false as const, reason: "env_missing" as const };
+  }
+
+  const r = await fetch(
+    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!r.ok) {
+    const msg = await r.text();
+    console.error("Telegram error", msg);
+    return { ok: false as const, reason: "send_failed" as const, msg };
+  }
+
+  return { ok: true as const };
+}
+
+
 /* ---------------- AIRTABLE HELPERS ---------------- */
 
 function airtableEnv() {
@@ -338,17 +381,32 @@ export async function POST(req: Request) {
     const found = await airtableFindByPaymentId(paymentId);
 
     if (found.ok && found.record?.id) {
+      const fields = (found.record?.fields ?? {}) as any;
+    
       const tgToken =
-        String((found.record?.fields as any)?.tg_link_token ?? "").trim() || null;
-
+        String(fields?.tg_link_token ?? "").trim() || null;
+    
+      const prevStatus = String(fields?.Status ?? "").trim().toLowerCase();
+    
       const upd = await airtableUpdateRecord(found.record.id, {
         Status: "paid",
         // Paid_time: new Date().toISOString(),
       });
-
+    
+      // ✅ Уведомление в TG — только если раньше не было paid (чтобы не спамить)
+      if (prevStatus !== "paid") {
+        const msg =
+          `<b>✅ Оплата успешна</b>\n` +
+          `<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>\n` +
+          (tgToken ? `<b>TG token:</b> <code>${escapeTgHtml(tgToken)}</code>\n` : "") +
+          `<b>Airtable:</b> Status → paid`;
+    
+        await sendTelegramMessage(msg);
+      }
+    
       return NextResponse.json({
         ...baseResponse,
-        tgToken, // ✅ NEW: возвращаем токен на фронт
+        tgToken,
         airtable: {
           action: "updated",
           found: true,
@@ -358,12 +416,18 @@ export async function POST(req: Request) {
         },
       });
     }
+    
 
     // Если не нашли — создаём запись, чтобы не потерять оплату (но теперь это должно быть редкостью)
     const create = await airtableCreateRecord({
       id_payment: paymentId,
       Status: "paid",
     });
+
+    await sendTelegramMessage(
+      `<b>✅ Оплата успешна (fallback)</b>\n<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>\n<b>Airtable:</b> record created with paid`
+    );
+    
 
     return NextResponse.json({
       ...baseResponse,
