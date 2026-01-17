@@ -202,8 +202,21 @@ function guessCountryIso(): string {
   return "RU";
 }
 
+type FormErrors = {
+  fullName?: string;
+  email?: string;
+  dial?: string;
+  phone?: string;
+  course?: string;
+};
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function HomePage() {
   const t = useTranslations("home");
+  const tErr = useTranslations("home.modals.errors");
   const pathname = usePathname();
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
 
@@ -225,10 +238,8 @@ export default function HomePage() {
   const [testAgreed, setTestAgreed] = useState(false);
   const [isTestSubmitting, setIsTestSubmitting] = useState(false);
 
-  // ✅ Ошибки валидации телефона (тест)
-  const [testPhoneError, setTestPhoneError] = useState("");
-  const [testDialError, setTestDialError] = useState("");
-  const [testPhoneTouched, setTestPhoneTouched] = useState(false);
+  const [testTriedSubmit, setTestTriedSubmit] = useState(false);
+  const [testErrors, setTestErrors] = useState<FormErrors>({});
 
   function openTestModal(context?: string, opts?: { needsCourse?: boolean }) {
     setTestContext(context);
@@ -237,9 +248,8 @@ export default function HomePage() {
     setIsTestModalOpen(true);
 
     // reset ошибок
-    setTestPhoneError("");
-    setTestDialError("");
-    setTestPhoneTouched(false);
+    setTestTriedSubmit(false);
+    setTestErrors({});
   }
 
   function closeTestModal() {
@@ -248,38 +258,68 @@ export default function HomePage() {
     setTestNeedsCourse(false);
 
     // reset ошибок
-    setTestPhoneError("");
-    setTestDialError("");
-    setTestPhoneTouched(false);
+    setTestTriedSubmit(false);
+    setTestErrors({});
   }
 
-  function validateTestPhoneAndSetErrors() {
+  function validateTestForm(): FormErrors {
+    const errs: FormErrors = {};
+
+    if (!testFullName.trim()) errs.fullName = tErr("required");
+
+    if (!testEmail.trim()) errs.email = tErr("required");
+    else if (!isValidEmail(testEmail)) errs.email = tErr("invalidEmail");
+
+    if (testNeedsCourse && !testCourse) errs.course = tErr("chooseCourse");
+
     const dialToCheck = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
-    const { dialError, phoneError } = validatePhoneByCountry({
-      iso: testCountryIso,
-      dial: dialToCheck,
-      national: testPhoneNational,
-      locale: activeLocale,
-    });
 
-    setTestDialError(dialError);
-    setTestPhoneError(phoneError);
+    if (!digitsOnly(testPhoneNational)) {
+      errs.phone = tErr("required");
+    } else {
+      const { dialError, phoneError } = validatePhoneByCountry({
+        iso: testCountryIso,
+        dial: dialToCheck,
+        national: testPhoneNational,
+        locale: activeLocale,
+      });
 
-    return !dialError && !phoneError;
+      if (dialError) errs.dial = tErr("invalidDial");
+      if (phoneError) errs.phone = tErr("invalidPhone");
+    }
+
+    return errs;
   }
+
+  useEffect(() => {
+    if (!testTriedSubmit) return;
+    setTestErrors(validateTestForm());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    testTriedSubmit,
+    testFullName,
+    testEmail,
+    testNeedsCourse,
+    testCourse,
+    testCountryIso,
+    testDialCode,
+    testCustomDial,
+    testPhoneNational,
+    activeLocale,
+  ]);
 
   async function handleTestSubmit(e: FormEvent) {
     e.preventDefault();
     if (!testAgreed || isTestSubmitting) return;
 
-    setTestPhoneTouched(true);
+    setTestTriedSubmit(true);
 
-    // ✅ Перед отправкой — жёсткая проверка
-    const isPhoneOk = validateTestPhoneAndSetErrors();
-    if (!isPhoneOk) return;
+    const errs = validateTestForm();
+    setTestErrors(errs);
+
+    if (Object.keys(errs).length > 0) return;
 
     const dialToSend = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
-    if (testNeedsCourse && !testCourse) return;
 
     setIsTestSubmitting(true);
 
@@ -309,9 +349,8 @@ export default function HomePage() {
         setTestCustomDial("+");
 
         // reset ошибок
-        setTestPhoneError("");
-        setTestDialError("");
-        setTestPhoneTouched(false);
+        setTestTriedSubmit(false);
+        setTestErrors({});
       }
     } catch (err) {
       console.error("Ошибка запроса (тест силы)", err);
@@ -336,10 +375,8 @@ export default function HomePage() {
   const [buyAgreed, setBuyAgreed] = useState(false);
   const [isBuySubmitting, setIsBuySubmitting] = useState(false);
 
-  // ✅ Ошибки валидации телефона (покупка)
-  const [buyPhoneError, setBuyPhoneError] = useState("");
-  const [buyDialError, setBuyDialError] = useState("");
-  const [buyPhoneTouched, setBuyPhoneTouched] = useState(false);
+  const [buyTriedSubmit, setBuyTriedSubmit] = useState(false);
+  const [buyErrors, setBuyErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     const iso = guessCountryIso();
@@ -357,9 +394,8 @@ export default function HomePage() {
     setIsPurchaseModalOpen(true);
 
     // reset ошибок
-    setBuyPhoneError("");
-    setBuyDialError("");
-    setBuyPhoneTouched(false);
+    setBuyTriedSubmit(false);
+    setBuyErrors({});
   }
 
   function closePurchaseModal() {
@@ -367,35 +403,65 @@ export default function HomePage() {
     setIsPurchaseModalOpen(false);
 
     // reset ошибок
-    setBuyPhoneError("");
-    setBuyDialError("");
-    setBuyPhoneTouched(false);
+    setBuyTriedSubmit(false);
+    setBuyErrors({});
   }
 
-  function validateBuyPhoneAndSetErrors() {
+  function validateBuyForm(): FormErrors {
+    const errs: FormErrors = {};
+
+    if (!buyFullName.trim()) errs.fullName = tErr("required");
+
+    if (!buyEmail.trim()) errs.email = tErr("required");
+    else if (!isValidEmail(buyEmail)) errs.email = tErr("invalidEmail");
+
+    if (!buyCourse) errs.course = tErr("chooseCourse");
+
     const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
-    const { dialError, phoneError } = validatePhoneByCountry({
-      iso: buyCountryIso,
-      dial: dialToCheck,
-      national: buyPhoneNational,
-      locale: activeLocale,
-    });
 
-    setBuyDialError(dialError);
-    setBuyPhoneError(phoneError);
+    if (!digitsOnly(buyPhoneNational)) {
+      errs.phone = tErr("required");
+    } else {
+      const { dialError, phoneError } = validatePhoneByCountry({
+        iso: buyCountryIso,
+        dial: dialToCheck,
+        national: buyPhoneNational,
+        locale: activeLocale,
+      });
 
-    return !dialError && !phoneError;
+      if (dialError) errs.dial = tErr("invalidDial");
+      if (phoneError) errs.phone = tErr("invalidPhone");
+    }
+
+    return errs;
   }
+
+  useEffect(() => {
+    if (!buyTriedSubmit) return;
+    setBuyErrors(validateBuyForm());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    buyTriedSubmit,
+    buyFullName,
+    buyEmail,
+    buyCourse,
+    buyCountryIso,
+    buyDialCode,
+    buyCustomDial,
+    buyPhoneNational,
+    activeLocale,
+  ]);
 
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
 
-    setBuyPhoneTouched(true);
+    setBuyTriedSubmit(true);
 
-    // ✅ Перед отправкой — жёсткая проверка
-    const isPhoneOk = validateBuyPhoneAndSetErrors();
-    if (!isPhoneOk) return;
+    const errs = validateBuyForm();
+    setBuyErrors(errs);
+
+    if (Object.keys(errs).length > 0) return;
 
     const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
@@ -477,7 +543,7 @@ export default function HomePage() {
     body.style.position = "fixed";
     body.style.top = `-${scrollYRef.current}px`;
     body.style.left = "0";
-    body.style.right = "0";
+    body.style.right = "";
     body.style.width = "100%";
     body.style.overflow = "hidden";
 
@@ -500,31 +566,6 @@ export default function HomePage() {
       html.style.scrollBehavior = prev;
     };
   }, [anyModalOpen]);
-
-  // ✅ Вспомогательные флаги валидности (для disabled на кнопках — чтобы точно “не давало отправить”)
-  const isTestPhoneValidNow = (() => {
-    if (!testPhoneNational) return false;
-    const dialToCheck = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
-    const { dialError, phoneError } = validatePhoneByCountry({
-      iso: testCountryIso,
-      dial: dialToCheck,
-      national: testPhoneNational,
-      locale: activeLocale,
-    });
-    return !dialError && !phoneError;
-  })();
-
-  const isBuyPhoneValidNow = (() => {
-    if (!buyPhoneNational) return false;
-    const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
-    const { dialError, phoneError } = validatePhoneByCountry({
-      iso: buyCountryIso,
-      dial: dialToCheck,
-      national: buyPhoneNational,
-      locale: activeLocale,
-    });
-    return !dialError && !phoneError;
-  })();
 
   return (
     <main className="min-h-screen bg-brand-dark text-white">
@@ -847,10 +888,17 @@ export default function HomePage() {
                   type="text"
                   value={testFullName}
                   onChange={(e) => setTestFullName(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    testErrors.fullName ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
                   placeholder={t("modals.strengthTest.fullNamePlaceholder")}
                 />
+                {testErrors.fullName && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {testErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -861,10 +909,17 @@ export default function HomePage() {
                   type="email"
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    testErrors.email ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
                   placeholder="you@example.com"
                 />
+                {testErrors.email && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {testErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -878,19 +933,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={testCustomDial}
-                      onChange={(e) => {
-                        setTestCustomDial(e.target.value);
-                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setTestPhoneTouched(true);
-                        validateTestPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!testDialError}
+                      onChange={(e) => setTestCustomDial(e.target.value)}
+                      aria-invalid={!!testErrors.dial}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        testDialError ? "border-rose-400/60" : "border-white/10",
+                        testErrors.dial ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={t("modals.strengthTest.customDialPlaceholder")}
                     />
@@ -898,19 +945,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={testPhoneNational}
-                      onChange={(e) => {
-                        setTestPhoneNational(e.target.value);
-                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setTestPhoneTouched(true);
-                        validateTestPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!testPhoneError}
+                      onChange={(e) => setTestPhoneNational(e.target.value)}
+                      aria-invalid={!!testErrors.phone}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        testPhoneError ? "border-rose-400/60" : "border-white/10",
+                        testErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={t("modals.strengthTest.phonePlaceholder")}
                     />
@@ -924,14 +963,6 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setTestCountryIso(iso);
                         setTestDialCode(dial);
-
-                        // при смене страны — пере-валидируем, если уже трогали поле
-                        if (testPhoneTouched) {
-                          setTimeout(() => validateTestPhoneAndSetErrors(), 0);
-                        } else {
-                          setTestPhoneError("");
-                          setTestDialError("");
-                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -946,19 +977,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={testPhoneNational}
-                      onChange={(e) => {
-                        setTestPhoneNational(e.target.value);
-                        if (testPhoneTouched) validateTestPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setTestPhoneTouched(true);
-                        validateTestPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!testPhoneError}
+                      onChange={(e) => setTestPhoneNational(e.target.value)}
+                      aria-invalid={!!testErrors.phone}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        testPhoneError ? "border-rose-400/60" : "border-white/10",
+                        testErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === testCountryIso)
@@ -977,13 +1000,6 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setTestCountryIso(iso);
                         setTestDialCode(dial);
-
-                        if (testPhoneTouched) {
-                          setTimeout(() => validateTestPhoneAndSetErrors(), 0);
-                        } else {
-                          setTestPhoneError("");
-                          setTestDialError("");
-                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -996,9 +1012,9 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {(testDialError || testPhoneError) && (
+                {(testErrors.dial || testErrors.phone) && (
                   <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
-                    {testDialError || testPhoneError}
+                    {testErrors.dial || testErrors.phone}
                   </p>
                 )}
 
@@ -1024,8 +1040,10 @@ export default function HomePage() {
                     <select
                       value={testCourse}
                       onChange={(e) => setTestCourse(e.target.value)}
-                      required
-                      className="w-full rounded-2xl border border-brand-primary/60 bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none"
+                      className={[
+                        "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
+                        testErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
+                      ].join(" ")}
                     >
                       <option value="" disabled>
                         {t("modals.strengthTest.coursePlaceholder")}
@@ -1042,6 +1060,12 @@ export default function HomePage() {
                       ▾
                     </span>
                   </div>
+
+                  {testErrors.course && (
+                    <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                      {testErrors.course}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -1068,12 +1092,7 @@ export default function HomePage() {
 
               <button
                 type="submit"
-                disabled={
-                  isTestSubmitting ||
-                  !testAgreed ||
-                  !isTestPhoneValidNow ||
-                  (testNeedsCourse && !testCourse)
-                }
+                disabled={isTestSubmitting || !testAgreed}
                 className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
               >
                 {isTestSubmitting
@@ -1128,10 +1147,17 @@ export default function HomePage() {
                   type="text"
                   value={buyFullName}
                   onChange={(e) => setBuyFullName(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    buyErrors.fullName ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
                   placeholder={t("modals.purchase.fullNamePlaceholder")}
                 />
+                {buyErrors.fullName && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -1142,10 +1168,17 @@ export default function HomePage() {
                   type="email"
                   value={buyEmail}
                   onChange={(e) => setBuyEmail(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    buyErrors.email ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
                   placeholder="you@example.com"
                 />
+                {buyErrors.email && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -1159,19 +1192,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={buyCustomDial}
-                      onChange={(e) => {
-                        setBuyCustomDial(e.target.value);
-                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setBuyPhoneTouched(true);
-                        validateBuyPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!buyDialError}
+                      onChange={(e) => setBuyCustomDial(e.target.value)}
+                      aria-invalid={!!buyErrors.dial}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        buyDialError ? "border-rose-400/60" : "border-white/10",
+                        buyErrors.dial ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={t("modals.purchase.customDialPlaceholder")}
                     />
@@ -1179,19 +1204,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={buyPhoneNational}
-                      onChange={(e) => {
-                        setBuyPhoneNational(e.target.value);
-                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setBuyPhoneTouched(true);
-                        validateBuyPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!buyPhoneError}
+                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      aria-invalid={!!buyErrors.phone}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        buyPhoneError ? "border-rose-400/60" : "border-white/10",
+                        buyErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={t("modals.purchase.phonePlaceholder")}
                     />
@@ -1205,13 +1222,6 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setBuyCountryIso(iso);
                         setBuyDialCode(dial);
-
-                        if (buyPhoneTouched) {
-                          setTimeout(() => validateBuyPhoneAndSetErrors(), 0);
-                        } else {
-                          setBuyPhoneError("");
-                          setBuyDialError("");
-                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -1226,19 +1236,11 @@ export default function HomePage() {
                       type="tel"
                       inputMode="tel"
                       value={buyPhoneNational}
-                      onChange={(e) => {
-                        setBuyPhoneNational(e.target.value);
-                        if (buyPhoneTouched) validateBuyPhoneAndSetErrors();
-                      }}
-                      onBlur={() => {
-                        setBuyPhoneTouched(true);
-                        validateBuyPhoneAndSetErrors();
-                      }}
-                      required
-                      aria-invalid={!!buyPhoneError}
+                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      aria-invalid={!!buyErrors.phone}
                       className={[
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
-                        buyPhoneError ? "border-rose-400/60" : "border-white/10",
+                        buyErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === buyCountryIso)
@@ -1257,13 +1259,6 @@ export default function HomePage() {
                         const dial = countryToDial(iso);
                         setBuyCountryIso(iso);
                         setBuyDialCode(dial);
-
-                        if (buyPhoneTouched) {
-                          setTimeout(() => validateBuyPhoneAndSetErrors(), 0);
-                        } else {
-                          setBuyPhoneError("");
-                          setBuyDialError("");
-                        }
                       }}
                       className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
                     >
@@ -1276,9 +1271,9 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {(buyDialError || buyPhoneError) && (
+                {(buyErrors.dial || buyErrors.phone) && (
                   <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
-                    {buyDialError || buyPhoneError}
+                    {buyErrors.dial || buyErrors.phone}
                   </p>
                 )}
               </div>
@@ -1292,8 +1287,10 @@ export default function HomePage() {
                   <select
                     value={buyCourse}
                     onChange={(e) => setBuyCourse(e.target.value)}
-                    required
-                    className="w-full rounded-2xl border border-brand-primary/60 bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none"
+                    className={[
+                      "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
+                      buyErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
+                    ].join(" ")}
                   >
                     <option value="" disabled>
                       {t("modals.purchase.coursePlaceholder")}
@@ -1310,6 +1307,12 @@ export default function HomePage() {
                     ▾
                   </span>
                 </div>
+
+                {buyErrors.course && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.course}
+                  </p>
+                )}
               </div>
 
               <label className="flex items-start gap-2 text-[11px] sm:text-xs text-brand-muted">
@@ -1335,7 +1338,7 @@ export default function HomePage() {
 
               <button
                 type="submit"
-                disabled={isBuySubmitting || !buyAgreed || !isBuyPhoneValidNow || !buyCourse}
+                disabled={isBuySubmitting || !buyAgreed}
                 className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
               >
                 {isBuySubmitting

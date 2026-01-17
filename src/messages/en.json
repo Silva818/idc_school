@@ -84,6 +84,13 @@
         "message": "Your account is currently in development. We'll email you when the app becomes available.",
         "submitChecking": "Checking…",
         "submit": "Log in"
+      },
+      "errors": {
+        "required": "Please fill out this field.",
+        "invalidEmail": "Please check your email — it looks invalid.",
+        "invalidDial": "Please check the country code (for example, +34).",
+        "invalidPhone": "Please check your phone number — it looks incomplete or has extra digits.",
+        "chooseCourse": "Please choose a course."
       }
     },
     "countries": {
