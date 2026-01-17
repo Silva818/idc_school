@@ -549,6 +549,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
               <TestSignupButton
+                label={t("header.takeStrengthTest")}
                 onClick={() => openTestModal(t("contexts.heroStrengthTest"))}
               />
 
