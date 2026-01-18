@@ -71,6 +71,7 @@ async function initAmeriaPayment(params: {
     Username,
     Password,
     Amount: params.amount,
+    OrderID: orderId, 
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
