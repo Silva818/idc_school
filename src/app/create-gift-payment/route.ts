@@ -71,7 +71,6 @@ async function initAmeriaPayment(params: {
     Username,
     Password,
     Amount: params.amount,
-    OrderID: orderId,
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
@@ -259,7 +258,6 @@ export async function POST(req: Request) {
     await sendToAirtable({
       ...airtableFieldsBase,
       id_payment: paymentId,
-      OrderID: orderId, // ⚠️ если поля нет — можешь убрать
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });
