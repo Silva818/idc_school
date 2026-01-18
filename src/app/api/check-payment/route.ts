@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 /* ---------------- TELEGRAM HELPERS ---------------- */
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const TELEGRAM_CHAT_ID_RAW = process.env.TELEGRAM_CHAT_ID;
+const TELEGRAM_CHAT_ID = TELEGRAM_CHAT_ID_RAW ? Number(TELEGRAM_CHAT_ID_RAW) : NaN;
+
 
 function escapeTgHtml(s: string) {
   return String(s)
@@ -14,7 +16,7 @@ function escapeTgHtml(s: string) {
 }
 
 async function sendTelegramMessage(text: string) {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+  if (!TELEGRAM_BOT_TOKEN || !Number.isFinite(TELEGRAM_CHAT_ID)) {
     console.warn("⚠️ Telegram config missing");
     return { ok: false as const, reason: "env_missing" as const };
   }

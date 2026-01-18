@@ -45,8 +45,12 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
 };
 
 function makeOrderId(): number {
-  return 1000000 + (Date.now() % 9000000);
+  // Берём последние 10 цифр timestamp (в пределах), + 4 цифры случайно => до 14 цифр
+  const ts = Date.now() % 10_000_000_000; // 0..9_999_999_999
+  const rnd = crypto.randomInt(1000, 10000); // 1000..9999
+  return ts * 10_000 + rnd; // до 14 цифр, безопасно для Number
 }
+
 
 async function initAmeriaPayment(params: {
   amount: number;
@@ -77,6 +81,7 @@ async function initAmeriaPayment(params: {
     Username,
     Password,
     Amount: params.amount,
+    OrderID: orderId,      
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
