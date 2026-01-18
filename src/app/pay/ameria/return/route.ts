@@ -100,10 +100,8 @@ export async function GET(req: NextRequest) {
   // - нет paymentId => pending
   // - есть paymentId и успех => success
   // - есть paymentId и НЕ успех => fail
-  let targetPath = "/pay/pending";
-  if (paymentId) {
-    targetPath = isSuccess(responseCode) ? "/pay/success" : "/pay/fail";
-  }
+  let targetPath = "/pay/success"; // единая страница статуса
+if (!paymentId) targetPath = "/pay/pending";
 
   const target = new URL(`${base}${targetPath}`);
 
