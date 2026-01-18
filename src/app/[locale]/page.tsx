@@ -365,6 +365,9 @@ export default function HomePage() {
 
   const [buyFullName, setBuyFullName] = useState("");
   const [buyEmail, setBuyEmail] = useState("");
+  const [activeCurrency, setActiveCurrency] =
+  useState<"EUR" | "USD" | "AMD">("EUR");
+
 
   const [buyCountryIso, setBuyCountryIso] = useState(COUNTRY_OPTIONS[0].iso);
   const [buyDialCode, setBuyDialCode] = useState(COUNTRY_OPTIONS[0].dial);
@@ -384,6 +387,9 @@ export default function HomePage() {
 
     setTestCountryIso(iso);
     setTestDialCode(dial);
+
+    setGiftCountryIso(iso);
+    setGiftDialCode(dial);
 
     setBuyCountryIso(iso);
     setBuyDialCode(dial);
@@ -406,6 +412,52 @@ export default function HomePage() {
     setBuyTriedSubmit(false);
     setBuyErrors({});
   }
+
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
+
+  function openGiftModal() {
+    setIsGiftModalOpen(true);
+  
+    setGiftTriedSubmit(false);
+    setGiftErrors({});
+    setGiftAgreed(false);
+    setGiftBuyerName("");
+    setGiftRecipientName("");
+    setGiftEmail("");
+    setGiftAmount("");
+    setGiftPhoneNational("");
+    setGiftCustomDial("+");
+  }
+  
+  function closeGiftModal() {
+    if (isGiftSubmitting) return;
+    setIsGiftModalOpen(false);
+  
+    setGiftTriedSubmit(false);
+    setGiftErrors({});
+  }
+  
+
+  // ---------------- GIFT FORM STATE ----------------
+  const [giftBuyerName, setGiftBuyerName] = useState("");
+  const [giftRecipientName, setGiftRecipientName] = useState("");
+  const [giftEmail, setGiftEmail] = useState("");
+  const [giftCountryIso, setGiftCountryIso] = useState(COUNTRY_OPTIONS[0].iso);
+  const [giftDialCode, setGiftDialCode] = useState(COUNTRY_OPTIONS[0].dial);
+  const [giftPhoneNational, setGiftPhoneNational] = useState("");
+  const [giftCustomDial, setGiftCustomDial] = useState("+");
+
+  const [giftAmount, setGiftAmount] = useState<string>("");
+
+  const [giftAgreed, setGiftAgreed] = useState(false);
+  const [isGiftSubmitting, setIsGiftSubmitting] = useState(false);
+
+  const [giftTriedSubmit, setGiftTriedSubmit] = useState(false);
+  const [giftErrors, setGiftErrors] = useState<
+    FormErrors & { recipient?: string; amount?: string }
+  >({});
+
+ 
 
   function validateBuyForm(): FormErrors {
     const errs: FormErrors = {};
@@ -435,6 +487,114 @@ export default function HomePage() {
 
     return errs;
   }
+
+  function validateGiftForm() {
+    const errs: any = {};
+
+    if (!giftBuyerName.trim()) errs.fullName = tErr("required");
+    if (!giftEmail.trim()) errs.email = tErr("required");
+    else if (!isValidEmail(giftEmail)) errs.email = tErr("invalidEmail");
+
+    if (!giftRecipientName.trim()) errs.recipient = tErr("required");
+
+    if (!giftAmount.trim()) errs.amount = tErr("required");
+    else {
+      const n = Number(giftAmount.replace(",", "."));
+      if (!Number.isFinite(n) || n <= 0) errs.amount = activeLocale === "ru" ? "Введите корректную сумму." : "Please enter a valid amount.";
+      // если хочешь минимум:
+      // if (n < 10) errs.amount = activeLocale === "ru" ? "Минимальная сумма: 10." : "Minimum amount: 10.";
+    }
+
+    const dialToCheck = giftCountryIso === "OTHER" ? giftCustomDial : giftDialCode;
+
+    if (!digitsOnly(giftPhoneNational)) {
+      errs.phone = tErr("required");
+    } else {
+      const { dialError, phoneError } = validatePhoneByCountry({
+        iso: giftCountryIso,
+        dial: dialToCheck,
+        national: giftPhoneNational,
+        locale: activeLocale,
+      });
+
+      if (dialError) errs.dial = tErr("invalidDial");
+      if (phoneError) errs.phone = tErr("invalidPhone");
+    }
+
+    return errs as FormErrors & { recipient?: string; amount?: string };
+  }
+
+  useEffect(() => {
+    if (!giftTriedSubmit) return;
+    setGiftErrors(validateGiftForm());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    giftTriedSubmit,
+    giftBuyerName,
+    giftRecipientName,
+    giftEmail,
+    giftAmount,
+    giftCountryIso,
+    giftDialCode,
+    giftCustomDial,
+    giftPhoneNational,
+    activeLocale,
+  ]);
+
+  async function handleGiftSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!giftAgreed || isGiftSubmitting) return;
+
+    setGiftTriedSubmit(true);
+
+    const errs = validateGiftForm();
+    setGiftErrors(errs);
+
+    if (Object.keys(errs).length > 0) return;
+
+    const dialToSend = giftCountryIso === "OTHER" ? giftCustomDial : giftDialCode;
+
+    setIsGiftSubmitting(true);
+
+    try {
+      // ⚠️ валюта: беру ту же логику, что у тарифов.
+      // Если gift всегда EUR — поставь "EUR".
+      const currency: "EUR" | "USD" | "AMD" = "EUR";
+
+      const res = await fetch("/api/create-gift-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locale: activeLocale,
+          amount: Number(giftAmount.replace(",", ".")),
+          currency,
+
+          buyerName: giftBuyerName,
+          buyerEmail: giftEmail,
+          buyerPhone: buildE164(dialToSend, giftPhoneNational),
+
+          recipientName: giftRecipientName,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Ошибка создания оплаты (gift)", await res.text());
+        return;
+      }
+
+      const data = await res.json();
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        console.error("paymentUrl не получен из API (gift)");
+      }
+    } catch (err) {
+      console.error("Ошибка запроса (gift)", err);
+    } finally {
+      setIsGiftSubmitting(false);
+    }
+  }
+
 
   useEffect(() => {
     if (!buyTriedSubmit) return;
@@ -841,10 +1001,15 @@ export default function HomePage() {
       <Courses onOpenTestModal={openTestModal} />
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
-        <Pricing
-          onOpenTestModal={(context) => openTestModal(context, { needsCourse: true })}
-          onOpenPurchaseModal={openPurchaseModal}
-        />
+      <Pricing onOpenTestModal={(context) => openTestModal(context, { needsCourse: true })}
+      onOpenPurchaseModal={(opts) => {
+        setActiveCurrency(opts.currency);
+        openPurchaseModal(opts);
+      }}
+      onOpenGiftModal={() => openGiftModal()}
+      onCurrencyChange={(c) => setActiveCurrency(c)}
+    />
+
         <About />
         <Testimonials />
         <FAQ />
@@ -1434,6 +1599,248 @@ export default function HomePage() {
       <div className="hidden md:block">
         {/* <ChatWidget /> */}
       </div>
+
+      {/* MODAL: gift */}
+      {isGiftModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 p-4 sm:p-0 flex items-center justify-center"
+          onClick={closeGiftModal}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-brand-dark border border-white/10 p-5 sm:p-6 shadow-xl
+                       max-h-[calc(100dvh-2rem)] overflow-y-auto
+                       pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold">
+                  {activeLocale === "ru" ? "Подарочный сертификат" : "Gift certificate"}
+                </h2>
+                <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
+                  {activeLocale === "ru"
+                    ? "Укажите данные плательщика и имя получателя. Сумму можно выбрать самостоятельно."
+                    : "Enter payer details and recipient name. You can choose any amount."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeGiftModal}
+                className="rounded-full bg-white/5 p-1 text-brand-muted hover:bg-white/10 hover:text-white transition-colors"
+                aria-label="Close"
+              >
+                <span className="block h-4 w-4 leading-none">✕</span>
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleGiftSubmit}>
+              {/* buyer name */}
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {activeLocale === "ru" ? "Ваше имя" : "Your name"}
+                </label>
+                <input
+                  type="text"
+                  value={giftBuyerName}
+                  onChange={(e) => setGiftBuyerName(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    giftErrors.fullName ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                />
+                {giftErrors.fullName && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {giftErrors.fullName}
+                  </p>
+                )}
+              </div>
+
+              {/* recipient name */}
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {activeLocale === "ru" ? "Имя получателя" : "Recipient name"}
+                </label>
+                <input
+                  type="text"
+                  value={giftRecipientName}
+                  onChange={(e) => setGiftRecipientName(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    (giftErrors as any).recipient ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                />
+                {(giftErrors as any).recipient && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {(giftErrors as any).recipient}
+                  </p>
+                )}
+              </div>
+
+              {/* email */}
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {activeLocale === "ru" ? "Email" : "Email"}
+                </label>
+                <input
+                  type="email"
+                  value={giftEmail}
+                  onChange={(e) => setGiftEmail(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    giftErrors.email ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                  placeholder="you@example.com"
+                />
+                {giftErrors.email && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {giftErrors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* phone */}
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {activeLocale === "ru" ? "Телефон" : "Phone"}
+                </label>
+
+                {giftCountryIso === "OTHER" ? (
+                  <div className="grid grid-cols-[0.7fr_1.3fr] gap-2">
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={giftCustomDial}
+                      onChange={(e) => setGiftCustomDial(e.target.value)}
+                      aria-invalid={!!giftErrors.dial}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        giftErrors.dial ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={activeLocale === "ru" ? "Код (+34)" : "Code (+34)"}
+                    />
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={giftPhoneNational}
+                      onChange={(e) => setGiftPhoneNational(e.target.value)}
+                      aria-invalid={!!giftErrors.phone}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        giftErrors.phone ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={activeLocale === "ru" ? "Номер" : "Number"}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-[1fr_1.2fr] gap-2">
+                    <select
+                      value={giftCountryIso}
+                      onChange={(e) => {
+                        const iso = e.target.value;
+                        const dial = countryToDial(iso);
+                        setGiftCountryIso(iso);
+                        setGiftDialCode(dial);
+                      }}
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.iso} value={c.iso}>
+                          {c.flag} {c.dial || c.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={giftPhoneNational}
+                      onChange={(e) => setGiftPhoneNational(e.target.value)}
+                      aria-invalid={!!giftErrors.phone}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        giftErrors.phone ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={
+                        COUNTRY_OPTIONS.find((c) => c.iso === giftCountryIso)?.placeholder ??
+                        (activeLocale === "ru" ? "Введите номер" : "Enter phone")
+                      }
+                    />
+                  </div>
+                )}
+
+                {(giftErrors.dial || giftErrors.phone) && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {giftErrors.dial || giftErrors.phone}
+                  </p>
+                )}
+              </div>
+
+              {/* amount */}
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {activeLocale === "ru" ? "Сумма (EUR)" : "Amount (EUR)"}
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={giftAmount}
+                  onChange={(e) => setGiftAmount(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    (giftErrors as any).amount ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                  placeholder={activeLocale === "ru" ? "Например, 50" : "e.g., 50"}
+                />
+                {(giftErrors as any).amount && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {(giftErrors as any).amount}
+                  </p>
+                )}
+              </div>
+
+              {/* agree */}
+              <label className="flex items-start gap-2 text-[11px] sm:text-xs text-brand-muted">
+                <input
+                  type="checkbox"
+                  checked={giftAgreed}
+                  onChange={(e) => setGiftAgreed(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 rounded border-white/20 bg-transparent text-brand-primary focus:ring-0"
+                  required
+                />
+                <span>
+                  {activeLocale === "ru" ? "Я согласен(на) с " : "I agree with "}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    className="underline decoration-dotted hover:text-white"
+                  >
+                    {activeLocale === "ru" ? "политикой конфиденциальности" : "privacy policy"}
+                  </a>
+                  .
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isGiftSubmitting || !giftAgreed}
+                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
+              >
+                {isGiftSubmitting
+                  ? activeLocale === "ru"
+                    ? "Переходим к оплате…"
+                    : "Redirecting…"
+                  : activeLocale === "ru"
+                  ? "Оплатить сертификат"
+                  : "Pay for gift"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
     </main>
   );
 }

@@ -58,9 +58,20 @@ export type PurchaseOptions = {
 type PricingProps = {
   onOpenTestModal?: (context?: string) => void;
   onOpenPurchaseModal?: (options: PurchaseOptions) => void;
+
+  // ✅ NEW: открыть модалку подарочного сертификата
+  onOpenGiftModal?: () => void;
+
+  // ✅ NEW: сообщать наружу текущую валюту (для gift-модалки)
+  onCurrencyChange?: (currency: Currency) => void;
 };
 
-export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) {
+export function Pricing({
+  onOpenTestModal,
+  onOpenPurchaseModal,
+  onOpenGiftModal,
+  onCurrencyChange,
+}: PricingProps) {
   const t = useTranslations("home.pricing");
 
   const [currency, setCurrency] = useState<Currency>("EUR");
@@ -103,7 +114,10 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs sm:text-sm">
                 <button
                   type="button"
-                  onClick={() => setCurrency("EUR")}
+                  onClick={() => {
+                    setCurrency("EUR");
+                    onCurrencyChange?.("EUR");
+                  }}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
                     isEUR ? "bg-white text-brand-dark" : "text-brand-muted",
@@ -114,7 +128,10 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
 
                 <button
                   type="button"
-                  onClick={() => setCurrency("USD")}
+                  onClick={() => {
+                    setCurrency("USD");
+                    onCurrencyChange?.("USD");
+                  }}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
                     isUSD ? "bg-white text-brand-dark" : "text-brand-muted",
@@ -125,7 +142,10 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
 
                 <button
                   type="button"
-                  onClick={() => setCurrency("AMD")}
+                  onClick={() => {
+                    setCurrency("AMD");
+                    onCurrencyChange?.("AMD");
+                  }}
                   className={[
                     "px-3 py-1.5 rounded-full transition-colors",
                     "hidden", // ← СКРЫВАЕМ AMD
@@ -374,6 +394,19 @@ export function Pricing({ onOpenTestModal, onOpenPurchaseModal }: PricingProps) 
             </div>
           </article>
         </div>
+
+        {/* ✅ NEW: маленькая ссылка под блоком */}
+        {onOpenGiftModal ? (
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={onOpenGiftModal}
+              className="text-sm text-brand-muted underline decoration-dotted hover:text-white transition-colors"
+            >
+              {t("gift.link")}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

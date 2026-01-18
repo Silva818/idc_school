@@ -205,6 +205,13 @@
       }
     },
     "pricing": {
+      "gift": {
+        "link": "Gift a certificate",
+        "title": "Gift a certificate",
+        "desc": "Gift a certificate to a friend or family member so they can take the strength test or buy a course.",
+        "button": "Gift a certificate",
+        "tariffLabel": "Gift a certificate"
+      },
       "kicker": "Pricing",
       "title": "How much training costs",
       "desc": "You buy a workout block, complete it at your own pace, and then take the next one. No subscription and no auto-charges.",
