@@ -85,7 +85,9 @@ async function initAmeriaPayment(params: {
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
-    Opaque: params.opaque ?? "",
+    // Opaque: params.opaque ?? "",
+    Opaque: "",        // <= тест
+  Timeout: 1200,     // <= явно
   };
 
   const r = await fetch(`${base}/api/VPOS/InitPayment`, {
@@ -103,9 +105,8 @@ async function initAmeriaPayment(params: {
 
   // ✅ Если банк игнорирует lang — это не ломает; но на всякий оставим.
   const paymentUrl =
-  `${base}/Payments/Pay?paymentID=${encodeURIComponent(data.PaymentID)}` +
+  `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
   `&lang=${encodeURIComponent(params.locale)}`;
-
 
   return { paymentUrl, paymentId: data.PaymentID, orderId };
 }
