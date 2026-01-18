@@ -103,8 +103,9 @@ async function initAmeriaPayment(params: {
 
   // ✅ Если банк игнорирует lang — это не ломает; но на всякий оставим.
   const paymentUrl =
-    `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
-    `&lang=${encodeURIComponent(params.locale)}`;
+  `${base}/Payments/Pay?paymentID=${encodeURIComponent(data.PaymentID)}` +
+  `&lang=${encodeURIComponent(params.locale)}`;
+
 
   return { paymentUrl, paymentId: data.PaymentID, orderId };
 }
