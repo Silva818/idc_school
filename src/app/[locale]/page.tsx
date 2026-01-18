@@ -559,7 +559,7 @@ export default function HomePage() {
     try {
       // ⚠️ валюта: беру ту же логику, что у тарифов.
       // Если gift всегда EUR — поставь "EUR".
-      const currency: "EUR" | "USD" | "AMD" = "EUR";
+      const currency: "EUR" | "USD" | "AMD" = activeCurrency;
 
       const res = await fetch("/api/create-gift-payment", {
         method: "POST",
@@ -692,7 +692,7 @@ export default function HomePage() {
   }
 
   const scrollYRef = useRef(0);
-  const anyModalOpen = isTestModalOpen || isPurchaseModalOpen || isLoginModalOpen;
+  const anyModalOpen = isTestModalOpen || isPurchaseModalOpen || isLoginModalOpen || isGiftModalOpen;
 
   useEffect(() => {
     if (!anyModalOpen) return;
@@ -1615,7 +1615,7 @@ export default function HomePage() {
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold">
-                  {activeLocale === "ru" ? "Подарочный сертификат" : "Gift certificate"}
+                {activeLocale === "ru" ? `Сумма (${activeCurrency})` : `Amount (${activeCurrency})`}
                 </h2>
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
                   {activeLocale === "ru"

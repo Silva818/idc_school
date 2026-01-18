@@ -6,13 +6,7 @@ const LOCALES = new Set(["en", "ru"]);
 function parseLocaleFromQuery(req: NextRequest): "en" | "ru" | null {
   const sp = req.nextUrl.searchParams;
 
-  // ✅ банк возвращает то, что было в BackURL (?locale=ru|en)
-  const v =
-    sp.get("locale") ||
-    sp.get("lang") ||
-    sp.get("language") ||
-    "";
-
+  const v = sp.get("locale") || sp.get("lang") || sp.get("language") || "";
   const norm = String(v).trim().toLowerCase();
   if (norm === "ru") return "ru";
   if (norm === "en") return "en";
@@ -49,7 +43,6 @@ function parseLocaleFromAcceptLanguage(req: NextRequest): "en" | "ru" | null {
 }
 
 function pickLocale(req: NextRequest): "en" | "ru" {
-  // ✅ FIX: сначала query (BackURL locale), потом opaque, потом cookie/headers
   return (
     parseLocaleFromQuery(req) ||
     parseLocaleFromOpaque(req) ||
@@ -63,6 +56,16 @@ function prefix(locale: "en" | "ru") {
   return locale === "ru" ? "/ru" : "";
 }
 
+function normalizeResponseCode(v: string | null) {
+  const s = String(v ?? "").trim();
+  return s;
+}
+
+function isSuccess(code: string) {
+  // Обычно "00" = approved. Иногда встречается "0000" — подстрахуемся.
+  return code === "00" || code === "0000";
+}
+
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
 
@@ -70,27 +73,39 @@ export async function GET(req: NextRequest) {
     sp.get("paymentID") ||
     sp.get("PaymentID") ||
     sp.get("paymentId") ||
-    sp.get("id");
+    sp.get("id") ||
+    "";
 
-  const responseCode =
+  const responseCodeRaw =
     sp.get("responseCode") ||
     sp.get("ResponseCode") ||
     sp.get("responsecode") ||
-    sp.get("resposneCode") ||
-    sp.get("ResposneCode");
+    sp.get("resposneCode") || // (как в доке с опечаткой)
+    sp.get("ResposneCode") ||
+    "";
 
   const orderId =
     sp.get("orderId") ||
     sp.get("OrderId") ||
     sp.get("orderID") ||
-    sp.get("OrderID");
+    sp.get("OrderID") ||
+    "";
+
+  const responseCode = normalizeResponseCode(responseCodeRaw);
 
   const locale = pickLocale(req);
   const base = `${req.nextUrl.origin}${prefix(locale)}`;
 
-  const target = paymentId
-    ? new URL(`${base}/pay/success`)
-    : new URL(`${base}/pay/pending`);
+  // ✅ Логика:
+  // - нет paymentId => pending
+  // - есть paymentId и успех => success
+  // - есть paymentId и НЕ успех => fail
+  let targetPath = "/pay/pending";
+  if (paymentId) {
+    targetPath = isSuccess(responseCode) ? "/pay/success" : "/pay/fail";
+  }
+
+  const target = new URL(`${base}${targetPath}`);
 
   if (paymentId) target.searchParams.set("paymentId", paymentId);
   if (responseCode) target.searchParams.set("responseCode", responseCode);
