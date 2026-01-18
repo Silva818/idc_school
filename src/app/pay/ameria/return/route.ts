@@ -115,6 +115,8 @@ if (!paymentId) targetPath = "/pay/pending";
     maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
   });
+  console.log("🔙 Ameria return query:", Object.fromEntries(req.nextUrl.searchParams.entries()));
 
   return res;
+  
 }

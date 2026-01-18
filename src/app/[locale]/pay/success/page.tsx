@@ -80,7 +80,6 @@ export default function PaySuccessPage() {
       sp.get("PaymentID") ||
       sp.get("paymentId") ||
       sp.get("id") ||
-      localStorage.getItem("ameriaPaymentId") ||
       "";
 
     setPaymentId(pid);
