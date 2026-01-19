@@ -44,21 +44,35 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   USD: "840",
 };
 
-function makeOrderId(): number {
-  // Берём последние 10 цифр timestamp (в пределах), + 4 цифры случайно => до 14 цифр
-  const ts = Date.now() % 10_000_000_000; // 0..9_999_999_999
-  const rnd = crypto.randomInt(1000, 10000); // 1000..9999
-  return ts * 10_000 + rnd; // до 14 цифр, безопасно для Number
+function makeOrderIdFromToken(tokenHex: string): number {
+  const buf = Buffer.from(tokenHex, "hex");
+
+  let x = BigInt(0);
+  for (let i = 0; i < 8; i++) {
+    x = (x << BigInt(8)) + BigInt(buf[i]); // 64-bit
+  }
+
+  const mod = BigInt("100000000000000");   // 10^14
+  const offset = BigInt("10000000000000"); // 10^13
+
+  const orderId = offset + (x % mod);      // 14 digits
+  return Number(orderId);                  // безопасно (< 2e14)
 }
 
 
+
+
 async function initAmeriaPayment(params: {
+  orderId: number;
   amount: number;
   currency: Exclude<Currency, "RUB">;
   description: string;
   opaque?: string;
   locale: Locale;
-}) {
+})
+
+
+{
   const base = process.env.AMERIA_VPOS_BASE?.replace(/\/+$/, "");
   const ClientID = process.env.AMERIA_CLIENT_ID;
   const Username = process.env.AMERIA_USERNAME;
@@ -69,7 +83,6 @@ async function initAmeriaPayment(params: {
     throw new Error("Ameria env vars missing");
   }
 
-  const orderId = makeOrderId();
 
   // ✅ ВАЖНО: возвращаемся с явным locale (банк этот параметр реально возвращает обратно)
   const backURL = `${appBase}/pay/ameria/return?locale=${encodeURIComponent(
@@ -81,12 +94,11 @@ async function initAmeriaPayment(params: {
     Username,
     Password,
     Amount: params.amount,
-    OrderID: orderId,      
+    OrderID: params.orderId,      
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
-    // Opaque: params.opaque ?? "",
-    Opaque: "",        // <= тест
+    Opaque: params.opaque ?? "",
   Timeout: 1200,     // <= явно
   };
 
@@ -102,13 +114,15 @@ async function initAmeriaPayment(params: {
   if (!r.ok || data?.ResponseCode !== 1 || !data?.PaymentID) {
     throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
   }
+  console.log("Ameria InitPayment response:", data);
 
   // ✅ Если банк игнорирует lang — это не ломает; но на всякий оставим.
   const paymentUrl =
   `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
   `&lang=${encodeURIComponent(params.locale)}`;
 
-  return { paymentUrl, paymentId: data.PaymentID, orderId };
+  return { paymentUrl, paymentId: data.PaymentID, orderId: params.orderId };
+
 }
 
 /* ---------------- AIRTABLE ---------------- */
@@ -229,6 +243,8 @@ export async function POST(req: Request) {
     const lessons = lessonsByTariff[tariffId] ?? 1;
 
     const tgToken = makeTelegramLinkToken();
+    const orderId = makeOrderIdFromToken(tgToken);
+
 
     /* ---------- RUB ---------- */
     if (currency === "RUB") {
@@ -269,13 +285,15 @@ export async function POST(req: Request) {
       locale: safeLocale,
     });
 
-    const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
+    const { paymentUrl, paymentId } = await initAmeriaPayment({
+      orderId,
       amount,
       currency: currency as Exclude<Currency, "RUB">,
       description,
       opaque,
       locale: safeLocale,
     });
+    
 
     await sendPurchaseToAirtable({
       email: email,
