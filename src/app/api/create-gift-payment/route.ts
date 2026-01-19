@@ -1,40 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
-type Currency = "RUB" | "AMD" | "EUR" | "USD";
+type Currency = "AMD" | "EUR" | "USD";
 type Locale = "en" | "ru";
 
-/* ---------------- ROBOKASSA ---------------- */
-
-function generateRoboPaymentLink(paymentId: number | string, sum: number, email: string) {
-  const shopId = process.env.ROBO_ID;
-  const secretKey1 = process.env.ROBO_SECRET1;
-
-  if (!shopId || !secretKey1) {
-    throw new Error("ROBO_ID или ROBO_SECRET1 не заданы");
-  }
-
-  const sumString = String(sum).replace(",", ".");
-
-  const signature = crypto
-    .createHash("md5")
-    .update(`${shopId}:${sumString}:${paymentId}:${secretKey1}`)
-    .digest("hex");
-
-  return (
-    `https://auth.robokassa.ru/Merchant/Index.aspx` +
-    `?MerchantLogin=${shopId}` +
-    `&OutSum=${encodeURIComponent(sumString)}` +
-    `&InvId=${encodeURIComponent(String(paymentId))}` +
-    `&SignatureValue=${signature}` +
-    `&Email=${encodeURIComponent(email)}` +
-    `&IsTest=0`
-  );
-}
 
 /* ---------------- AMERIA ---------------- */
 
-const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
+const ameriaCurrency: Record<Currency, string> = {
   AMD: "051",
   EUR: "978",
   USD: "840",
@@ -55,7 +28,7 @@ function makeOrderIdFromToken(tokenHex: string): number {
 async function initAmeriaPayment(params: {
   orderId: number;
   amount: number;
-  currency: Exclude<Currency, "RUB">;
+  currency: Currency;
   description: string;
   opaque?: string;
   locale: Locale;
@@ -96,8 +69,13 @@ async function initAmeriaPayment(params: {
   const data = await r.json();
 
   if (!r.ok || data?.ResponseCode !== 1 || !data?.PaymentID) {
-    throw new Error(`Ameria InitPayment failed: ${JSON.stringify(data)}`);
+    console.error("Ameria InitPayment failed", {
+      httpOk: r.ok,
+      responseCode: data?.ResponseCode,
+    });
+    throw new Error("Ameria InitPayment failed");
   }
+  
 
   const paymentUrl =
     `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
@@ -113,10 +91,8 @@ async function sendToAirtable(fields: Record<string, any>) {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_PURCHASE_WEBSITE_TABLE;
 
-  if (!apiKey || !baseId || !table) {
-    console.warn("❌ Airtable env missing — skip log");
-    return;
-  }
+  if (!apiKey || !baseId || !table) return;
+  
 
   const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`;
 
@@ -131,10 +107,9 @@ async function sendToAirtable(fields: Record<string, any>) {
       cache: "no-store",
     });
 
-    const text = await r.text();
 
     if (!r.ok) {
-      console.error("❌ Airtable write failed:", text);
+      console.error("❌ Airtable write failed:", r.status);
     }
   } catch (err) {
     console.error("💥 Airtable fetch crashed:", err);
@@ -164,7 +139,6 @@ function isLikelyValidPhone(nationalOrAny: string) {
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
-  console.log("🎁 create-gift-payment POST hit");
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -195,9 +169,6 @@ export async function POST(req: Request) {
     // minimal validation
     if (!amount || Number(amount) <= 0) {
       return NextResponse.json({ error: "Некорректная сумма" }, { status: 400 });
-    }
-    if (!currency) {
-      return NextResponse.json({ error: "Не указана валюта" }, { status: 400 });
     }
     if (!buyerName || !String(buyerName).trim()) {
       return NextResponse.json({ error: "Не указано имя" }, { status: 400 });
@@ -230,19 +201,6 @@ export async function POST(req: Request) {
       GiftRecipient: recipientName, // поле должно существовать в Airtable
     };
 
-    /* ---------- RUB (ROBOKASSA) ---------- */
-    if (currency === "RUB") {
-      const paymentId = Date.now();
-      const paymentUrl = generateRoboPaymentLink(paymentId, amount, buyerEmail);
-
-      await sendToAirtable({
-        ...airtableFieldsBase,
-        id_payment: paymentId,
-      });
-
-      return NextResponse.json({ paymentUrl, paymentId, tgToken });
-    }
-
     /* ---------- AMERIA ---------- */
     const description = `I Do Calisthenics - Gift Certificate`;
 
@@ -257,7 +215,7 @@ export async function POST(req: Request) {
     const { paymentUrl, paymentId } = await initAmeriaPayment({
       orderId,
       amount,
-      currency: currency as Exclude<Currency, "RUB">,
+      currency: currency,
       description,
       opaque,
       locale: safeLocale,
@@ -272,7 +230,7 @@ export async function POST(req: Request) {
   } catch (e: any) {
     console.error("create-gift-payment error:", e);
     return NextResponse.json(
-      { error: "Server error", details: String(e?.message ?? e) },
+      { error: "Server error"},
       { status: 500 }
     );
   }
