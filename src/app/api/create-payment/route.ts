@@ -95,8 +95,7 @@ async function initAmeriaPayment(params: {
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
-    // Opaque: params.opaque ?? "",
-    Opaque: "test",
+    Opaque: params.opaque ?? "",
   Timeout: 1200,     // <= явно
   };
 

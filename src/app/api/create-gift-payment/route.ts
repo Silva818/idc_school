@@ -40,11 +40,20 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
   USD: "840",
 };
 
-function makeOrderId(): number {
-  return 1000000 + (Date.now() % 9000000);
+/**
+ * Делает OrderID:
+ * - детерминированным (один tgToken -> один OrderID)
+ * - коротким и "безопасным" (1..2_000_000_000), чтобы пройти типичные int32-ограничения шлюза
+ */
+function makeOrderIdFromToken(tokenHex: string): number {
+  const h = crypto.createHash("sha256").update(tokenHex).digest();
+  const u32 = h.readUInt32BE(0); // 0..4294967295
+  const max = 2_000_000_000;
+  return (u32 % max) + 1; // 1..2_000_000_000
 }
 
 async function initAmeriaPayment(params: {
+  orderId: number;
   amount: number;
   currency: Exclude<Currency, "RUB">;
   description: string;
@@ -61,9 +70,6 @@ async function initAmeriaPayment(params: {
     throw new Error("Ameria env vars missing");
   }
 
-  const orderId = makeOrderId();
-
-  // вернёмся на твой return-роут (как и для обычных оплат)
   const backURL = `${appBase}/pay/ameria/return?locale=${encodeURIComponent(params.locale)}`;
 
   const body = {
@@ -71,11 +77,13 @@ async function initAmeriaPayment(params: {
     Username,
     Password,
     Amount: params.amount,
-    OrderID: orderId, 
+    OrderID: params.orderId,
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
+    // На старте лучше держать коротко/ASCII; JSON тоже ок, если шлюз не ругается.
     Opaque: params.opaque ?? "",
+    Timeout: 1200,
   };
 
   const r = await fetch(`${base}/api/VPOS/InitPayment`, {
@@ -95,7 +103,7 @@ async function initAmeriaPayment(params: {
     `${base}/Payments/Pay?id=${encodeURIComponent(data.PaymentID)}` +
     `&lang=${encodeURIComponent(params.locale)}`;
 
-  return { paymentUrl, paymentId: data.PaymentID, orderId };
+  return { paymentUrl, paymentId: data.PaymentID, orderId: params.orderId };
 }
 
 /* ---------------- AIRTABLE ---------------- */
@@ -150,7 +158,6 @@ function digitsOnly(v: string) {
 }
 
 function isLikelyValidPhone(nationalOrAny: string) {
-  // базовая проверка как у тебя: 6+ цифр
   return digitsOnly(nationalOrAny).length >= 6;
 }
 
@@ -180,13 +187,12 @@ export async function POST(req: Request) {
       recipientName: string;
     };
 
-    // fallback locale (как у тебя)
+    // fallback locale
     const referer = req.headers.get("referer") || "";
     const inferredLocale: Locale = referer.includes("/ru") ? "ru" : "en";
-    const safeLocale: Locale =
-      locale === "ru" ? "ru" : locale === "en" ? "en" : inferredLocale;
+    const safeLocale: Locale = locale === "ru" ? "ru" : locale === "en" ? "en" : inferredLocale;
 
-    // минимальная валидация
+    // minimal validation
     if (!amount || Number(amount) <= 0) {
       return NextResponse.json({ error: "Некорректная сумма" }, { status: 400 });
     }
@@ -207,12 +213,13 @@ export async function POST(req: Request) {
     }
 
     const tgToken = makeTelegramLinkToken();
+    const orderId = makeOrderIdFromToken(tgToken);
 
-    // Airtable base fields (в одну таблицу)
+    // Airtable base fields
     const airtableFieldsBase = {
       email: buyerEmail,
       FIO: buyerName,
-      Phone: buyerPhone, // ⚠️ поле должно существовать в Airtable; если нет — убери эту строку
+      Phone: buyerPhone, // поле должно существовать в Airtable
       Sum: Number(amount),
       Lessons: 0,
       Currency: currency,
@@ -220,8 +227,7 @@ export async function POST(req: Request) {
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,
-
-      GiftRecipient: recipientName, // ⚠️ поле должно существовать; если нет — убери или переименуй
+      GiftRecipient: recipientName, // поле должно существовать в Airtable
     };
 
     /* ---------- RUB (ROBOKASSA) ---------- */
@@ -240,7 +246,7 @@ export async function POST(req: Request) {
     /* ---------- AMERIA ---------- */
     const description = `I Do Calisthenics - Gift Certificate`;
 
-    // opaque: держим минимум
+    // opaque: можно держать коротко, чтобы не ловить ошибки по Opaque
     const opaque = JSON.stringify({
       type: "gift",
       currency,
@@ -248,7 +254,8 @@ export async function POST(req: Request) {
       email: buyerEmail,
     });
 
-    const { paymentUrl, paymentId, orderId } = await initAmeriaPayment({
+    const { paymentUrl, paymentId } = await initAmeriaPayment({
+      orderId,
       amount,
       currency: currency as Exclude<Currency, "RUB">,
       description,
