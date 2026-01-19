@@ -45,21 +45,18 @@ const ameriaCurrency: Record<Exclude<Currency, "RUB">, string> = {
 };
 
 function makeOrderIdFromToken(tokenHex: string): number {
-  const buf = Buffer.from(tokenHex, "hex");
+  // Детерминированно: один token -> один OrderID
+  const h = crypto.createHash("sha256").update(tokenHex).digest();
 
-  let x = BigInt(0);
-  for (let i = 0; i < 8; i++) {
-    x = (x << BigInt(8)) + BigInt(buf[i]); // 64-bit
-  }
+  // Берём первые 4 байта => uint32
+  const u32 = h.readUInt32BE(0); // 0..4294967295
 
-  const mod = BigInt("100000000000000");   // 10^14
-  const offset = BigInt("10000000000000"); // 10^13
+  // Приводим к безопасному int32-диапазону шлюза (предположительно)
+  const max = 2_000_000_000;
+  const orderId = (u32 % max) + 1; // 1..2_000_000_000
 
-  const orderId = offset + (x % mod);      // 14 digits
-  return Number(orderId);                  // безопасно (< 2e14)
+  return orderId;
 }
-
-
 
 
 async function initAmeriaPayment(params: {
@@ -98,7 +95,8 @@ async function initAmeriaPayment(params: {
     Description: params.description,
     Currency: ameriaCurrency[params.currency],
     BackURL: backURL,
-    Opaque: params.opaque ?? "",
+    // Opaque: params.opaque ?? "",
+    Opaque: "test",
   Timeout: 1200,     // <= явно
   };
 
