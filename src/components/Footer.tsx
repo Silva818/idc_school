@@ -9,28 +9,36 @@ export function Footer() {
   const t = useTranslations("home.footer");
   const pathname = usePathname();
 
-  // Если ты используешь схему: EN = /, RU = /ru
+  // EN = /en..., RU = /ru...
   const localePrefix = pathname.startsWith("/ru") ? "/ru" : "";
 
   const startYear = 2018;
   const currentYear = new Date().getFullYear();
   const yearLabel =
-    startYear === currentYear ? currentYear : `${startYear}–${currentYear}`;
+    startYear === currentYear ? `${currentYear}` : `${startYear}–${currentYear}`;
 
   return (
     <footer className="border-t border-white/5 bg-brand-dark/95">
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           {/* Left: brand */}
-          <div className="flex flex-col gap-1 text-center sm:text-left">
-            <span className="font-medium text-white/90">I Do Calisthenics</span>
-            <span className="text-[11px] text-brand-muted/80">
+          <div className="text-center sm:text-left">
+            <div className="font-medium text-white/90 leading-none">
+              I Do Calisthenics
+            </div>
+            <div className="mt-2 text-[11px] text-brand-muted/80">
               {t("copyright", { yearLabel })}
-            </span>
+            </div>
           </div>
 
-          {/* Middle: legal + cookie settings */}
-          <nav className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4 text-center text-[12px] sm:text-xs text-brand-muted">
+          {/* Middle: legal links (minimal, wrap nicely on mobile) */}
+          <nav
+            className={[
+              "flex flex-wrap justify-center gap-x-4 gap-y-2",
+              "text-[12px] sm:text-xs text-brand-muted",
+            ].join(" ")}
+            aria-label="Legal"
+          >
             <Link
               href={`${localePrefix}/offer`}
               className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
@@ -57,7 +65,9 @@ export function Footer() {
               type="button"
               onClick={() => {
                 window.dispatchEvent(
-                  new CustomEvent("cookie:open", { detail: { tab: "customize" } })
+                  new CustomEvent("cookie:open", {
+                    detail: { tab: "customize" },
+                  })
                 );
               }}
               className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
@@ -66,7 +76,7 @@ export function Footer() {
             </button>
           </nav>
 
-          {/* Right: socials */}
+          {/* Right: socials (single quiet pill) */}
           <div className="flex justify-center sm:justify-end">
             <a
               href="https://instagram.com/i_do_calisthenics"
@@ -75,7 +85,7 @@ export function Footer() {
               className={[
                 "inline-flex items-center gap-2",
                 "rounded-full border border-white/10 bg-white/5",
-                "px-4 py-2 text-xs font-medium",
+                "px-4 py-2 text-xs font-medium text-white/90",
                 "hover:bg-white/10 hover:text-white transition-colors",
               ].join(" ")}
             >
@@ -86,21 +96,6 @@ export function Footer() {
               <span>{t("instagram")}</span>
             </a>
           </div>
-        </div>
-
-        {/* Bottom micro row (optional, nice spacing on mobile) */}
-        <div className="mt-6 flex items-center justify-center sm:justify-between gap-3 text-[11px] text-brand-muted/70">
-          <span className="hidden sm:inline">
-            {t("tagline", { defaultValue: "" })}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            ↑ {t("backToTop", { defaultValue: "Back to top" })}
-          </button>
         </div>
       </div>
     </footer>
