@@ -13,11 +13,13 @@ function isLocale(value: string): value is Locale {
 
 type Props = {
   children: ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const rawLocale = (params.locale ?? "en").toLowerCase();
+  const { locale } = await params;
+
+  const rawLocale = (locale ?? "en").toLowerCase();
   const safeLocale: Locale = isLocale(rawLocale) ? rawLocale : "en";
 
   setRequestLocale(safeLocale);
@@ -33,7 +35,6 @@ export default async function LocaleLayout({ children, params }: Props) {
       <Suspense fallback={null}>{children}</Suspense>
     </NextIntlClientProvider>
   );
-  
 }
 
 export function generateStaticParams() {
