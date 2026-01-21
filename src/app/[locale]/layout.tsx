@@ -24,11 +24,16 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages({ locale: safeLocale });
 
   return (
-    <NextIntlClientProvider locale={safeLocale} messages={messages}>
+    <NextIntlClientProvider
+      key={safeLocale}
+      locale={safeLocale}
+      messages={messages}
+    >
       <CookieConsentBanner />
       <Suspense fallback={null}>{children}</Suspense>
     </NextIntlClientProvider>
   );
+  
 }
 
 export function generateStaticParams() {

@@ -55,24 +55,30 @@ export default function CookieConsentBanner() {
       ts: number;
       locale: string;
     }>(localStorage.getItem(STORAGE_KEY));
-
+  
     if (!saved) {
       setIsOpen(true);
+      setIsCustomizeOpen(false);
       return;
     }
-
+  
     const analyticsGranted = !!saved.consent.analytics;
     const marketingGranted = !!saved.consent.marketing;
-
+  
     const consent: GtagConsent = {
       analytics_storage: analyticsGranted ? "granted" : "denied",
       ad_storage: marketingGranted ? "granted" : "denied",
       ad_user_data: marketingGranted ? "granted" : "denied",
       ad_personalization: marketingGranted ? "granted" : "denied",
     };
-
+  
     gtagConsentUpdate(consent);
-  }, []);
+  
+    // баннер не показываем, т.к. уже есть выбор
+    setIsOpen(false);
+    setIsCustomizeOpen(false);
+  }, [locale]);
+  
 
   const consentFromToggles = useMemo<GtagConsent>(() => {
     const analyticsGranted = toggles.analytics;
