@@ -127,23 +127,26 @@ export default function CookieConsentBanner() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[9999] p-3 md:inset-auto md:bottom-6 md:right-6 md:p-0">
-      {/* Card */}
-      <div className="mx-auto w-full max-w-xl md:max-w-sm rounded-2xl border border-white/10 bg-brand-dark/90 backdrop-blur-xl shadow-2xl">
+    <div
+      key={locale}
+      className="fixed inset-x-0 bottom-0 z-[9999] p-3 md:inset-auto md:bottom-6 md:right-6 md:p-0"
+    >
+      {/* Card — в стиле твоих блоков (Pricing) */}
+      <div className="mx-auto w-full max-w-xl md:max-w-sm rounded-3xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm shadow-soft">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 p-4">
-          <div className="min-w-0">
-            <div className="text-base font-semibold text-white">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 pr-2">
+            <div className="text-[15px] sm:text-base font-semibold text-white">
               {t("title")}
             </div>
-            <div className="mt-1 text-sm text-white/70 leading-relaxed">
+            <div className="mt-1 text-[13px] sm:text-sm text-brand-muted leading-relaxed">
               {t("description")}
             </div>
           </div>
 
           <button
             onClick={rejectAll}
-            className="shrink-0 rounded-lg p-2 text-white/60 hover:text-white telling:bg-white/10 hover:bg-white/10 transition"
+            className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition-colors"
             aria-label={t("closeReject")}
             title={t("closeReject")}
           >
@@ -153,52 +156,59 @@ export default function CookieConsentBanner() {
 
         {/* Body */}
         {!isCustomizeOpen ? (
-          <div className="px-4 pb-4">
-            <div className="flex items-center justify-end gap-2">
-              {/* Customize icon button */}
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <button
                 onClick={openCustomize}
-                className="rounded-xl px-3 py-2 text-sm bg-white/5 hover:bg-white/10 text-white/80 transition"
-                aria-label={t("customize")}
-                title={t("customize")}
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[13px] sm:text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition-colors"
               >
                 {t("customize")}
               </button>
 
               <button
                 onClick={rejectAll}
-                className="rounded-xl px-3 py-2 text-sm bg-white/5 hover:bg-white/10 text-white/80 transition"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[13px] sm:text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition-colors"
               >
                 {t("rejectAll")}
               </button>
 
               <button
                 onClick={acceptAll}
-                className="rounded-xl px-3 py-2 text-sm bg-white text-black hover:bg-white/90 transition font-semibold"
+                className="rounded-full bg-brand-primary px-4 py-2 text-[13px] sm:text-sm font-semibold text-white shadow-soft hover:bg-brand-primary/90 transition-colors"
               >
                 {t("acceptAll")}
               </button>
             </div>
+
+            <div className="text-[11px] text-brand-muted/80">
+              {t("hint")}
+            </div>
           </div>
         ) : (
-          <div className="px-4 pb-4 space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 space-y-3">
+          <div className="mt-4 space-y-3">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">{t("necessaryTitle")}</div>
-                  <div className="text-xs text-white/65">
+                  <div className="text-[13px] sm:text-sm font-semibold text-white">
+                    {t("necessaryTitle")}
+                  </div>
+                  <div className="mt-0.5 text-[11px] sm:text-xs text-brand-muted leading-relaxed">
                     {t("necessaryDesc")}
                   </div>
                 </div>
-                <div className="text-xs text-white/60">{t("alwaysOn")}</div>
+                <div className="text-[11px] text-brand-muted/80">
+                  {t("alwaysOn")}
+                </div>
               </div>
 
-              <div className="h-px bg-white/10" />
+              <div className="my-3 h-px bg-white/10" />
 
-              <label className="flex items-center justify-between gap-3">
+              <label className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">{t("analyticsTitle")}</div>
-                  <div className="text-xs text-white/65">
+                  <div className="text-[13px] sm:text-sm font-semibold text-white">
+                    {t("analyticsTitle")}
+                  </div>
+                  <div className="mt-0.5 text-[11px] sm:text-xs text-brand-muted leading-relaxed">
                     {t("analyticsDesc")}
                   </div>
                 </div>
@@ -208,16 +218,18 @@ export default function CookieConsentBanner() {
                   onChange={(e) =>
                     setToggles((s) => ({ ...s, analytics: e.target.checked }))
                   }
-                  className="h-5 w-5 accent-white"
+                  className="mt-1 h-5 w-5 accent-white"
                 />
               </label>
 
-              <div className="h-px bg-white/10" />
+              <div className="my-3 h-px bg-white/10" />
 
-              <label className="flex items-center justify-between gap-3">
+              <label className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">{t("marketingTitle")}</div>
-                  <div className="text-xs text-white/65">
+                  <div className="text-[13px] sm:text-sm font-semibold text-white">
+                    {t("marketingTitle")}
+                  </div>
+                  <div className="mt-0.5 text-[11px] sm:text-xs text-brand-muted leading-relaxed">
                     {t("marketingDesc")}
                   </div>
                 </div>
@@ -227,28 +239,28 @@ export default function CookieConsentBanner() {
                   onChange={(e) =>
                     setToggles((s) => ({ ...s, marketing: e.target.checked }))
                   }
-                  className="h-5 w-5 accent-white"
+                  className="mt-1 h-5 w-5 accent-white"
                 />
               </label>
             </div>
 
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <button
                 onClick={rejectAll}
-                className="rounded-xl px-3 py-2 text-sm bg-white/5 hover:bg-white/10 text-white/80 transition"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[13px] sm:text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition-colors"
               >
                 {t("rejectAll")}
               </button>
 
               <button
                 onClick={saveCustom}
-                className="rounded-xl px-3 py-2 text-sm bg-white text-black hover:bg-white/90 transition font-semibold"
+                className="rounded-full bg-brand-primary px-4 py-2 text-[13px] sm:text-sm font-semibold text-white shadow-soft hover:bg-brand-primary/90 transition-colors"
               >
                 {t("save")}
               </button>
             </div>
 
-            <div className="text-[11px] text-white/50 leading-relaxed">
+            <div className="text-[11px] text-brand-muted/80">
               {t("hint")}
             </div>
           </div>
