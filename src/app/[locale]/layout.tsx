@@ -1,7 +1,7 @@
 // src/app/[locale]/layout.tsx
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 
 const LOCALES = ["en", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -10,10 +10,13 @@ function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
 }
 
-export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
-  const { children } = props;
-  const { locale } = await props.params;
-  const rawLocale = (locale ?? "en").toLowerCase();
+type Props = {
+  children: ReactNode;
+  params: { locale: string };
+};
+
+export default async function LocaleLayout({ children, params }: Props) {
+  const rawLocale = (params.locale ?? "en").toLowerCase();
   const safeLocale: Locale = isLocale(rawLocale) ? rawLocale : "en";
 
   setRequestLocale(safeLocale);
