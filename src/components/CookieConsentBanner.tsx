@@ -39,6 +39,9 @@ function gtagConsentUpdate(consent: GtagConsent) {
 export default function CookieConsentBanner() {
   const t = useTranslations("cookie");
   const locale = useLocale();
+  const messagesDebug = t.raw("title");
+  console.log("COOKIE LOCALE:", locale, "TITLE:", messagesDebug);
+
 
   const [isOpen, setIsOpen] = useState(false);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
