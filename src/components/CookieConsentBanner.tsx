@@ -17,6 +17,13 @@ type GtagConsent = {
   ad_personalization: GrantedDenied;
 };
 
+type SavedPayload = {
+  choice: ConsentChoice;
+  consent: ConsentState;
+  ts: number;
+  locale: string;
+};
+
 const STORAGE_KEY = "cookie_consent_v1";
 const OPEN_EVENT = "cookie:open";
 
@@ -29,7 +36,13 @@ function safeParse<T>(value: string | null): T | null {
   }
 }
 
+function readSaved(): SavedPayload | null {
+  if (typeof window === "undefined") return null;
+  return safeParse<SavedPayload>(localStorage.getItem(STORAGE_KEY));
+}
+
 function gtagConsentUpdate(consent: GtagConsent) {
+  if (typeof window === "undefined") return;
   (window as any).dataLayer = (window as any).dataLayer || [];
   function gtag(...args: any[]) {
     (window as any).dataLayer.push(args);
@@ -63,12 +76,7 @@ export default function CookieConsentBanner() {
 
   // Применяем сохранённый выбор (если есть). Если нет — показываем баннер.
   useEffect(() => {
-    const saved = safeParse<{
-      choice: ConsentChoice;
-      consent: ConsentState;
-      ts: number;
-      locale: string;
-    }>(localStorage.getItem(STORAGE_KEY));
+    const saved = readSaved();
 
     if (!saved) {
       setIsOpen(true);
@@ -77,7 +85,7 @@ export default function CookieConsentBanner() {
       return;
     }
 
-    // На всякий случай синхронизируем тогглы с сохранённым (чтобы Customize показывал текущий выбор)
+    // синхронизируем тогглы с сохранённым (для Customize)
     setToggles({
       analytics: !!saved.consent.analytics,
       marketing: !!saved.consent.marketing,
@@ -95,12 +103,7 @@ export default function CookieConsentBanner() {
       const ce = e as CustomEvent<{ tab?: "main" | "customize" }>;
       const tab = ce.detail?.tab ?? "main";
 
-      const saved = safeParse<{
-        choice: ConsentChoice;
-        consent: ConsentState;
-        ts: number;
-        locale: string;
-      }>(localStorage.getItem(STORAGE_KEY));
+      const saved = readSaved();
 
       if (saved?.consent) {
         setToggles({
@@ -122,7 +125,7 @@ export default function CookieConsentBanner() {
 
   const consentFromToggles = useMemo<GtagConsent>(() => {
     return toGtagConsent(toggles);
-  }, [toggles]);
+  }, [toggles.analytics, toggles.marketing]);
 
   function persist(choice: ConsentChoice, consent: ConsentState) {
     localStorage.setItem(
@@ -155,19 +158,15 @@ export default function CookieConsentBanner() {
   }
 
   function openCustomize() {
-    // При открытии кастомизации — подтягиваем сохранённое, чтобы не было рассинхрона
-    const saved = safeParse<{
-      choice: ConsentChoice;
-      consent: ConsentState;
-      ts: number;
-      locale: string;
-    }>(localStorage.getItem(STORAGE_KEY));
-
+    // при открытии кастомизации — подтягиваем сохранённое, чтобы не было рассинхрона
+    const saved = readSaved();
     if (saved?.consent) {
       setToggles({
         analytics: !!saved.consent.analytics,
         marketing: !!saved.consent.marketing,
       });
+    } else {
+      setToggles({ analytics: false, marketing: false });
     }
     setIsCustomizeOpen(true);
   }
@@ -333,9 +332,7 @@ export default function CookieConsentBanner() {
               </button>
             </div>
 
-            <div className="text-[11px] text-brand-muted/80">
-              {t("hint")}
-            </div>
+            <div className="text-[11px] text-brand-muted/80">{t("hint")}</div>
           </div>
         )}
       </div>
