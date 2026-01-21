@@ -2,6 +2,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 const LOCALES = ["en", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -24,6 +25,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider locale={safeLocale} messages={messages}>
+      <CookieConsentBanner />
       <Suspense fallback={null}>{children}</Suspense>
     </NextIntlClientProvider>
   );
