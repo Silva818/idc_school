@@ -3,6 +3,28 @@
     "lang_en": "EN",
     "lang_ru": "RU"
   },
+
+    "cookie": {
+      "ariaLabel": "Cookie consent",
+      "title": "We use cookies",
+      "description": "We use cookies to improve the site, analyze traffic, and support marketing. You can accept all, reject, or customize your choice.",
+      "customize": "Customize",
+      "rejectAll": "Reject all",
+      "acceptAll": "Accept all",
+      "save": "Save selection",
+      "closeReject": "Close and reject",
+      "necessaryTitle": "Necessary",
+      "necessaryDesc": "Required for the website to function.",
+      "alwaysOn": "Always on",
+      "analyticsTitle": "Analytics",
+      "analyticsDesc": "Helps us understand how visitors use the site.",
+      "marketingTitle": "Marketing",
+      "marketingDesc": "Used to measure and personalize ads.",
+      "hint": "You can change your choice anytime in the privacy settings.",
+      "manageLater": "Want to change this later?",
+      "openSettings": "Open cookie settings"
+    },
+  
   "home": {
     "header": {
       "nav": {
