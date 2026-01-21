@@ -3,7 +3,6 @@
     "lang_en": "EN",
     "lang_ru": "RU"
   },
-
     "cookie": {
       "ariaLabel": "Cookie consent",
       "title": "We use cookies",
@@ -24,7 +23,7 @@
       "manageLater": "Want to change this later?",
       "openSettings": "Open cookie settings"
     },
-  
+
   "home": {
     "header": {
       "nav": {
@@ -395,7 +394,10 @@
       "offer": "Public offer",
       "consent": "Consent to personal data processing",
       "privacy": "Personal data processing policy",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "cookieSettings": "Cookie settings",
+      "backToTop": "Back to top",
+      "tagline": "Calisthenics for everyone"
     }
   },
   "pay": {

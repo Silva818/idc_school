@@ -19,75 +19,88 @@ export function Footer() {
 
   return (
     <footer className="border-t border-white/5 bg-brand-dark/95">
-      <div
-        className="
-          mx-auto max-w-container
-          px-4 sm:px-6 lg:px-8
-          py-8 sm:py-10
-          flex flex-col gap-6
-          sm:flex-row sm:items-center sm:justify-between
-          text-[12px] sm:text-xs text-brand-muted
-        "
-      >
-        {/* Левая часть — бренд и копирайт */}
-        <div className="flex flex-col gap-1 text-center sm:text-left">
-          <span className="font-medium text-white/90">I Do Calisthenics</span>
-          <span className="text-[11px] text-brand-muted/80">
-            {t("copyright", { yearLabel })}
-          </span>
+      <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left: brand */}
+          <div className="flex flex-col gap-1 text-center sm:text-left">
+            <span className="font-medium text-white/90">I Do Calisthenics</span>
+            <span className="text-[11px] text-brand-muted/80">
+              {t("copyright", { yearLabel })}
+            </span>
+          </div>
+
+          {/* Middle: legal + cookie settings */}
+          <nav className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4 text-center text-[12px] sm:text-xs text-brand-muted">
+            <Link
+              href={`${localePrefix}/offer`}
+              className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            >
+              {t("offer")}
+            </Link>
+
+            <Link
+              href={`${localePrefix}/consent`}
+              className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            >
+              {t("consent")}
+            </Link>
+
+            <Link
+              href={`${localePrefix}/privacy`}
+              className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            >
+              {t("privacy")}
+            </Link>
+
+            {/* Cookie settings (opens banner) */}
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(
+                  new CustomEvent("cookie:open", { detail: { tab: "customize" } })
+                );
+              }}
+              className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            >
+              {t("cookieSettings")}
+            </button>
+          </nav>
+
+          {/* Right: socials */}
+          <div className="flex justify-center sm:justify-end">
+            <a
+              href="https://instagram.com/i_do_calisthenics"
+              target="_blank"
+              rel="noreferrer"
+              className={[
+                "inline-flex items-center gap-2",
+                "rounded-full border border-white/10 bg-white/5",
+                "px-4 py-2 text-xs font-medium",
+                "hover:bg-white/10 hover:text-white transition-colors",
+              ].join(" ")}
+            >
+              <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF]">
+                <span className="h-2.5 w-2.5 rounded-[6px] border border-white/80" />
+                <span className="absolute top-0.5 right-0.5 h-1 w-1 rounded-full bg-white/90" />
+              </span>
+              <span>{t("instagram")}</span>
+            </a>
+          </div>
         </div>
 
-        {/* Центр — ссылки на политики */}
-        <nav
-          className="
-            flex flex-col items-center gap-3
-            sm:flex-row sm:gap-4
-            text-center
-          "
-        >
-          <Link
-            href={`${localePrefix}/offer`}
-            className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
-          >
-            {t("offer")}
-          </Link>
-          <Link
-            href={`${localePrefix}/consent`}
-            className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
-          >
-            {t("consent")}
-          </Link>
-          <Link
-            href={`${localePrefix}/privacy`}
-            className="hover:text-white transition-colors underline decoration-dotted underline-offset-2"
-          >
-            {t("privacy")}
-          </Link>
-        </nav>
+        {/* Bottom micro row (optional, nice spacing on mobile) */}
+        <div className="mt-6 flex items-center justify-center sm:justify-between gap-3 text-[11px] text-brand-muted/70">
+          <span className="hidden sm:inline">
+            {t("tagline", { defaultValue: "" })}
+          </span>
 
-        {/* Правая часть — соцсети */}
-        <div className="flex justify-center sm:justify-end">
-          <a
-            href="https://instagram.com/i_do_calisthenics"
-            target="_blank"
-            rel="noreferrer"
-            className="
-              inline-flex items-center gap-2
-              rounded-full
-              border border-white/10
-              bg-white/5
-              px-4 py-2
-              text-xs font-medium
-              hover:bg-white/10 hover:text-white
-              transition-colors
-            "
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF]">
-              <span className="h-2.5 w-2.5 rounded-[6px] border border-white/80" />
-              <span className="absolute top-0.5 right-0.5 h-1 w-1 rounded-full bg-white/90" />
-            </span>
-            <span>{t("instagram")}</span>
-          </a>
+            ↑ {t("backToTop", { defaultValue: "Back to top" })}
+          </button>
         </div>
       </div>
     </footer>

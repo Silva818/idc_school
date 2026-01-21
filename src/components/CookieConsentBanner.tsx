@@ -18,6 +18,7 @@ type GtagConsent = {
 };
 
 const STORAGE_KEY = "cookie_consent_v1";
+const OPEN_EVENT = "cookie:open";
 
 function safeParse<T>(value: string | null): T | null {
   if (!value) return null;
@@ -36,12 +37,21 @@ function gtagConsentUpdate(consent: GtagConsent) {
   gtag("consent", "update", consent);
 }
 
+function toGtagConsent(state: ConsentState): GtagConsent {
+  const analyticsGranted = !!state.analytics;
+  const marketingGranted = !!state.marketing;
+
+  return {
+    analytics_storage: analyticsGranted ? "granted" : "denied",
+    ad_storage: marketingGranted ? "granted" : "denied",
+    ad_user_data: marketingGranted ? "granted" : "denied",
+    ad_personalization: marketingGranted ? "granted" : "denied",
+  };
+}
+
 export default function CookieConsentBanner() {
   const t = useTranslations("cookie");
   const locale = useLocale();
-  const messagesDebug = t.raw("title");
-  console.log("COOKIE LOCALE:", locale, "TITLE:", messagesDebug);
-
 
   const [isOpen, setIsOpen] = useState(false);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
@@ -51,6 +61,7 @@ export default function CookieConsentBanner() {
     marketing: false,
   });
 
+  // Применяем сохранённый выбор (если есть). Если нет — показываем баннер.
   useEffect(() => {
     const saved = safeParse<{
       choice: ConsentChoice;
@@ -58,42 +69,60 @@ export default function CookieConsentBanner() {
       ts: number;
       locale: string;
     }>(localStorage.getItem(STORAGE_KEY));
-  
+
     if (!saved) {
       setIsOpen(true);
       setIsCustomizeOpen(false);
+      setToggles({ analytics: false, marketing: false }); // GDPR-safe default
       return;
     }
-  
-    const analyticsGranted = !!saved.consent.analytics;
-    const marketingGranted = !!saved.consent.marketing;
-  
-    const consent: GtagConsent = {
-      analytics_storage: analyticsGranted ? "granted" : "denied",
-      ad_storage: marketingGranted ? "granted" : "denied",
-      ad_user_data: marketingGranted ? "granted" : "denied",
-      ad_personalization: marketingGranted ? "granted" : "denied",
-    };
-  
-    gtagConsentUpdate(consent);
-  
-    // баннер не показываем, т.к. уже есть выбор
+
+    // На всякий случай синхронизируем тогглы с сохранённым (чтобы Customize показывал текущий выбор)
+    setToggles({
+      analytics: !!saved.consent.analytics,
+      marketing: !!saved.consent.marketing,
+    });
+
+    gtagConsentUpdate(toGtagConsent(saved.consent));
+
     setIsOpen(false);
     setIsCustomizeOpen(false);
   }, [locale]);
-  
+
+  // Возможность открыть баннер с любой точки сайта
+  useEffect(() => {
+    function onOpen(e: Event) {
+      const ce = e as CustomEvent<{ tab?: "main" | "customize" }>;
+      const tab = ce.detail?.tab ?? "main";
+
+      const saved = safeParse<{
+        choice: ConsentChoice;
+        consent: ConsentState;
+        ts: number;
+        locale: string;
+      }>(localStorage.getItem(STORAGE_KEY));
+
+      if (saved?.consent) {
+        setToggles({
+          analytics: !!saved.consent.analytics,
+          marketing: !!saved.consent.marketing,
+        });
+      } else {
+        // если ещё не выбирали — GDPR-safe дефолт
+        setToggles({ analytics: false, marketing: false });
+      }
+
+      setIsOpen(true);
+      setIsCustomizeOpen(tab === "customize");
+    }
+
+    window.addEventListener(OPEN_EVENT, onOpen as EventListener);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen as EventListener);
+  }, []);
 
   const consentFromToggles = useMemo<GtagConsent>(() => {
-    const analyticsGranted = toggles.analytics;
-    const marketingGranted = toggles.marketing;
-
-    return {
-      analytics_storage: analyticsGranted ? "granted" : "denied",
-      ad_storage: marketingGranted ? "granted" : "denied",
-      ad_user_data: marketingGranted ? "granted" : "denied",
-      ad_personalization: marketingGranted ? "granted" : "denied",
-    };
-  }, [toggles.analytics, toggles.marketing]);
+    return toGtagConsent(toggles);
+  }, [toggles]);
 
   function persist(choice: ConsentChoice, consent: ConsentState) {
     localStorage.setItem(
@@ -105,49 +134,64 @@ export default function CookieConsentBanner() {
   function acceptAll() {
     const consentState: ConsentState = { analytics: true, marketing: true };
     persist("all", consentState);
-
-    const consent: GtagConsent = {
-      analytics_storage: "granted",
-      ad_storage: "granted",
-      ad_user_data: "granted",
-      ad_personalization: "granted",
-    };
-
-    gtagConsentUpdate(consent);
+    gtagConsentUpdate(toGtagConsent(consentState));
     setIsOpen(false);
+    setIsCustomizeOpen(false);
   }
 
   function rejectAll() {
     const consentState: ConsentState = { analytics: false, marketing: false };
     persist("necessary", consentState);
-
-    const consent: GtagConsent = {
-      analytics_storage: "denied",
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-    };
-
-    gtagConsentUpdate(consent);
+    gtagConsentUpdate(toGtagConsent(consentState));
     setIsOpen(false);
+    setIsCustomizeOpen(false);
   }
 
   function saveCustom() {
     persist("custom", toggles);
     gtagConsentUpdate(consentFromToggles);
     setIsOpen(false);
+    setIsCustomizeOpen(false);
+  }
+
+  function openCustomize() {
+    // При открытии кастомизации — подтягиваем сохранённое, чтобы не было рассинхрона
+    const saved = safeParse<{
+      choice: ConsentChoice;
+      consent: ConsentState;
+      ts: number;
+      locale: string;
+    }>(localStorage.getItem(STORAGE_KEY));
+
+    if (saved?.consent) {
+      setToggles({
+        analytics: !!saved.consent.analytics,
+        marketing: !!saved.consent.marketing,
+      });
+    }
+    setIsCustomizeOpen(true);
   }
 
   if (!isOpen) return null;
 
   return (
-    <div key={locale} className="fixed inset-x-0 bottom-0 z-[9999] px-4 pb-4">
+    <div
+      key={locale}
+      className="fixed inset-x-0 bottom-0 z-[9999] px-3 pb-3 sm:px-4 sm:pb-4"
+    >
       {/* Горизонтальный bar */}
-      <div className="mx-auto max-w-6xl rounded-2xl border border-white/15 bg-brand-dark px-4 py-4 shadow-[0_-12px_40px_rgba(0,0,0,0.6)]">
+      <div
+        className={[
+          "mx-auto w-full max-w-6xl",
+          "rounded-2xl border border-white/15 bg-brand-dark",
+          "px-4 py-4",
+          "shadow-[0_-12px_40px_rgba(0,0,0,0.6)]",
+        ].join(" ")}
+      >
         {!isCustomizeOpen ? (
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             {/* Text */}
-            <div className="max-w-2xl">
+            <div className="min-w-0 max-w-2xl">
               <div className="text-[15px] font-semibold text-white">
                 {t("title")}
               </div>
@@ -157,9 +201,9 @@ export default function CookieConsentBanner() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 md:justify-end shrink-0">
               <button
-                onClick={() => setIsCustomizeOpen(true)}
+                onClick={openCustomize}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition"
               >
                 {t("customize")}
@@ -178,11 +222,47 @@ export default function CookieConsentBanner() {
               >
                 {t("acceptAll")}
               </button>
+
+              {/* Close (как раньше: = reject) */}
+              <button
+                onClick={rejectAll}
+                className="ml-1 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition"
+                aria-label={t("closeReject")}
+                title={t("closeReject")}
+              >
+                ✕
+              </button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2">
+            {/* Header row in customize */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[15px] font-semibold text-white">
+                {t("customize")}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsCustomizeOpen(false)}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition"
+                >
+                  {t("back")}
+                </button>
+
+                <button
+                  onClick={rejectAll}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition"
+                  aria-label={t("closeReject")}
+                  title={t("closeReject")}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Content (limit height on mobile + scroll) */}
+            <div className="grid gap-3 md:grid-cols-2 max-h-[55vh] overflow-auto pr-1">
               {/* Necessary */}
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="text-sm font-semibold text-white">
@@ -198,7 +278,7 @@ export default function CookieConsentBanner() {
 
               {/* Analytics */}
               <label className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">
                     {t("analyticsTitle")}
                   </div>
@@ -218,7 +298,7 @@ export default function CookieConsentBanner() {
 
               {/* Marketing */}
               <label className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-4 md:col-span-2">
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">
                     {t("marketingTitle")}
                   </div>
@@ -237,7 +317,7 @@ export default function CookieConsentBanner() {
               </label>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <button
                 onClick={rejectAll}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-brand-muted hover:text-white hover:bg-white/10 transition"
@@ -251,6 +331,10 @@ export default function CookieConsentBanner() {
               >
                 {t("save")}
               </button>
+            </div>
+
+            <div className="text-[11px] text-brand-muted/80">
+              {t("hint")}
             </div>
           </div>
         )}

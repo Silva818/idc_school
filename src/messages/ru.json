@@ -393,7 +393,10 @@
       "offer": "Публичная оферта",
       "consent": "Согласие на обработку персональных данных",
       "privacy": "Политика обработки персональных данных",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "cookieSettings": "Настройки cookies",
+      "backToTop": "Наверх",
+      "tagline": "Калистеника для каждого"
     }
   },
   "pay": {
