@@ -132,7 +132,7 @@ export default function CookieConsentBanner() {
       className="fixed inset-x-0 bottom-0 z-[9999] p-3 md:inset-auto md:bottom-6 md:right-6 md:p-0"
     >
       {/* Card — в стиле твоих блоков (Pricing) */}
-      <div className="mx-auto w-full max-w-xl md:max-w-sm rounded-3xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm shadow-soft">
+      <div className="mx-auto w-full max-w-xl md:max-w-sm rounded-3xl border border-white/15 bg-brand-dark/95 px-4 py-4 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 pr-2">
@@ -186,7 +186,7 @@ export default function CookieConsentBanner() {
           </div>
         ) : (
           <div className="mt-4 space-y-3">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+            <div className="rounded-3xl border border-white/10 bg-black/30 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[13px] sm:text-sm font-semibold text-white">
