@@ -45,13 +45,18 @@ function readSaved(): SavedPayload | null {
 }
 
 function gtagConsentUpdate(consent: GtagConsent) {
-  if (typeof window === "undefined") return;
-  (window as any).dataLayer = (window as any).dataLayer || [];
-  function gtag(...args: any[]) {
-    (window as any).dataLayer.push(args);
+    if (typeof window === "undefined") return;
+  
+    (window as any).dataLayer = (window as any).dataLayer || [];
+  
+    // если GTM успел создать window.gtag (из твоего Default тега) — используем его
+    const gtag = (window as any).gtag || function (...args: any[]) {
+      (window as any).dataLayer.push(args);
+    };
+  
+    gtag("consent", "update", consent);
   }
-  gtag("consent", "update", consent);
-}
+  
 
 function toGtagConsent(state: ConsentState): GtagConsent {
   const analyticsGranted = !!state.analytics;
