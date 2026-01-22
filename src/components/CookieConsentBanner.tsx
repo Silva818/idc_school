@@ -27,6 +27,9 @@ type SavedPayload = {
 const STORAGE_KEY = "cookie_consent_v1";
 const OPEN_EVENT = "cookie:open";
 
+// ✅ событие, которое должен слушать GTM (Custom Event trigger)
+const CONSENT_EVENT = "cookie_consent_update";
+
 function safeParse<T>(value: string | null): T | null {
   if (!value) return null;
   try {
@@ -65,14 +68,17 @@ function toGtagConsent(state: ConsentState): GtagConsent {
 /**
  * ВАЖНО:
  * Когда страница загрузилась с denied, GA4 может НЕ отправить page_view.
- * После accept нужно вручную отправить событие, чтобы появился /collect.
+ * После accept нужно вручную сообщить GTM, что согласие выдано,
+ * чтобы GA4-тег (Google Tag) смог сработать и отправить /collect.
  *
  * Мы пушим event в dataLayer — это самый совместимый способ с GTM.
  */
+// ❌ было firePageView() -> event: "page_view"
+// ✅ стало: событие, которое ты повесишь в GTM на триггер Custom Event
 function firePageView() {
   if (typeof window === "undefined") return;
   (window as any).dataLayer = (window as any).dataLayer || [];
-  (window as any).dataLayer.push({ event: "page_view" });
+  (window as any).dataLayer.push({ event: CONSENT_EVENT });
 }
 
 export default function CookieConsentBanner() {
@@ -152,7 +158,7 @@ export default function CookieConsentBanner() {
     persist("all", consentState);
     gtagConsentUpdate(toGtagConsent(consentState));
 
-    // 👇 ключевой момент: после grant шлём событие, чтобы GA4 сделал /collect
+    // 👇 ключевой момент: после grant шлём событие, которое поймает GTM
     firePageView();
 
     setIsOpen(false);
@@ -171,7 +177,7 @@ export default function CookieConsentBanner() {
     persist("custom", toggles);
     gtagConsentUpdate(consentFromToggles);
 
-    // 👇 если в кастоме включили analytics — отправим page_view
+    // 👇 если в кастоме включили analytics — отправим событие для GTM
     if (toggles.analytics) {
       firePageView();
     }
