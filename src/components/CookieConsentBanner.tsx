@@ -62,6 +62,19 @@ function toGtagConsent(state: ConsentState): GtagConsent {
   };
 }
 
+/**
+ * ВАЖНО:
+ * Когда страница загрузилась с denied, GA4 может НЕ отправить page_view.
+ * После accept нужно вручную отправить событие, чтобы появился /collect.
+ *
+ * Мы пушим event в dataLayer — это самый совместимый способ с GTM.
+ */
+function firePageView() {
+  if (typeof window === "undefined") return;
+  (window as any).dataLayer = (window as any).dataLayer || [];
+  (window as any).dataLayer.push({ event: "page_view" });
+}
+
 export default function CookieConsentBanner() {
   const t = useTranslations("cookie");
   const locale = useLocale();
@@ -138,6 +151,10 @@ export default function CookieConsentBanner() {
     const consentState: ConsentState = { analytics: true, marketing: true };
     persist("all", consentState);
     gtagConsentUpdate(toGtagConsent(consentState));
+
+    // 👇 ключевой момент: после grant шлём событие, чтобы GA4 сделал /collect
+    firePageView();
+
     setIsOpen(false);
     setIsCustomizeOpen(false);
   }
@@ -153,6 +170,12 @@ export default function CookieConsentBanner() {
   function saveCustom() {
     persist("custom", toggles);
     gtagConsentUpdate(consentFromToggles);
+
+    // 👇 если в кастоме включили analytics — отправим page_view
+    if (toggles.analytics) {
+      firePageView();
+    }
+
     setIsOpen(false);
     setIsCustomizeOpen(false);
   }
