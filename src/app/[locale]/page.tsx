@@ -437,14 +437,6 @@ export default function HomePage() {
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
     setIsPurchaseModalOpen(true);
-    track("start_checkout", {
-      site_language,
-      tariff_id: options.tariffId,
-      tariff_label: options.tariffLabel,
-      currency: options.currency,
-      value: options.amount,
-      payment_provider: "ameriabank",
-    });
 
 
     // reset ошибок
@@ -676,6 +668,15 @@ export default function HomePage() {
     setBuyErrors(errs);
 
     if (Object.keys(errs).length > 0) return;
+
+    track("start_checkout", {
+      site_language,
+      tariff_id: purchaseOptions.tariffId,
+      tariff_label: purchaseOptions.tariffLabel,
+      currency: purchaseOptions.currency,
+      value: purchaseOptions.amount,
+      payment_provider: "ameriabank",
+    });
 
     const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
