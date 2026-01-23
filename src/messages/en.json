@@ -273,7 +273,7 @@
           "button": "Pay for technique review",
           "tariffLabel": "Technique review (1 session)"
         },
-        "month": {
+        "short12": {
           "badge": "Intensive block",
           "title": "12 workouts",
           "perLabel": "per workout",
@@ -289,7 +289,7 @@
         },
         "bundle": {
           "badge": "Easy pace and long format",
-          "slow12": {
+          "long12": {
             "title": "12 workouts — easy pace",
             "perLabel": "per workout",
             "text": "Great if you want 1–2 workouts per week with no rush or deadlines.",

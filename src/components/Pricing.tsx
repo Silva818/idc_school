@@ -4,6 +4,9 @@
 import { useState } from "react";
 import { TestSignupButton } from "@/components/TestSignupButton";
 import { useTranslations } from "next-intl";
+import { track } from "@/lib/track";
+import { usePathname } from "next/navigation";
+
 
 function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
   return (
@@ -18,12 +21,12 @@ const prices = {
     USD: { total: 13, per: 13 },
     AMD: { total: 5500, per: 5500 }, // разовый формат
   },
-  month: {
+  short12: {
     EUR: { total: 108, per: 9 },
     USD: { total: 132, per: 11 },
     AMD: { total: 48000, per: 4000 }, // 12 тренировок
   },
-  slow12: {
+  long12: {
     EUR: { total: 120, per: 10 },
     USD: { total: 144, per: 12 },
     AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
@@ -49,7 +52,7 @@ function formatPrice(value: number, currency: Currency) {
 
 // то, что передаём вверх в модалку покупки
 export type PurchaseOptions = {
-  tariffId: "review" | "month" | "slow12" | "long36";
+  tariffId: "review" | "short12" | "long12" | "long36";
   tariffLabel: string;
   amount: number;
   currency: Currency;
@@ -73,6 +76,8 @@ export function Pricing({
   onCurrencyChange,
 }: PricingProps) {
   const t = useTranslations("home.pricing");
+  const pathname = usePathname();
+  const site_language: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
 
   const [currency, setCurrency] = useState<Currency>("EUR");
 
@@ -246,14 +251,21 @@ export function Pricing({
             <div className="mt-auto pt-4">
               <button
                 className="w-full rounded-full border border-white/40 px-4 py-2.5 text-[13px] sm:text-sm font-semibold hover:bg-white/10 transition-colors"
-                onClick={() =>
+                onClick={() => {
+                  track("select_tariff", {
+                    site_language,
+                    tariff_id: "review",
+                    tariff_label: t("cards.review.tariffLabel"),
+                    currency,
+                    value: prices.review[currency].total,
+                  });
                   onOpenPurchaseModal?.({
                     tariffId: "review",
                     tariffLabel: t("cards.review.tariffLabel"),
                     amount: prices.review[currency].total,
                     currency,
-                  })
-                }
+                  });
+                }}
               >
                 {t("cards.review.button")}
               </button>
@@ -268,47 +280,54 @@ export function Pricing({
               <div>
                 <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
                   <StepDot color="bg-brand-primary" />
-                  <span>{t("cards.month.badge")}</span>
+                  <span>{t("cards.short12.badge")}</span>
                 </div>
 
                 <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                  {t("cards.month.title")}
+                  {t("cards.short12.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold mb-1">
-                  {formatPrice(prices.month[currency].total, currency)}
+                  {formatPrice(prices.short12[currency].total, currency)}
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-4">
-                  {formatPrice(prices.month[currency].per, currency)}{" "}
-                  {t("cards.month.perLabel")}
+                  {formatPrice(prices.short12[currency].per, currency)}{" "}
+                  {t("cards.short12.perLabel")}
                 </p>
 
                 <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                  <li>• {t("cards.month.bullets.0")}</li>
-                  <li>• {t("cards.month.bullets.1")}</li>
-                  <li>• {t("cards.month.bullets.2")}</li>
-                  <li>• {t("cards.month.bullets.3")}</li>
+                  <li>• {t("cards.short12.bullets.0")}</li>
+                  <li>• {t("cards.short12.bullets.1")}</li>
+                  <li>• {t("cards.short12.bullets.2")}</li>
+                  <li>• {t("cards.short12.bullets.3")}</li>
                 </ul>
 
                 <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                  {t("cards.month.text")}
+                  {t("cards.short12.text")}
                 </p>
               </div>
 
               <div className="mt-auto pt-4">
                 <button
                   className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                  onClick={() =>
-                    onOpenPurchaseModal?.({
-                      tariffId: "month",
-                      tariffLabel: t("cards.month.tariffLabel"),
-                      amount: prices.month[currency].total,
+                  onClick={() => {
+                    track("select_tariff", {
+                      site_language,
+                      tariff_id: "short12",
+                      tariff_label: t("cards.short12.tariffLabel"),
                       currency,
-                    })
-                  }
+                      value: prices.short12[currency].total,
+                    });
+                    onOpenPurchaseModal?.({
+                      tariffId: "short12",
+                      tariffLabel: t("cards.short12.tariffLabel"),
+                      amount: prices.short12[currency].total,
+                      currency,
+                    });
+                  }}
                 >
-                  {t("cards.month.button")}
+                  {t("cards.short12.button")}
                 </button>
               </div>
             </div>
@@ -325,35 +344,42 @@ export function Pricing({
             <div className="flex flex-1 flex-col justify-between pb-4 mb-4 border-b border-white/10">
               <div>
                 <h3 className="text-[15px] sm:text-lg font-semibold mb-2">
-                  {t("cards.bundle.slow12.title")}
+                  {t("cards.bundle.long12.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold text-white">
-                  {formatPrice(prices.slow12[currency].total, currency)}
+                  {formatPrice(prices.long12[currency].total, currency)}
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-2">
-                  {formatPrice(prices.slow12[currency].per, currency)}{" "}
-                  {t("cards.bundle.slow12.perLabel")}
+                  {formatPrice(prices.long12[currency].per, currency)}{" "}
+                  {t("cards.bundle.long12.perLabel")}
                 </p>
 
                 <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  {t("cards.bundle.slow12.text")}
+                  {t("cards.bundle.long12.text")}
                 </p>
               </div>
 
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                onClick={() =>
-                  onOpenPurchaseModal?.({
-                    tariffId: "slow12",
-                    tariffLabel: t("cards.bundle.slow12.tariffLabel"),
-                    amount: prices.slow12[currency].total,
+                onClick={() => {
+                  track("select_tariff", {
+                    site_language,
+                    tariff_id: "long12",
+                    tariff_label: t("cards.bundle.long12.tariffLabel"),
                     currency,
-                  })
-                }
+                    value: prices.long12[currency].total,
+                  });
+                  onOpenPurchaseModal?.({
+                    tariffId: "long12",
+                    tariffLabel: t("cards.bundle.long12.tariffLabel"),
+                    amount: prices.long12[currency].total,
+                    currency,
+                  });
+                }}
               >
-                {t("cards.bundle.slow12.button")}
+                {t("cards.bundle.long12.button")}
               </button>
             </div>
 
@@ -380,14 +406,21 @@ export function Pricing({
 
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                onClick={() =>
+                onClick={() => {
+                  track("select_tariff", {
+                    site_language,
+                    tariff_id: "long36",
+                    tariff_label: t("cards.bundle.long36.tariffLabel"),
+                    currency,
+                    value: prices.long36[currency].total,
+                  });
                   onOpenPurchaseModal?.({
                     tariffId: "long36",
                     tariffLabel: t("cards.bundle.long36.tariffLabel"),
                     amount: prices.long36[currency].total,
                     currency,
-                  })
-                }
+                  });
+                }}
               >
                 {t("cards.bundle.long36.button")}
               </button>

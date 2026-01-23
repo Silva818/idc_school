@@ -181,8 +181,8 @@ export async function POST(req: Request) {
 
     const lessonsByTariff: Record<string, number> = {
       review: 1,
-      month: 12,
-      slow12: 12,
+      short12: 12,
+      long12: 12,
       long36: 36,
     };
 
@@ -194,8 +194,8 @@ export async function POST(req: Request) {
     /* ---------- AMERIA ---------- */
     const descriptionByTariff: Record<string, string> = {
       review: "I Do Calisthenics - 1 lesson",
-      month: "I Do Calisthenics - 12 lessons (4 weeks)",
-      slow12: "I Do Calisthenics - 12 lessons (8 weeks)",
+      short12: "I Do Calisthenics - 12 lessons (4 weeks)",
+      long12: "I Do Calisthenics - 12 lessons (8 weeks)",
       long36: "I Do Calisthenics - 36 lessons",
     };
 

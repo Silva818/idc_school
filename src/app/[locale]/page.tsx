@@ -23,6 +23,8 @@ import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import { track, slugifyCourseName } from "@/lib/track";
+
 
 function HowStepCard({
   children,
@@ -219,6 +221,7 @@ export default function HomePage() {
   const tErr = useTranslations("home.modals.errors");
   const pathname = usePathname();
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
+  const site_language = activeLocale;
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -246,6 +249,11 @@ export default function HomePage() {
     setTestNeedsCourse(!!opts?.needsCourse);
     if (opts?.needsCourse) setTestCourse("");
     setIsTestModalOpen(true);
+    track("start_strength_test", {
+      site_language,
+      source: context ? "context" : "unknown",
+    });
+
 
     // reset ошибок
     setTestTriedSubmit(false);
@@ -290,6 +298,32 @@ export default function HomePage() {
 
     return errs;
   }
+
+  useEffect(() => {
+    const el = document.getElementById("pricing");
+    if (!el) return;
+
+    let fired = false;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || fired) return;
+        fired = true;
+
+        const lastNavAt = (window as any).__pricingNavClickAt as number | undefined;
+        const entry_point =
+          lastNavAt && Date.now() - lastNavAt < 5000 ? "nav" : "scroll";
+
+        track("pricing_view", { site_language, entry_point });
+        obs.disconnect();
+      },
+      { threshold: 0.25 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [site_language]);
+
 
   useEffect(() => {
     if (!testTriedSubmit) return;
@@ -339,6 +373,11 @@ export default function HomePage() {
       if (!res.ok) {
         console.error("Ошибка отправки формы теста", await res.text());
       } else {
+        track("strength_test_submit", {
+          site_language,
+          course_id: testNeedsCourse && testCourse ? slugifyCourseName(testCourse) : undefined,
+          course_name: testNeedsCourse && testCourse ? testCourse : undefined,
+        });
         setTestFullName("");
         setTestEmail("");
         setTestAgreed(false);
@@ -398,6 +437,15 @@ export default function HomePage() {
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
     setIsPurchaseModalOpen(true);
+    track("start_checkout", {
+      site_language,
+      tariff_id: options.tariffId,
+      tariff_label: options.tariffLabel,
+      currency: options.currency,
+      value: options.amount,
+      payment_provider: "ameriabank",
+    });
+
 
     // reset ошибок
     setBuyTriedSubmit(false);
@@ -416,6 +464,7 @@ export default function HomePage() {
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
   function openGiftModal() {
+    track("start_gift", { site_language });
     setIsGiftModalOpen(true);
   
     setGiftTriedSubmit(false);
@@ -584,6 +633,11 @@ export default function HomePage() {
 
       const data = await res.json();
       if (data.paymentUrl) {
+        track("gift_select", {
+          site_language,
+          currency,
+          value: Number(giftAmount.replace(",", ".")),
+        });
         window.location.href = data.paymentUrl;
       } else {
         console.error("paymentUrl не получен из API (gift)");
@@ -649,6 +703,13 @@ export default function HomePage() {
       } else {
         const data = await res.json();
         if (data.paymentUrl) {
+          track("purchase_submit", {
+            site_language,
+            tariff_id: purchaseOptions.tariffId,
+            tariff_label: purchaseOptions.tariffLabel,
+            currency: purchaseOptions.currency,
+            value: purchaseOptions.amount,
+          });  
           window.location.href = data.paymentUrl;
         } else {
           console.error("paymentUrl не получен из API");
@@ -753,9 +814,17 @@ export default function HomePage() {
               <a href="#courses" className="hover:text-white transition-colors">
                 {t("header.nav.courses")}
               </a>
-              <a href="#pricing" className="hover:text-white transition-colors">
-                {t("header.nav.pricing")}
-              </a>
+              <a
+  href="#pricing"
+  className="hover:text-white transition-colors"
+  onClick={() => {
+    (window as any).__pricingNavClickAt = Date.now();
+    track("pricing_nav_click", { site_language, target: "pricing" });
+  }}
+>
+  {t("header.nav.pricing")}
+</a>
+
               <a href="#about" className="hover:text-white transition-colors">
                 {t("header.nav.about")}
               </a>
@@ -833,12 +902,17 @@ export default function HomePage() {
                   {t("header.nav.courses")}
                 </a>
                 <a
-                  href="#pricing"
-                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
-                >
-                  {t("header.nav.pricing")}
-                </a>
+  href="#pricing"
+  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+  onClick={() => {
+    (window as any).__pricingNavClickAt = Date.now();
+    track("pricing_nav_click", { site_language, target: "pricing" });
+    setIsMobileNavOpen(false);
+  }}
+>
+  {t("header.nav.pricing")}
+</a>
+
                 <a
                   href="#about"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
@@ -1204,7 +1278,16 @@ export default function HomePage() {
                   <div className="relative">
                     <select
                       value={testCourse}
-                      onChange={(e) => setTestCourse(e.target.value)}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setTestCourse(name);
+                      
+                        track("choose_course", {
+                          site_language,
+                          course_id: slugifyCourseName(name),
+                          course_name: name,
+                        });
+                      }}
                       className={[
                         "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
                         testErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
@@ -1779,7 +1862,7 @@ export default function HomePage() {
               {/* amount */}
               <div className="space-y-1">
                 <label className="text-xs sm:text-sm text-brand-muted">
-                  {activeLocale === "ru" ? "Сумма (EUR)" : "Amount (EUR)"}
+                {activeLocale === "ru" ? `Сумма (${activeCurrency})` : `Amount (${activeCurrency})`}
                 </label>
                 <input
                   type="text"
