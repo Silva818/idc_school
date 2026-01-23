@@ -1190,7 +1190,7 @@ export default function HomePage() {
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
                         testErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
-                      placeholder={t("modals.strengthTest.phonePlaceholder")}
+                      placeholder={t("modals.strengthTest.phonePlaceholderGeneric")}
                     />
                   </div>
                 ) : (
@@ -1224,7 +1224,7 @@ export default function HomePage() {
                       ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === testCountryIso)
-                          ?.placeholder ?? t("modals.strengthTest.phonePlaceholder")
+                          ?.placeholder ?? t("modals.strengthTest.phonePlaceholderGeneric")
                       }
                     />
                   </div>
@@ -1370,7 +1370,7 @@ export default function HomePage() {
                   {t("modals.purchase.title")}
                 </h2>
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
-                  {t("modals.purchase.tariffLabelPrefix")} {purchaseOptions.tariffLabel} ·{" "}
+                  {t("modals.purchase.tariff")} {purchaseOptions.tariffLabel} ·{" "}
                   {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
                   {purchaseOptions.currency === "EUR" ? "€" : "$"}
                 </p>
@@ -1446,7 +1446,7 @@ export default function HomePage() {
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
                         buyErrors.dial ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
-                      placeholder={t("modals.purchase.customDialPlaceholder")}
+                      placeholder={t("modals.strengthTest.customDialPlaceholder")}
                     />
                     <input
                       type="tel"
@@ -1458,7 +1458,7 @@ export default function HomePage() {
                         "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
                         buyErrors.phone ? "border-rose-400/60" : "border-white/10",
                       ].join(" ")}
-                      placeholder={t("modals.purchase.phonePlaceholder")}
+                      placeholder={t("modals.strengthTest.phonePlaceholderGeneric")}
                     />
                   </div>
                 ) : (
@@ -1492,7 +1492,7 @@ export default function HomePage() {
                       ].join(" ")}
                       placeholder={
                         COUNTRY_OPTIONS.find((c) => c.iso === buyCountryIso)
-                          ?.placeholder ?? t("modals.purchase.phonePlaceholder")
+                          ?.placeholder ?? t("modals.strengthTest.phonePlaceholderGeneric")
                       }
                     />
                   </div>
