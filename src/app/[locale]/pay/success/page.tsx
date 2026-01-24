@@ -3,6 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { track } from "@/lib/track";
+
+type PurchasePayload = {
+  transaction_id: string;        // id_payment
+  tariff_id?: string;            // Tag
+  currency?: "EUR" | "USD";      // AMD нет
+  value?: number;                // Sum
+  site_language?: "ru" | "en";   // locale
+};
 
 type CheckPaymentResp =
   | {
@@ -11,21 +20,23 @@ type CheckPaymentResp =
       paid?: boolean;
       tgToken?: string | null;
       locale?: "en" | "ru"; // ✅ optional (на будущее, если вернёшь из /api/check-payment)
+      purchasePayload?: PurchasePayload; // ✅ здесь
       bank?: {
         status?: string;
         code?: string;
         reason?: string;
         paymentState?: string;
-        orderStatus?: string;
+        orderStatus?: string;     
       };
     }
   | {
       ok?: boolean;
       error?: string;
       details?: string;
-      bank?: any;
       tgToken?: string | null;
       locale?: "en" | "ru"; // ✅ optional
+      purchasePayload?: PurchasePayload; // ✅ и здесь
+      bank?: any;
     };
 
 function useLocalePrefix() {
@@ -124,6 +135,27 @@ export default function PaySuccessPage() {
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noRedirect]);
+
+  useEffect(() => {
+    if (!paymentId || !resp) return;
+  
+    const status = String((resp as any)?.status ?? "").toLowerCase();
+    const isPaid = status === "paid" || (resp as any)?.paid === true;
+    if (!isPaid) return;
+  
+    const payload = (resp as any)?.purchasePayload ?? {};
+const transactionId = String(payload?.transaction_id ?? paymentId).trim();
+if (!transactionId) return;
+
+const key = `ga4_purchase_sent_${transactionId}`;
+if (sessionStorage.getItem(key) === "1") return;
+
+track("purchase", { ...payload, transaction_id: transactionId });
+
+sessionStorage.setItem(key, "1");
+
+  }, [paymentId, resp]);
+  
 
   const statusLabel = (() => {
     const s = String((resp as any)?.status ?? "").toLowerCase();

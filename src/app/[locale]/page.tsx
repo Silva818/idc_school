@@ -704,13 +704,6 @@ export default function HomePage() {
       } else {
         const data = await res.json();
         if (data.paymentUrl) {
-          track("purchase_submit", {
-            site_language,
-            tariff_id: purchaseOptions.tariffId,
-            tariff_label: purchaseOptions.tariffLabel,
-            currency: purchaseOptions.currency,
-            value: purchaseOptions.amount,
-          });  
           window.location.href = data.paymentUrl;
         } else {
           console.error("paymentUrl не получен из API");

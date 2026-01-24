@@ -394,6 +394,14 @@ export async function POST(req: Request) {
         Status: "paid",
         // Paid_time: new Date().toISOString(),
       });
+
+      const purchasePayload = {
+        transaction_id: paymentId, // ✅ обязателен для GA4 purchase
+        site_language: String(fields?.locale ?? "").trim() || undefined, // "ru" | "en"
+        tariff_id: String(fields?.Tag ?? "").trim() || undefined,        // твой Tag
+        currency: String(fields?.Currency ?? "").trim() || undefined,    // "EUR" | "USD"
+        value: Number(fields?.Sum ?? 0) || 0,                            // сумма
+      };
     
       // ✅ Уведомление в TG — только если раньше не было paid (чтобы не спамить)
       if (prevStatus !== "paid") {
@@ -409,6 +417,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ...baseResponse,
         tgToken,
+        purchasePayload,
         airtable: {
           action: "updated",
           found: true,
@@ -434,6 +443,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ...baseResponse,
       tgToken: null, // ✅ NEW: токена нет, потому что запись была создана fallback-ом
+      purchasePayload: {
+        transaction_id: paymentId,
+        // остального нет, потому что запись только создали и в ней нет полей
+      },
       airtable: {
         action: "created",
         found: false,
