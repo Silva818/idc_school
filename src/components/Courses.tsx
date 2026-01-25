@@ -10,7 +10,7 @@ type OpenStrengthTestOpts = {
 };
 
 type CoursesProps = {
-  onOpenTestModal?: (opts?: OpenStrengthTestOpts) => void;
+  onOpenTestModal?: (opts?: { source?: "courses" | "pricing"; course_name?: string }) => void;
 };
 
 export function Courses({ onOpenTestModal }: CoursesProps) {

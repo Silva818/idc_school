@@ -22,7 +22,8 @@ import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { track, slugifyCourseName } from "@/lib/track";
+import { track } from "@/lib/track";
+
 
 
 function HowStepCard({
@@ -227,7 +228,9 @@ export default function HomePage() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const [testContext, setTestContext] = useState<string | undefined>();
+  type StrengthTestSource = "courses" | "pricing" | "unknown";
+const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
+
 
   const [testCourse, setTestCourse] = useState("");
   const [testCoursePreselected, setTestCoursePreselected] = useState(false);
@@ -245,36 +248,45 @@ export default function HomePage() {
   const [testTriedSubmit, setTestTriedSubmit] = useState(false);
   const [testErrors, setTestErrors] = useState<FormErrors>({});
 
-  function openTestModal(opts?: {
-    source?: "courses" | "pricing";
-    courseName?: string;
-  }) {
-    const source = opts?.source ?? "unknown";
-    const courseName = opts?.courseName;
-  
-    const course_preselected = !!courseName;
-  
-    setTestContext(source);
-    setTestCoursePreselected(course_preselected);
-  
-    if (course_preselected) {
-      setTestCourse(courseName!);
-    } else {
-      setTestCourse("");
-    }
-  
-    setIsTestModalOpen(true);
-  
-    track("strength_test_start", {
-      site_language,
-      source,
-      course_preselected,
-      course_name: courseName ?? undefined,
-    });
-  
-    setTestTriedSubmit(false);
-    setTestErrors({});
-  }
+
+function openTestModal(opts?: {
+  source?: "courses" | "pricing";
+  course_name?: string;
+}) {
+  const source: StrengthTestSource = opts?.source ?? "unknown";
+  const course_name = opts?.course_name;
+
+  const course_preselected = !!course_name;
+
+  setTestContext(source);
+  setTestCoursePreselected(course_preselected);
+  setTestCourse(course_name ?? "");
+
+  setIsTestModalOpen(true);
+
+  track("strength_test_start", {
+    site_language,
+    source,
+    course_preselected,
+    course_name: course_name || undefined,
+  });
+
+  setTestTriedSubmit(false);
+  setTestErrors({});
+}
+
+function closeTestModal() {
+  if (isTestSubmitting) return;
+  setIsTestModalOpen(false);
+
+  // опционально: сбрасывать курс/флаги при закрытии
+  setTestCourse("");
+  setTestCoursePreselected(false);
+
+  setTestTriedSubmit(false);
+  setTestErrors({});
+}
+
   
 
   function validateTestForm(): FormErrors {
@@ -341,7 +353,6 @@ export default function HomePage() {
     testTriedSubmit,
     testFullName,
     testEmail,
-    testNeedsCourse,
     testCourse,
     testCountryIso,
     testDialCode,
@@ -374,7 +385,7 @@ export default function HomePage() {
           email: testEmail,
           phone: buildE164(dialToSend, testPhoneNational),
           context: testContext ?? "",
-          courseName: testNeedsCourse ? testCourse : null,
+          courseName: testCourse ? testCourse : null,
         }),
       });
 
@@ -392,7 +403,7 @@ export default function HomePage() {
         setTestAgreed(false);
         setIsTestModalOpen(false);
         setTestCourse("");
-        setTestNeedsCourse(false);
+        setTestCoursePreselected(false);
         setTestPhoneNational("");
         setTestCustomDial("+");
 
@@ -1081,7 +1092,9 @@ export default function HomePage() {
       <Courses onOpenTestModal={openTestModal} />
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
-      <Pricing onOpenTestModal={(context) => openTestModal(context, { needsCourse: true })}
+      <Pricing
+  onOpenTestModal={() =>
+    openTestModal({ source: "pricing" })}
       onOpenPurchaseModal={(opts) => {
         setActiveCurrency(opts.currency);
         openPurchaseModal(opts);
@@ -1290,7 +1303,7 @@ export default function HomePage() {
                       
                         track("strength_test_course_select", {
                           site_language,
-                          source: testContext ?? "unknown",
+                          source: testContext,
                           course_name: name,
                         });                        
                       }}
