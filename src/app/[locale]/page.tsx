@@ -230,7 +230,7 @@ export default function HomePage() {
   const [testContext, setTestContext] = useState<string | undefined>();
 
   const [testCourse, setTestCourse] = useState("");
-  const [testNeedsCourse, setTestNeedsCourse] = useState(false);
+  const [testCoursePreselected, setTestCoursePreselected] = useState(false);
 
   const [testCountryIso, setTestCountryIso] = useState(COUNTRY_OPTIONS[0].iso);
   const [testDialCode, setTestDialCode] = useState(COUNTRY_OPTIONS[0].dial);
@@ -245,31 +245,37 @@ export default function HomePage() {
   const [testTriedSubmit, setTestTriedSubmit] = useState(false);
   const [testErrors, setTestErrors] = useState<FormErrors>({});
 
-  function openTestModal(context?: string, opts?: { needsCourse?: boolean }) {
-    setTestContext(context);
-    setTestNeedsCourse(!!opts?.needsCourse);
-    if (opts?.needsCourse) setTestCourse("");
+  function openTestModal(opts?: {
+    source?: "courses" | "pricing";
+    courseName?: string;
+  }) {
+    const source = opts?.source ?? "unknown";
+    const courseName = opts?.courseName;
+  
+    const course_preselected = !!courseName;
+  
+    setTestContext(source);
+    setTestCoursePreselected(course_preselected);
+  
+    if (course_preselected) {
+      setTestCourse(courseName!);
+    } else {
+      setTestCourse("");
+    }
+  
     setIsTestModalOpen(true);
-    track("start_strength_test", {
+  
+    track("strength_test_start", {
       site_language,
-      source: context ? "context" : "unknown",
+      source,
+      course_preselected,
+      course_name: courseName ?? undefined,
     });
-
-
-    // reset ошибок
+  
     setTestTriedSubmit(false);
     setTestErrors({});
   }
-
-  function closeTestModal() {
-    if (isTestSubmitting) return;
-    setIsTestModalOpen(false);
-    setTestNeedsCourse(false);
-
-    // reset ошибок
-    setTestTriedSubmit(false);
-    setTestErrors({});
-  }
+  
 
   function validateTestForm(): FormErrors {
     const errs: FormErrors = {};
@@ -279,7 +285,8 @@ export default function HomePage() {
     if (!testEmail.trim()) errs.email = tErr("required");
     else if (!isValidEmail(testEmail)) errs.email = tErr("invalidEmail");
 
-    if (testNeedsCourse && !testCourse) errs.course = tErr("chooseCourse");
+    if (!testCoursePreselected && !testCourse) errs.course = tErr("chooseCourse");
+
 
     const dialToCheck = testCountryIso === "OTHER" ? testCustomDial : testDialCode;
 
@@ -376,9 +383,10 @@ export default function HomePage() {
       } else {
         track("strength_test_submit", {
           site_language,
-          course_id: testNeedsCourse && testCourse ? slugifyCourseName(testCourse) : undefined,
-          course_name: testNeedsCourse && testCourse ? testCourse : undefined,
+          source: testContext ?? "unknown",
+          course_name: testCourse || undefined,
         });
+        
         setTestFullName("");
         setTestEmail("");
         setTestAgreed(false);
@@ -814,7 +822,7 @@ export default function HomePage() {
   className="hover:text-white transition-colors"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
-    track("menu_pricing_click", { site_language, source: "menu" });
+    track("menu_pricing_click", { site_language, source: "header_menu" });
   }}
 >
   {t("header.nav.pricing")}
@@ -903,7 +911,7 @@ export default function HomePage() {
   className="rounded-2xl px-3 py-2 hover:bg-white/5"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
-    track("menu_pricing_click", { site_language, source: "menu" });
+    track("menu_pricing_click", { site_language, source: "header_menu" });
     setIsMobileNavOpen(false);
   }}
 >
@@ -1267,7 +1275,7 @@ export default function HomePage() {
 
               <input type="hidden" name="context" value={testContext ?? ""} />
 
-              {testNeedsCourse && (
+              {!testCoursePreselected && (
                 <div className="space-y-1">
                   <label className="text-xs sm:text-sm text-brand-muted">
                     {t("modals.strengthTest.courseLabel")}
@@ -1280,11 +1288,11 @@ export default function HomePage() {
                         const name = e.target.value;
                         setTestCourse(name);
                       
-                        track("choose_course", {
+                        track("strength_test_course_select", {
                           site_language,
-                          course_id: slugifyCourseName(name),
+                          source: testContext ?? "unknown",
                           course_name: name,
-                        });
+                        });                        
                       }}
                       className={[
                         "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",

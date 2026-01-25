@@ -4,8 +4,13 @@
 import { TestSignupButton } from "@/components/TestSignupButton";
 import { useTranslations } from "next-intl";
 
+type OpenStrengthTestOpts = {
+  source?: "courses" | "pricing";
+  course_name?: string;
+};
+
 type CoursesProps = {
-  onOpenTestModal?: (context?: string) => void;
+  onOpenTestModal?: (opts?: OpenStrengthTestOpts) => void;
 };
 
 export function Courses({ onOpenTestModal }: CoursesProps) {
@@ -79,7 +84,13 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                 <TestSignupButton
                   label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onOpenTestModal?.(t("cards.light.context"))}
+                  onClick={() =>
+                    onOpenTestModal?.({
+                      source: "courses",
+                      course_name: t("cards.light.title"),
+                    })
+                  }
+                  
                 />
               </div>
             </article>
@@ -110,7 +121,13 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                 <TestSignupButton
                   label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onOpenTestModal?.(t("cards.super.context"))}
+                  onClick={() =>
+                    onOpenTestModal?.({
+                      source: "courses",
+                      course_name: t("cards.light.title"),
+                    })
+                  }
+                  
                 />
               </div>
             </article>
@@ -142,8 +159,12 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
                   onClick={() =>
-                    onOpenTestModal?.(t("cards.pullupsGirls.context"))
+                    onOpenTestModal?.({
+                      source: "courses",
+                      course_name: t("cards.light.title"),
+                    })
                   }
+                  
                 />
               </div>
             </article>
@@ -183,7 +204,13 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                 <TestSignupButton
                   label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onOpenTestModal?.(t("cards.handstand.context"))}
+                  onClick={() =>
+                    onOpenTestModal?.({
+                      source: "courses",
+                      course_name: t("cards.light.title"),
+                    })
+                  }
+                  
                 />
               </div>
             </article>
@@ -224,8 +251,12 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   label={t("testButton")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
                   onClick={() =>
-                    onOpenTestModal?.(t("cards.crossfit.context"))
+                    onOpenTestModal?.({
+                      source: "courses",
+                      course_name: t("cards.light.title"),
+                    })
                   }
+                  
                 />
               </div>
             </article>

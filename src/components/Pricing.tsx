@@ -58,16 +58,18 @@ export type PurchaseOptions = {
   currency: Currency;
 };
 
+type OpenStrengthTestOpts = {
+  source?: "courses" | "pricing";
+  course_name?: string;
+};
+
 type PricingProps = {
-  onOpenTestModal?: (context?: string) => void;
+  onOpenTestModal?: (opts?: OpenStrengthTestOpts) => void;
   onOpenPurchaseModal?: (options: PurchaseOptions) => void;
-
-  // ✅ NEW: открыть модалку подарочного сертификата
   onOpenGiftModal?: () => void;
-
-  // ✅ NEW: сообщать наружу текущую валюту (для gift-модалки)
   onCurrencyChange?: (currency: Currency) => void;
 };
+
 
 export function Pricing({
   onOpenTestModal,
@@ -211,7 +213,8 @@ export function Pricing({
               <TestSignupButton
                 label={t("cards.test.button")}
                 buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2.5 text-[13px] sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
-                onClick={() => onOpenTestModal?.(t("cards.test.context"))}
+                onClick={() => onOpenTestModal?.({ source: "pricing" })}
+
               />
             </div>
           </article>
