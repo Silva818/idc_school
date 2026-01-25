@@ -814,7 +814,7 @@ export default function HomePage() {
   className="hover:text-white transition-colors"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
-    track("pricing_menu_click", { site_language, source: "header_menu" });
+    track("menu_pricing_click", { site_language, source: "menu" });
   }}
 >
   {t("header.nav.pricing")}
@@ -903,7 +903,7 @@ export default function HomePage() {
   className="rounded-2xl px-3 py-2 hover:bg-white/5"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
-    track("pricing_menu_click", { site_language, source: "menu" });
+    track("menu_pricing_click", { site_language, source: "menu" });
     setIsMobileNavOpen(false);
   }}
 >
