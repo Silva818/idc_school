@@ -971,23 +971,14 @@ export default function HomePage() {
               {t("hero.desc")}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
+            <div className="pt-2">
   {/* Primary: Courses */}
   <a
     href="#courses"
-    className="inline-flex items-center justify-center rounded-full bg-brand-primary px-6 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
+    className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand-primary px-8 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
     onClick={() => track("hero_cta_click", { site_language, target: "courses" })}
   >
     {t("hero.ctaCourses")}
-  </a>
-
-  {/* Secondary (green): How it works (later AI) */}
-  <a
-    href="#how"
-    className="inline-flex items-center justify-center rounded-full bg-brand-accent text-brand-dark px-6 py-3 text-sm sm:text-base font-semibold hover:bg-brand-accent/90 transition-colors"
-    onClick={() => track("hero_cta_click", { site_language, target: "how" })}
-  >
-    {t("header.nav.how")}
   </a>
 </div>
 
