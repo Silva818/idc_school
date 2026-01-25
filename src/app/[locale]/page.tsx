@@ -17,7 +17,6 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
 import { Testimonials } from "@/components/Testimonials";
-import { TestSignupButton } from "@/components/TestSignupButton";
 import { courseNames } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -222,6 +221,8 @@ export default function HomePage() {
   const pathname = usePathname();
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
   const site_language = activeLocale;
+  const SHOW_LOGIN = false;
+
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -832,13 +833,15 @@ export default function HomePage() {
 
             <LanguageSwitcher />
 
-            <button
-              className="hidden md:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
-              type="button"
-              onClick={openLoginModal}
-            >
-              {t("header.login")}
-            </button>
+            {SHOW_LOGIN && (
+  <button
+    className="hidden md:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
+    type="button"
+    onClick={openLoginModal}
+  >
+    {t("header.login")}
+  </button>
+)}
 
             <button
               type="button"
@@ -932,15 +935,17 @@ export default function HomePage() {
 
               <div className="space-y-2">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileNavOpen(false);
-                    openTestModal(t("contexts.headerStrengthTest"));
-                  }}
-                  className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
-                >
-                  {t("header.takeStrengthTest")}
-                </button>
+  type="button"
+  onClick={() => {
+    setIsMobileNavOpen(false);
+    track("mobile_menu_cta_click", { site_language, target: "courses" });
+    document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+  }}
+  className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
+>
+  {t("hero.ctaCourses")}
+</button>
+
               </div>
             </nav>
           </div>
@@ -967,18 +972,25 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-              <TestSignupButton
-                label={t("header.takeStrengthTest")}
-                onClick={() => openTestModal(t("contexts.heroStrengthTest"))}
-              />
+  {/* Primary: Courses */}
+  <a
+    href="#courses"
+    className="inline-flex items-center justify-center rounded-full bg-brand-primary px-6 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
+    onClick={() => track("hero_cta_click", { site_language, target: "courses" })}
+  >
+    {t("hero.ctaCourses")}
+  </a>
 
-              <a
-                href="#courses"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm sm:text-base font-semibold hover:bg-white/5 transition-colors"
-              >
-                {t("hero.ctaCourses")}
-              </a>
-            </div>
+  {/* Secondary (green): How it works (later AI) */}
+  <a
+    href="#how"
+    className="inline-flex items-center justify-center rounded-full bg-brand-accent text-brand-dark px-6 py-3 text-sm sm:text-base font-semibold hover:bg-brand-accent/90 transition-colors"
+    onClick={() => track("hero_cta_click", { site_language, target: "how" })}
+  >
+    {t("header.nav.how")}
+  </a>
+</div>
+
 
             <div className="flex flex-wrap gap-4 pt-4 text-[13px] sm:text-sm text-brand-muted">
               <div className="flex items-center gap-2">
@@ -1048,7 +1060,8 @@ export default function HomePage() {
                       <button
                         className="shrink-0 rounded-full bg-brand-accent text-brand-dark px-4 py-2 text-xs font-semibold hover:bg-brand-accent/90 transition-colors"
                         onClick={() => {
-                          document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+                          track("hero_card_cta_click", { site_language, target: "how" });
+                          document.getElementById("how")?.scrollIntoView({ behavior: "smooth" });
                         }}
                       >
                         {t("hero.start")}
