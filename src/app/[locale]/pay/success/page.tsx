@@ -235,6 +235,20 @@ sessionStorage.setItem(key, "1");
 
               <a
                 href={botUrl}
+                onClick={() => {
+                  const payload = (resp as any)?.purchasePayload ?? {};
+                  const pid = String(payload?.transaction_id ?? paymentId).trim();
+              
+                  track("telegram_bot_open_click", {
+                    site_language: payload?.site_language ?? (pref ? "ru" : "en"),
+                    payment_id: pid || undefined,
+              
+                    // опционально (если есть в payload)
+                    tariff_label: payload?.tariff_label,
+                    currency: payload?.currency,
+                    value: payload?.value,
+                  });
+                }}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
               >
                 {t("telegram.button")}
