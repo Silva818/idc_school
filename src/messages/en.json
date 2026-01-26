@@ -281,20 +281,20 @@
             "Everything included in the strength test",
             "12 personalized workouts",
             "Technique review after each workout",
-            "Train 2–3 times per week"
+            "Train 3 times per week"
           ],
           "text": "A block to noticeably improve strength, technique, and physique.",
           "button": "Buy 12 workouts",
-          "tariffLabel": "12-workout block"
+          "tariffLabel": "12-workout block — 4 weeks"
         },
         "bundle": {
           "badge": "Easy pace and long format",
           "long12": {
             "title": "12 workouts — easy pace",
             "perLabel": "per workout",
-            "text": "Great if you want 1–2 workouts per week with no rush or deadlines.",
+            "text": "Great if you want 2 workouts per week.",
             "button": "Buy easy block (12 w.)",
-            "tariffLabel": "12 workouts — easy pace"
+            "tariffLabel": "12 workouts — 8 weeks"
           },
           "long36": {
             "title": "36 workouts",

@@ -22,7 +22,7 @@ const prices = {
     AMD: { total: 5500, per: 5500 }, // разовый формат
   },
   short12: {
-    EUR: { total: 108, per: 9 },
+    EUR: { total: 1, per: 9 },
     USD: { total: 132, per: 11 },
     AMD: { total: 48000, per: 4000 }, // 12 тренировок
   },
@@ -255,13 +255,6 @@ export function Pricing({
               <button
                 className="w-full rounded-full border border-white/40 px-4 py-2.5 text-[13px] sm:text-sm font-semibold hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("purchase_start", {
-                    site_language,
-                    tariff_id: "review",
-                    tariff_label: t("cards.review.tariffLabel"),
-                    currency,
-                    value: prices.review[currency].total,
-                  });
                   onOpenPurchaseModal?.({
                     tariffId: "review",
                     tariffLabel: t("cards.review.tariffLabel"),
@@ -315,13 +308,6 @@ export function Pricing({
                 <button
                   className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                   onClick={() => {
-                    track("purchase_start", {
-                      site_language,
-                      tariff_id: "short12",
-                      tariff_label: t("cards.short12.tariffLabel"),
-                      currency,
-                      value: prices.short12[currency].total,
-                    });
                     onOpenPurchaseModal?.({
                       tariffId: "short12",
                       tariffLabel: t("cards.short12.tariffLabel"),
@@ -367,13 +353,6 @@ export function Pricing({
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("purchase_start", {
-                    site_language,
-                    tariff_id: "long12",
-                    tariff_label: t("cards.bundle.long12.tariffLabel"),
-                    currency,
-                    value: prices.long12[currency].total,
-                  });
                   onOpenPurchaseModal?.({
                     tariffId: "long12",
                     tariffLabel: t("cards.bundle.long12.tariffLabel"),
@@ -410,13 +389,6 @@ export function Pricing({
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("purchase_start", {
-                    site_language,
-                    tariff_id: "long36",
-                    tariff_label: t("cards.bundle.long36.tariffLabel"),
-                    currency,
-                    value: prices.long36[currency].total,
-                  });
                   onOpenPurchaseModal?.({
                     tariffId: "long36",
                     tariffLabel: t("cards.bundle.long36.tariffLabel"),
