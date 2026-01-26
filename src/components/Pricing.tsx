@@ -255,7 +255,7 @@ export function Pricing({
               <button
                 className="w-full rounded-full border border-white/40 px-4 py-2.5 text-[13px] sm:text-sm font-semibold hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("select_tariff", {
+                  track("purchase_start", {
                     site_language,
                     tariff_id: "review",
                     tariff_label: t("cards.review.tariffLabel"),
@@ -315,7 +315,7 @@ export function Pricing({
                 <button
                   className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                   onClick={() => {
-                    track("select_tariff", {
+                    track("purchase_start", {
                       site_language,
                       tariff_id: "short12",
                       tariff_label: t("cards.short12.tariffLabel"),
@@ -367,7 +367,7 @@ export function Pricing({
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("select_tariff", {
+                  track("purchase_start", {
                     site_language,
                     tariff_id: "long12",
                     tariff_label: t("cards.bundle.long12.tariffLabel"),
@@ -410,7 +410,7 @@ export function Pricing({
               <button
                 className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                 onClick={() => {
-                  track("select_tariff", {
+                  track("purchase_start", {
                     site_language,
                     tariff_id: "long36",
                     tariff_label: t("cards.bundle.long36.tariffLabel"),

@@ -458,6 +458,13 @@ function closeTestModal() {
     setPurchaseOptions(options);
     setIsPurchaseModalOpen(true);
 
+    track("purchase_start", {
+      site_language,
+      product_type: "tariff",
+      tariff_label: options.tariffLabel,
+      currency: options.currency,
+      value: options.amount,
+    });
 
     // reset ошибок
     setBuyTriedSubmit(false);
@@ -476,7 +483,12 @@ function closeTestModal() {
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
   function openGiftModal() {
-    track("start_gift", { site_language });
+    track("purchase_start", {
+      site_language,
+      product_type: "gift",
+      tariff_label: "Gift Certificate", // можно и локализовать, но лучше фикс-строка
+      currency: activeCurrency,
+    });
     setIsGiftModalOpen(true);
   
     setGiftTriedSubmit(false);
@@ -645,10 +657,13 @@ function closeTestModal() {
 
       const data = await res.json();
       if (data.paymentUrl) {
-        track("gift_select", {
+        track("purchase_url_created", {
           site_language,
+          product_type: "gift",
+          tariff_label: "Gift Certificate",
           currency,
           value: Number(giftAmount.replace(",", ".")),
+          payment_id: data.paymentId,
         });
         window.location.href = data.paymentUrl;
       } else {
@@ -689,14 +704,6 @@ function closeTestModal() {
 
     if (Object.keys(errs).length > 0) return;
 
-    track("start_checkout", {
-      site_language,
-      tariff_id: purchaseOptions.tariffId,
-      tariff_label: purchaseOptions.tariffLabel,
-      currency: purchaseOptions.currency,
-      value: purchaseOptions.amount,
-      payment_provider: "ameriabank",
-    });
 
     const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
@@ -724,6 +731,14 @@ function closeTestModal() {
       } else {
         const data = await res.json();
         if (data.paymentUrl) {
+          track("purchase_url_created", {
+            site_language,
+            product_type: "tariff",
+            tariff_label: purchaseOptions.tariffLabel,
+            currency: purchaseOptions.currency,
+            value: purchaseOptions.amount,
+            payment_id: data.paymentId, // важно!
+          });
           window.location.href = data.paymentUrl;
         } else {
           console.error("paymentUrl не получен из API");
