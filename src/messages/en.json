@@ -94,7 +94,9 @@
         "privacyPolicy": "privacy policy",
         "andPaymentTerms": "and the payment terms.",
         "submitGoing": "Redirecting to payment...",
-        "submit": "Proceed to payment"
+        "submit": "Proceed to payment",
+        "submitWithAmount": "Pay {amount}",
+        "oneTimeNote": "One-time payment, no subscription"
       },
       "login": {
         "title": "Log in to your account",

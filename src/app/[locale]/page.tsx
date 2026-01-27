@@ -1545,11 +1545,52 @@ if (!selectedTariff) {
                 <h2 className="text-lg sm:text-xl font-semibold">
                   {t("modals.purchase.title")}
                 </h2>
-                <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
-  {buyTariffId
-    ? `${t("modals.purchase.tariff")} ${buyTariffId}`
-    : (activeLocale === "ru" ? "Выберите тариф" : "Choose a plan")}
-</p>
+                {/* Тариф и цена */}
+                {(() => {
+                  const selected =
+                    purchaseOptions ??
+                    (buyTariffId
+                      ? (() => {
+                          const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
+                          if (!tar || !purchaseContext) return null;
+                          const amount = prices[tar.amountKey][purchaseContext.currency].total;
+                          const label =
+                            tar.id === "review"
+                              ? tPricing("cards.test.tariffLabel")
+                              : (tPricing(tar.labelKey as any) || tar.id);
+                          return {
+                            tariffId: tar.id,
+                            tariffLabel: label,
+                            amount,
+                            currency: purchaseContext.currency,
+                          } as PurchaseOptions;
+                        })()
+                      : null);
+
+                  if (!selected) {
+                    return (
+                      <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
+                        {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <p className="mt-1 text-[12px] sm:text-sm text-white">
+                        {selected.tariffLabel}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
+                          {formatPrice(selected.amount, selected.currency)}
+                        </span>
+                        <span className="text-[11px] sm:text-xs text-brand-muted">
+                          {t("modals.purchase.oneTimeNote")}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
 
               </div>
 
@@ -1818,9 +1859,25 @@ if (!selectedTariff) {
                 disabled={isBuySubmitting || !buyAgreed}
                 className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
               >
-                {isBuySubmitting
-                  ? t("modals.purchase.submitGoing")
-                  : t("modals.purchase.submit")}
+                {(() => {
+                  if (isBuySubmitting) return t("modals.purchase.submitGoing");
+                  const selected =
+                    purchaseOptions ??
+                    (buyTariffId
+                      ? (() => {
+                          const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
+                          if (!tar || !purchaseContext) return null;
+                          const amount = prices[tar.amountKey][purchaseContext.currency].total;
+                          return {
+                            amount,
+                            currency: purchaseContext.currency,
+                          } as { amount: number; currency: "EUR" | "USD" | "AMD" };
+                        })()
+                      : null);
+                  if (!selected) return t("modals.purchase.submit");
+                  const amt = formatPrice(selected.amount, selected.currency);
+                  return t("modals.purchase.submitWithAmount", { amount: amt });
+                })()}
               </button>
             </form>
           </div>
