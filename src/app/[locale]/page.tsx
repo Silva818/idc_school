@@ -219,6 +219,7 @@ function isValidEmail(email: string) {
 export default function HomePage() {
   const t = useTranslations("home");
   const tErr = useTranslations("home.modals.errors");
+  const tCourses = useTranslations("home.courses");
   const pathname = usePathname();
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
   const site_language = activeLocale;
@@ -1333,7 +1334,7 @@ function closeTestModal() {
 
                       {courseNames.map((name) => (
                         <option key={name} value={name}>
-                          {COURSE_TITLE_KEY[name]}
+                          {tCourses(COURSE_TITLE_KEY[name])}
                         </option>
                       ))}
                     </select>
@@ -1580,7 +1581,7 @@ function closeTestModal() {
 
                     {courseNames.map((name) => (
                       <option key={name} value={name}>
-                        {COURSE_TITLE_KEY[name]}
+                        {tCourses(COURSE_TITLE_KEY[name])}
                       </option>
                     ))}
                   </select>
