@@ -17,7 +17,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
 import { Testimonials } from "@/components/Testimonials";
-import { courseNames, COURSE_LABELS } from "@/data/courses";
+import { courseNames, COURSE_TITLE_KEY } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
@@ -1333,7 +1333,7 @@ function closeTestModal() {
 
                       {courseNames.map((name) => (
                         <option key={name} value={name}>
-                          {COURSE_LABELS[name]}
+                          {COURSE_TITLE_KEY[name]}
                         </option>
                       ))}
                     </select>
@@ -1580,7 +1580,7 @@ function closeTestModal() {
 
                     {courseNames.map((name) => (
                       <option key={name} value={name}>
-                        {COURSE_LABELS[name]}
+                        {COURSE_TITLE_KEY[name]}
                       </option>
                     ))}
                   </select>
