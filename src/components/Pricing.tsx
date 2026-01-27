@@ -15,7 +15,7 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
 }
 
 // отдельные цены для AMD, EUR и USD
-const prices = {
+export const prices = {
   review: {
     EUR: { total: 11, per: 11 },
     USD: { total: 13, per: 13 },
@@ -40,7 +40,7 @@ const prices = {
 
 export type Currency = "EUR" | "USD" | "AMD";
 
-function formatPrice(value: number, currency: Currency) {
+export function formatPrice(value: number, currency: Currency) {
   const suffixMap: Record<Currency, string> = {
     EUR: "€",
     USD: "$",
@@ -57,6 +57,17 @@ export type PurchaseOptions = {
   amount: number;
   currency: Currency;
 };
+
+export const PURCHASE_TARIFFS: Array<{
+  id: PurchaseOptions["tariffId"];
+  labelKey: string; // ключ в i18n для tariffLabel
+  amountKey: keyof typeof prices; // откуда брать цену
+}> = [
+  { id: "review", labelKey: "cards.review.tariffLabel", amountKey: "review" },
+  { id: "short12", labelKey: "cards.short12.tariffLabel", amountKey: "short12" },
+  { id: "long12", labelKey: "cards.bundle.long12.tariffLabel", amountKey: "long12" },
+  { id: "long36", labelKey: "cards.bundle.long36.tariffLabel", amountKey: "long36" },
+];
 
 type OpenStrengthTestOpts = {
   source?: "courses" | "pricing";

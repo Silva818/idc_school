@@ -12,7 +12,7 @@ import {
 
 import { HowItWorks } from "@/components/HowItWorks";
 import { Courses } from "@/components/Courses";
-import { Pricing, type PurchaseOptions } from "@/components/Pricing";
+import { Pricing, type PurchaseOptions, prices, PURCHASE_TARIFFS, } from "@/components/Pricing";
 import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
@@ -21,6 +21,7 @@ import { courseNames, COURSE_TITLE_KEY } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
+const tPricing = useTranslations("home.pricing");
 import { usePathname } from "next/navigation";
 import { track } from "@/lib/track";
 
@@ -212,6 +213,14 @@ type FormErrors = {
   course?: string;
 };
 
+type PurchaseModalContext = {
+  preselectedCourse?: string;
+  preselectedTariffId?: PurchaseOptions["tariffId"];
+  currency: "EUR" | "USD" | "AMD";
+  source: "pricing" | "courses" | "unknown";
+};
+
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
@@ -224,8 +233,8 @@ export default function HomePage() {
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
   const site_language = activeLocale;
   const SHOW_LOGIN = false;
-
-
+  
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -249,6 +258,62 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   const [testTriedSubmit, setTestTriedSubmit] = useState(false);
   const [testErrors, setTestErrors] = useState<FormErrors>({});
 
+  function openPurchaseFromPricing(options: PurchaseOptions) {
+    setPurchaseOptions(options);
+    setActiveCurrency(options.currency);
+    setPurchaseContext({
+      preselectedTariffId: options.tariffId,
+      preselectedCourse: selectedCourse || buyCourse || "",
+      currency: options.currency,
+      source: "pricing",
+    });
+    setIsPurchaseModalOpen(true);
+    setBuyTariffId(options.tariffId);
+
+  
+    // проставим тариф/курс в локальные стейты формы
+    setBuyCourse(selectedCourse || buyCourse || "");
+  
+    track("purchase_start", {
+      site_language,
+      product_type: "tariff",
+      tariff_label: options.tariffLabel,
+      currency: options.currency,
+      value: options.amount,
+      source: "pricing",
+    });
+  
+    setBuyTriedSubmit(false);
+    setBuyErrors({});
+  }
+  
+  function openPurchaseFromCourses(courseName: string) {
+    setSelectedCourse(courseName);
+  
+    // ✅ критично: при входе из Courses тариф ещё НЕ выбран
+    setPurchaseOptions(null);
+    setBuyTariffId("");
+  
+    setPurchaseContext({
+      preselectedCourse: courseName,
+      currency: activeCurrency,
+      source: "courses",
+    });
+  
+    setIsPurchaseModalOpen(true);
+    setBuyCourse(courseName);
+  
+    track("purchase_start", {
+      site_language,
+      product_type: "tariff",
+      source: "courses",
+      course_name: courseName,
+    });
+  
+    setBuyTriedSubmit(false);
+    setBuyErrors({});
+  }  
+  
 
 function openTestModal(opts?: {
   source?: "courses" | "pricing";
@@ -423,6 +488,14 @@ function closeTestModal() {
   const [purchaseOptions, setPurchaseOptions] =
     useState<PurchaseOptions | null>(null);
 
+    const [purchaseContext, setPurchaseContext] =
+  useState<PurchaseModalContext | null>(null);
+
+// выбранный тариф внутри модалки (нужен для сценария "выбрал курс → выбери тариф")
+const [buyTariffId, setBuyTariffId] =
+  useState<PurchaseOptions["tariffId"] | "">("");
+
+
   const [buyFullName, setBuyFullName] = useState("");
   const [buyEmail, setBuyEmail] = useState("");
   const [activeCurrency, setActiveCurrency] =
@@ -475,11 +548,15 @@ function closeTestModal() {
   function closePurchaseModal() {
     if (isBuySubmitting) return;
     setIsPurchaseModalOpen(false);
-
-    // reset ошибок
+  
+    // ✅ чтобы не "прилипало" между сценариями
+    setPurchaseOptions(null);
+    setBuyTariffId("");
+  
     setBuyTriedSubmit(false);
     setBuyErrors({});
   }
+  
 
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
@@ -696,7 +773,32 @@ function closeTestModal() {
 
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!purchaseOptions || !buyAgreed || isBuySubmitting) return;
+    if (!buyAgreed || isBuySubmitting) return;
+  
+    const selectedTariff =
+  purchaseOptions ??
+  (buyTariffId
+    ? (() => {
+        const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
+        if (!tar || !purchaseContext) return null;
+
+        const amount = prices[tar.amountKey][purchaseContext.currency].total;
+        const tariffLabel = tPricing(tar.labelKey as any) || tar.id;
+
+        return {
+          tariffId: tar.id,
+          tariffLabel,
+          amount,
+          currency: purchaseContext.currency,
+        } as PurchaseOptions;
+      })()
+    : null);
+
+if (!selectedTariff) {
+  setBuyTriedSubmit(true);
+  return;
+}
+
 
     setBuyTriedSubmit(true);
 
@@ -720,10 +822,10 @@ function closeTestModal() {
           email: buyEmail,
           phone: buildE164(dialToSend, buyPhoneNational),
           courseName: buyCourse,
-          tariffId: purchaseOptions.tariffId,
-          tariffLabel: purchaseOptions.tariffLabel,
-          amount: purchaseOptions.amount,
-          currency: purchaseOptions.currency,
+          tariffId: selectedTariff.tariffId,
+          tariffLabel: selectedTariff.tariffLabel,
+          amount: selectedTariff.amount,
+          currency: selectedTariff.currency,
         }),
       });
 
@@ -735,9 +837,9 @@ function closeTestModal() {
           track("purchase_url_created", {
             site_language,
             product_type: "tariff",
-            tariff_label: purchaseOptions.tariffLabel,
-            currency: purchaseOptions.currency,
-            value: purchaseOptions.amount,
+            tariff_label: selectedTariff.tariffLabel,
+            currency: selectedTariff.currency,
+            value: selectedTariff.amount,
             payment_id: data.paymentId, // важно!
           });
           window.location.href = data.paymentUrl;
@@ -1105,16 +1207,17 @@ function closeTestModal() {
         <HowItWorks />
       </div>
 
-      <Courses onOpenTestModal={openTestModal} />
+      <Courses onChooseCourse={openPurchaseFromCourses} />
+
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
       <Pricing
   onOpenTestModal={() =>
     openTestModal({ source: "pricing" })}
-      onOpenPurchaseModal={(opts) => {
-        setActiveCurrency(opts.currency);
-        openPurchaseModal(opts);
-      }}
+    onOpenPurchaseModal={(opts) => {
+      openPurchaseFromPricing(opts);
+    }}
+    
       onOpenGiftModal={() => openGiftModal()}
       onCurrencyChange={(c) => setActiveCurrency(c)}
     />
@@ -1388,7 +1491,7 @@ function closeTestModal() {
       )}
 
       {/* MODAL: purchase */}
-      {isPurchaseModalOpen && purchaseOptions && (
+{isPurchaseModalOpen && purchaseContext && (
         <div
           className="fixed inset-0 z-50 bg-black/60 p-4 sm:p-0 flex items-center justify-center"
           onClick={closePurchaseModal}
@@ -1405,10 +1508,11 @@ function closeTestModal() {
                   {t("modals.purchase.title")}
                 </h2>
                 <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
-                  {t("modals.purchase.tariff")} {purchaseOptions.tariffLabel} ·{" "}
-                  {purchaseOptions.amount.toLocaleString("ru-RU")}{" "}
-                  {purchaseOptions.currency === "EUR" ? "€" : "$"}
-                </p>
+  {buyTariffId
+    ? `${t("modals.purchase.tariff")} ${buyTariffId}`
+    : (activeLocale === "ru" ? "Выберите тариф" : "Choose a plan")}
+</p>
+
               </div>
 
               <button

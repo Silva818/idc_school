@@ -11,9 +11,10 @@ type OpenStrengthTestOpts = {
 
 type CoursesProps = {
   onOpenTestModal?: (opts?: { source?: "courses" | "pricing"; course_name?: string }) => void;
+  onChooseCourse?: (courseName: string) => void; // ✅ добавить
 };
 
-export function Courses({ onOpenTestModal }: CoursesProps) {
+export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
   const t = useTranslations("home.courses");
 
   return (
@@ -92,6 +93,14 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   }
                   
                 />
+                <button
+  type="button"
+  className="mt-2 w-full rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-semibold text-brand-dark hover:bg-black/5"
+  onClick={() => onChooseCourse?.(t("cards.light.title"))}
+>
+  {t("buyButton")} {/* или просто "Выбрать курс" */}
+</button>
+
               </div>
             </article>
 
@@ -124,11 +133,19 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   onClick={() =>
                     onOpenTestModal?.({
                       source: "courses",
-                      course_name: t("cards.light.title"),
+                      course_name: t("cards.super.title"),
                     })
                   }
                   
                 />
+                <button
+  type="button"
+  className="mt-2 w-full rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-semibold text-brand-dark hover:bg-black/5"
+  onClick={() => onChooseCourse?.(t("cards.super.title"))}
+>
+  {t("buyButton")} {/* или просто "Выбрать курс" */}
+</button>
+
               </div>
             </article>
 
@@ -161,11 +178,19 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   onClick={() =>
                     onOpenTestModal?.({
                       source: "courses",
-                      course_name: t("cards.light.title"),
+                      course_name: t("cards.pullupsGirls.title"),
                     })
                   }
                   
                 />
+                <button
+  type="button"
+  className="mt-2 w-full rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-semibold text-brand-dark hover:bg-black/5"
+  onClick={() => onChooseCourse?.(t("cards.pullupsGirls.title"))}
+>
+  {t("buyButton")} {/* или просто "Выбрать курс" */}
+</button>
+
               </div>
             </article>
 
@@ -207,11 +232,19 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   onClick={() =>
                     onOpenTestModal?.({
                       source: "courses",
-                      course_name: t("cards.light.title"),
+                      course_name: t("cards.handstand.title"),
                     })
                   }
                   
                 />
+                <button
+  type="button"
+  className="mt-2 w-full rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-semibold text-brand-dark hover:bg-black/5"
+  onClick={() => onChooseCourse?.(t("cards.handstand.title"))}
+>
+  {t("buyButton")} {/* или просто "Выбрать курс" */}
+</button>
+
               </div>
             </article>
 
@@ -253,11 +286,19 @@ export function Courses({ onOpenTestModal }: CoursesProps) {
                   onClick={() =>
                     onOpenTestModal?.({
                       source: "courses",
-                      course_name: t("cards.light.title"),
+                      course_name: t("cards.crossfit.title"),
                     })
                   }
                   
                 />
+                <button
+  type="button"
+  className="mt-2 w-full rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-semibold text-brand-dark hover:bg-black/5"
+  onClick={() => onChooseCourse?.(t("cards.crossfit.title"))}
+>
+  {t("buyButton")} {/* или просто "Выбрать курс" */}
+</button>
+
               </div>
             </article>
           </div>
