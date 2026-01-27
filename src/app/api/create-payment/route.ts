@@ -207,6 +207,7 @@ export async function POST(req: Request) {
       email,
       currency,
       locale: safeLocale,
+      courseName: courseName ?? "",
     });
 
     const { paymentUrl, paymentId } = await initAmeriaPayment({
@@ -230,6 +231,7 @@ export async function POST(req: Request) {
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,
+      course_name: courseName ?? "",
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });
