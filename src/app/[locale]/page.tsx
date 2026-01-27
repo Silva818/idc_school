@@ -7,12 +7,12 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type FormEvent,
+  type FormEvent, 
 } from "react";
 
 import { HowItWorks } from "@/components/HowItWorks";
 import { Courses } from "@/components/Courses";
-import { Pricing, type PurchaseOptions, prices, PURCHASE_TARIFFS, } from "@/components/Pricing";
+import { Pricing, type PurchaseOptions, prices, PURCHASE_TARIFFS, formatPrice } from "@/components/Pricing";
 import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
@@ -233,7 +233,7 @@ export default function HomePage() {
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
   const site_language = activeLocale;
   const SHOW_LOGIN = false;
-  
+
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -328,7 +328,7 @@ function openTestModal(opts?: {
   setTestCoursePreselected(course_preselected);
   setTestCourse(course_name ?? "");
 
-  setIsTestModalOpen(true);
+    setIsTestModalOpen(true);
 
   track("strength_test_start", {
     site_language,
@@ -339,11 +339,11 @@ function openTestModal(opts?: {
 
   setTestTriedSubmit(false);
   setTestErrors({});
-}
+  }
 
-function closeTestModal() {
-  if (isTestSubmitting) return;
-  setIsTestModalOpen(false);
+  function closeTestModal() {
+    if (isTestSubmitting) return;
+    setIsTestModalOpen(false);
 
   // опционально: сбрасывать курс/флаги при закрытии
   setTestCourse("");
@@ -618,7 +618,8 @@ const [buyTariffId, setBuyTariffId] =
     if (!buyEmail.trim()) errs.email = tErr("required");
     else if (!isValidEmail(buyEmail)) errs.email = tErr("invalidEmail");
 
-    if (!buyCourse) errs.course = tErr("chooseCourse");
+    // Требование курса только когда модалка открыта из pricing
+    if (purchaseContext?.source === "pricing" && !buyCourse) errs.course = tErr("chooseCourse");
 
     const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
@@ -954,8 +955,8 @@ if (!selectedTariff) {
     track("menu_pricing_click", { site_language, source: "header_menu" });
   }}
 >
-  {t("header.nav.pricing")}
-</a>
+                {t("header.nav.pricing")}
+              </a>
 
               <a href="#about" className="hover:text-white transition-colors">
                 {t("header.nav.about")}
@@ -971,13 +972,13 @@ if (!selectedTariff) {
             <LanguageSwitcher />
 
             {SHOW_LOGIN && (
-  <button
-    className="hidden md:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
-    type="button"
-    onClick={openLoginModal}
-  >
-    {t("header.login")}
-  </button>
+            <button
+              className="hidden md:inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
+              type="button"
+              onClick={openLoginModal}
+            >
+              {t("header.login")}
+            </button>
 )}
 
             <button
@@ -1036,16 +1037,16 @@ if (!selectedTariff) {
                   {t("header.nav.courses")}
                 </a>
                 <a
-  href="#pricing"
-  className="rounded-2xl px-3 py-2 hover:bg-white/5"
+                  href="#pricing"
+                  className="rounded-2xl px-3 py-2 hover:bg-white/5"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
     track("menu_pricing_click", { site_language, source: "header_menu" });
     setIsMobileNavOpen(false);
   }}
->
-  {t("header.nav.pricing")}
-</a>
+                >
+                  {t("header.nav.pricing")}
+                </a>
 
                 <a
                   href="#about"
@@ -1072,16 +1073,16 @@ if (!selectedTariff) {
 
               <div className="space-y-2">
                 <button
-  type="button"
-  onClick={() => {
-    setIsMobileNavOpen(false);
+                  type="button"
+                  onClick={() => {
+                    setIsMobileNavOpen(false);
     track("mobile_menu_cta_click", { site_language, target: "courses" });
     document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
-  }}
-  className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
->
+                  }}
+                  className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
+                >
   {t("hero.ctaCourses")}
-</button>
+                </button>
 
               </div>
             </nav>
@@ -1110,14 +1111,14 @@ if (!selectedTariff) {
 
             <div className="pt-2">
   {/* Primary: Courses */}
-  <a
-    href="#courses"
+              <a
+                href="#courses"
     className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand-primary px-8 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
     onClick={() => track("hero_cta_click", { site_language, target: "courses" })}
-  >
-    {t("hero.ctaCourses")}
-  </a>
-</div>
+              >
+                {t("hero.ctaCourses")}
+              </a>
+            </div>
 
 
             <div className="flex flex-wrap gap-4 pt-4 text-[13px] sm:text-sm text-brand-muted">
@@ -1211,7 +1212,7 @@ if (!selectedTariff) {
 
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
-      <Pricing
+        <Pricing
   onOpenTestModal={() =>
     openTestModal({ source: "pricing" })}
     onOpenPurchaseModal={(opts) => {
@@ -1526,6 +1527,55 @@ if (!selectedTariff) {
             </div>
 
             <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
+              {/* выбор тарифа показываем только если пришли из Courses */}
+              {purchaseContext?.source === "courses" ? (
+                <div className="space-y-1">
+                  <label className="text-xs sm:text-sm text-brand-muted">
+                    {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
+                  </label>
+                  <div className="space-y-2">
+                    {PURCHASE_TARIFFS.filter((x) => x.id !== "review").map((tar) => {
+                      const price =
+                        prices[tar.amountKey][purchaseContext.currency].total;
+                      const label = tPricing(tar.labelKey as any) || tar.id;
+                      return (
+                        <label
+                          key={tar.id}
+                          className={[
+                            "flex items-center justify-between gap-3",
+                            "w-full rounded-2xl border px-3 py-2 text-sm",
+                            buyTariffId === tar.id ? "border-brand-primary bg-brand-primary/5" : "border-white/10 bg-white/5",
+                          ].join(" ")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="tariff"
+                              value={tar.id}
+                              checked={buyTariffId === tar.id}
+                              onChange={() => setBuyTariffId(tar.id)}
+                              className="h-4 w-4 text-brand-primary focus:ring-0"
+                            />
+                            <span>{label}</span>
+                          </div>
+                          <span className="text-white/90">
+                            {formatPrice(
+                              price,
+                              purchaseContext.currency
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {buyTriedSubmit && !buyTariffId ? (
+                    <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                      {activeLocale === "ru" ? "Выберите тариф." : "Please choose a plan."}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="space-y-1">
                 <label className="text-xs sm:text-sm text-brand-muted">
                   {t("modals.purchase.fullNameLabel")}
@@ -1665,6 +1715,8 @@ if (!selectedTariff) {
                 )}
               </div>
 
+              {/* выбор курса показываем только если пришли из Pricing */}
+              {purchaseContext?.source === "pricing" ? (
               <div className="space-y-1">
                 <label className="text-xs sm:text-sm text-brand-muted">
                   {t("modals.purchase.courseLabel")}
@@ -1674,10 +1726,10 @@ if (!selectedTariff) {
                   <select
                     value={buyCourse}
                     onChange={(e) => setBuyCourse(e.target.value)}
-                    className={[
-                      "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
-                      buyErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
-                    ].join(" ")}
+                      className={[
+                        "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
+                        buyErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
+                      ].join(" ")}
                   >
                     <option value="" disabled>
                       {t("modals.purchase.coursePlaceholder")}
@@ -1685,7 +1737,7 @@ if (!selectedTariff) {
 
                     {courseNames.map((name) => (
                       <option key={name} value={name}>
-                        {tCourses(COURSE_TITLE_KEY[name])}
+                          {tCourses(COURSE_TITLE_KEY[name])}
                       </option>
                     ))}
                   </select>
@@ -1695,12 +1747,13 @@ if (!selectedTariff) {
                   </span>
                 </div>
 
-                {buyErrors.course && (
-                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
-                    {buyErrors.course}
-                  </p>
-                )}
+                  {buyErrors.course && (
+                    <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                      {buyErrors.course}
+                    </p>
+                  )}
               </div>
+              ) : null}
 
               <label className="flex items-start gap-2 text-[11px] sm:text-xs text-brand-muted">
                 <input

@@ -256,8 +256,9 @@
             "No payment and no obligations"
           ],
           "text": "Take the test when it’s convenient and upload your videos in the app.",
-          "button": "Take the free test",
-          "context": "Pricing: Strength test (free)"
+          "button": "Pay for the strength test",
+          "context": "Pricing: Strength test",
+          "tariffLabel": "Strength test (1 session)"
         },
         "review": {
           "badge": "One-time",

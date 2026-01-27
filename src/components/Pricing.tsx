@@ -189,7 +189,7 @@ export function Pricing({
 
         {/* Сетка тарифов */}
         <div className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-4 items-stretch">
-          {/* 1. Тест силы — бесплатный, использует текущую модалку теста */}
+          {/* 1. Тест силы — теперь платный, цена как у «Разбор техники» */}
           <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm shadow-soft">
             <div>
               <div className="inline-flex items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.16em] text-brand-muted">
@@ -202,12 +202,10 @@ export function Pricing({
               </h3>
 
               <p className="text-[15px] font-semibold mb-1">
-                {formatPrice(0, currency)}
+                {formatPrice(prices.review[currency].total, currency)}
               </p>
 
-              <p className="text-[11px] text-brand-muted mb-4">
-                {t("cards.test.free")}
-              </p>
+              {/* убрали пометку «бесплатно» */}
 
               <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
                 <li>• {t("cards.test.bullets.0")}</li>
@@ -224,62 +222,19 @@ export function Pricing({
               <TestSignupButton
                 label={t("cards.test.button")}
                 buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2.5 text-[13px] sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
-                onClick={() => onOpenTestModal?.({ source: "pricing" })}
-
+                onClick={() =>
+                  onOpenPurchaseModal?.({
+                    tariffId: "review",
+                    tariffLabel: t("cards.test.tariffLabel"),
+                    amount: prices.review[currency].total,
+                    currency,
+                  })
+                }
               />
             </div>
           </article>
 
-          {/* 2. Разбор техники — платный тариф */}
-          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm shadow-soft">
-            <div>
-              <div className="inline-flex items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.16em] text-brand-muted">
-                <StepDot color="bg-brand-accent" />
-                <span>{t("cards.review.badge")}</span>
-              </div>
-
-              <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                {t("cards.review.title")}
-              </h3>
-
-              <p className="text-[15px] font-semibold mb-1">
-                {formatPrice(prices.review[currency].total, currency)}
-              </p>
-
-              <p className="text-[11px] text-brand-muted mb-4">
-                {t("cards.review.note")}
-              </p>
-
-              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                <li>• {t("cards.review.bullets.0")}</li>
-                <li>• {t("cards.review.bullets.1")}</li>
-                <li>• {t("cards.review.bullets.2")}</li>
-                <li>• {t("cards.review.bullets.3")}</li>
-              </ul>
-
-              <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                {t("cards.review.text")}
-              </p>
-            </div>
-
-            <div className="mt-auto pt-4">
-              <button
-                className="w-full rounded-full border border-white/40 px-4 py-2.5 text-[13px] sm:text-sm font-semibold hover:bg-white/10 transition-colors"
-                onClick={() => {
-                  onOpenPurchaseModal?.({
-                    tariffId: "review",
-                    tariffLabel: t("cards.review.tariffLabel"),
-                    amount: prices.review[currency].total,
-                    currency,
-                  });
-                }}
-              >
-                {t("cards.review.button")}
-              </button>
-            </div>
-          </article>
-
-          {/* 3. 12 занятий — акцентный план */}
+          {/* 2. 12 занятий — акцентный план */}
           <article className="relative flex h-full flex-col rounded-3xl border border-brand-primary/40 bg-brand-primary/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm shadow-[0_0_40px_rgba(216,22,150,0.35)] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 rounded-3xl border border-brand-primary/60 opacity-40" />
 
@@ -333,84 +288,76 @@ export function Pricing({
             </div>
           </article>
 
-          {/* 4. Спокойный темп + длинный блок */}
-          <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
-            <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
-              <StepDot color="bg-brand-accent/80" />
-              <span>{t("cards.bundle.badge")}</span>
-            </div>
-
-            {/* верхняя половина — 12 тренировок в спокойном темпе */}
-            <div className="flex flex-1 flex-col justify-between pb-4 mb-4 border-b border-white/10">
-              <div>
-                <h3 className="text-[15px] sm:text-lg font-semibold mb-2">
-                  {t("cards.bundle.long12.title")}
-                </h3>
-
-                <p className="text-[15px] font-semibold text-white">
-                  {formatPrice(prices.long12[currency].total, currency)}
-                </p>
-
-                <p className="text-[11px] text-brand-muted mb-2">
-                  {formatPrice(prices.long12[currency].per, currency)}{" "}
-                  {t("cards.bundle.long12.perLabel")}
-                </p>
-
-                <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  {t("cards.bundle.long12.text")}
-                </p>
+          {/* 3. 12 тренировок — спокойный темп (отдельная карточка) */}
+          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
+                <StepDot color="bg-brand-accent/80" />
+                <span>{t("cards.bundle.badge")}</span>
               </div>
-
-              <button
-                className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                onClick={() => {
-                  onOpenPurchaseModal?.({
-                    tariffId: "long12",
-                    tariffLabel: t("cards.bundle.long12.tariffLabel"),
-                    amount: prices.long12[currency].total,
-                    currency,
-                  });
-                }}
-              >
-                {t("cards.bundle.long12.button")}
-              </button>
+              <h3 className="text-[15px] sm:text-lg font-semibold mb-2">
+                {t("cards.bundle.long12.title")}
+              </h3>
+              <p className="text-[15px] font-semibold text-white">
+                {formatPrice(prices.long12[currency].total, currency)}
+              </p>
+              <p className="text-[11px] text-brand-muted mb-2">
+                {formatPrice(prices.long12[currency].per, currency)}{" "}
+                {t("cards.bundle.long12.perLabel")}
+              </p>
+              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
+                {t("cards.bundle.long12.text")}
+              </p>
             </div>
+            <button
+              className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              onClick={() => {
+                onOpenPurchaseModal?.({
+                  tariffId: "long12",
+                  tariffLabel: t("cards.bundle.long12.tariffLabel"),
+                  amount: prices.long12[currency].total,
+                  currency,
+                });
+              }}
+            >
+              {t("cards.bundle.long12.button")}
+            </button>
+          </article>
 
-            {/* нижняя половина — 36 тренировок */}
-            <div className="flex flex-1 flex-col justify-between pt-2">
-              <div>
-                <h3 className="text-[15px] sm:text-base font-semibold mb-1 text-white">
-                  {t("cards.bundle.long36.title")}
-                </h3>
-
-                <p className="text-[15px] font-semibold text-white">
-                  {formatPrice(prices.long36[currency].total, currency)}
-                </p>
-
-                <p className="text-[11px] text-brand-muted mb-2">
-                  {formatPrice(prices.long36[currency].per, currency)}{" "}
-                  {t("cards.bundle.long36.perLabel")}
-                </p>
-
-                <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  {t("cards.bundle.long36.text")}
-                </p>
+          {/* 4. 36 тренировок — отдельная карточка */}
+          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
+                <StepDot color="bg-brand-accent/80" />
+                <span>{t("cards.bundle.badge")}</span>
               </div>
-
-              <button
-                className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                onClick={() => {
-                  onOpenPurchaseModal?.({
-                    tariffId: "long36",
-                    tariffLabel: t("cards.bundle.long36.tariffLabel"),
-                    amount: prices.long36[currency].total,
-                    currency,
-                  });
-                }}
-              >
-                {t("cards.bundle.long36.button")}
-              </button>
+              <h3 className="text-[15px] sm:text-base font-semibold mb-1 text-white">
+                {t("cards.bundle.long36.title")}
+              </h3>
+              <p className="text-[15px] font-semibold text-white">
+                {formatPrice(prices.long36[currency].total, currency)}
+              </p>
+              <p className="text-[11px] text-brand-muted mb-2">
+                {formatPrice(prices.long36[currency].per, currency)}{" "}
+                {t("cards.bundle.long36.perLabel")}
+              </p>
+              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
+                {t("cards.bundle.long36.text")}
+              </p>
             </div>
+            <button
+              className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              onClick={() => {
+                onOpenPurchaseModal?.({
+                  tariffId: "long36",
+                  tariffLabel: t("cards.bundle.long36.tariffLabel"),
+                  amount: prices.long36[currency].total,
+                  currency,
+                });
+              }}
+            >
+              {t("cards.bundle.long36.button")}
+            </button>
           </article>
         </div>
 
