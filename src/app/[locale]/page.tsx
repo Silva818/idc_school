@@ -315,6 +315,40 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   }  
   
 
+  // Открыть оплату «Тест силы» из блока курсов:
+  // - курс проставляем из карточки
+  // - тариф сразу проставляем как 1 тренировка (review) по активной валюте
+  function openStrengthTestPurchaseFromCourses(courseName: string | undefined) {
+    const options: PurchaseOptions = {
+      tariffId: "review",
+      tariffLabel: tPricing("cards.test.tariffLabel"),
+      amount: prices.review[activeCurrency].total,
+      currency: activeCurrency,
+    };
+    setPurchaseOptions(options);
+    setActiveCurrency(options.currency);
+    setPurchaseContext({
+      preselectedTariffId: options.tariffId,
+      preselectedCourse: courseName || "",
+      currency: options.currency,
+      source: "courses",
+    });
+    setIsPurchaseModalOpen(true);
+    setBuyTariffId(options.tariffId);
+    setBuyCourse(courseName || "");
+    track("purchase_start", {
+      site_language,
+      product_type: "tariff",
+      tariff_label: options.tariffLabel,
+      currency: options.currency,
+      value: options.amount,
+      source: "courses_strength_test",
+      course_name: courseName || undefined,
+    });
+    setBuyTriedSubmit(false);
+    setBuyErrors({});
+  }
+
 function openTestModal(opts?: {
   source?: "courses" | "pricing";
   course_name?: string;
@@ -1208,7 +1242,10 @@ if (!selectedTariff) {
         <HowItWorks />
       </div>
 
-      <Courses onChooseCourse={openPurchaseFromCourses} />
+      <Courses
+        onOpenTestModal={(opts) =>
+          openStrengthTestPurchaseFromCourses(opts?.course_name)}
+      />
 
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
@@ -1527,8 +1564,8 @@ if (!selectedTariff) {
             </div>
 
             <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
-              {/* выбор тарифа показываем только если пришли из Courses */}
-              {purchaseContext?.source === "courses" ? (
+              {/* выбор тарифа показываем только если пришли из Courses и тариф не предзаполнен */}
+              {purchaseContext?.source === "courses" && !purchaseOptions ? (
                 <div className="space-y-1">
                   <label className="text-xs sm:text-sm text-brand-muted">
                     {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
