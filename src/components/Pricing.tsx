@@ -22,7 +22,7 @@ const prices = {
     AMD: { total: 5500, per: 5500 }, // разовый формат
   },
   short12: {
-    EUR: { total: 1, per: 9 },
+    EUR: { total: 108, per: 9 },
     USD: { total: 132, per: 11 },
     AMD: { total: 48000, per: 4000 }, // 12 тренировок
   },

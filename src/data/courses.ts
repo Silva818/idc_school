@@ -1,10 +1,10 @@
 // src/data/courses.ts
 export const courseNames = [
-    "Calisthenics Light",
-    "Super Calisthenics",
-    "Подтягивания для девушек",
-    "Стойка на руках",
-    "Калистеника для кроссфитеров",
+    "calisthenics_light",
+    "super_calisthenics",
+    "pullups",
+    "handstand",
+    "calisthenics_for_crossfit",
   ] as const;
   
   export type CourseName = (typeof courseNames)[number];
