@@ -182,14 +182,14 @@
         },
         "super": {
           "badge": "Get stronger · Any level",
-          "title": "Super Calisthenics",
+          "title": "Calisthenics Classic",
           "desc": "The main course if you simply want to get strong: full body work, progress in pull-ups, handstands, and core basics.",
           "features": [
             "45–60 minutes, pull-up bar needed",
             "Balanced pull, push, and core",
             "Learn any skill"
           ],
-          "context": "Course: Super Calisthenics"
+          "context": "Course: Calisthenics Classic"
         },
         "pullupsGirls": {
           "badge": "Learn pull-ups · Any level",
@@ -198,7 +198,7 @@
           "features": [
             "45–60 minutes, pull-up bar needed",
             "Step-by-step path from 0 → 1 and beyond",
-            "Super Calisthenics with your chosen goal"
+            "Calisthenics Classic with your chosen goal"
           ],
           "context": "Course: Pull-ups for girls"
         },
