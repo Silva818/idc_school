@@ -21,7 +21,6 @@ import { courseNames, COURSE_TITLE_KEY } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
-const tPricing = useTranslations("home.pricing");
 import { usePathname } from "next/navigation";
 import { track } from "@/lib/track";
 
@@ -229,6 +228,7 @@ export default function HomePage() {
   const t = useTranslations("home");
   const tErr = useTranslations("home.modals.errors");
   const tCourses = useTranslations("home.courses");
+  const tPricing = useTranslations("home.pricing");
   const pathname = usePathname();
   const activeLocale: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
   const site_language = activeLocale;
