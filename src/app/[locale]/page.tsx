@@ -818,7 +818,7 @@ const [buyTariffId, setBuyTariffId] =
   async function handlePurchaseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!buyAgreed || isBuySubmitting) return;
-  
+
     const selectedTariff =
   purchaseOptions ??
   (buyTariffId
@@ -1264,7 +1264,7 @@ if (!selectedTariff) {
     
       onOpenGiftModal={() => openGiftModal()}
       onCurrencyChange={(c) => setActiveCurrency(c)}
-    />
+        />
 
         <About />
         <Testimonials />
@@ -1659,7 +1659,7 @@ if (!selectedTariff) {
               <div className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
                 <div className="flip__inner">
                   {/* Front: Step 1 */}
-                  <div className={["flip__face", "flip__front", funnelStep === 2 ? "flip__abs" : ""].join(" ")}>
+                  <div className="flip__face flip__front">
                     <div className="space-y-4">
                       <button
                         type="button"
@@ -1691,7 +1691,7 @@ if (!selectedTariff) {
                     </div>
                   </div>
                   {/* Back: Step 2 (form) */}
-                  <div className={["flip__face", "flip__back", funnelStep === 1 ? "flip__abs" : ""].join(" ")}>
+                  <div className="flip__face flip__back">
             <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
                       <div className="flex items-center justify-between">
                         <button

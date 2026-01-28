@@ -6,6 +6,7 @@
 .flip {
   perspective: 1000px;
   position: relative;
+  overflow: hidden;
 }
 .flip__inner {
   display: grid;
@@ -13,20 +14,24 @@
   transition: transform 250ms ease-in-out;
   will-change: transform;
 }
-.flip__abs {
-  position: absolute;
-  inset: 0;
-}
 .flip--isFlipped .flip__inner {
   transform: rotateY(180deg);
 }
 .flip__face {
+  position: absolute;
+  inset: 0;
   grid-area: 1 / 1;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 .flip__back {
   transform: rotateY(180deg);
+}
+.flip:not(.flip--isFlipped) .flip__back {
+  pointer-events: none;
+}
+.flip.flip--isFlipped .flip__front {
+  pointer-events: none;
 }
 
 html,
