@@ -1591,9 +1591,9 @@ if (!selectedTariff) {
                   </>
                 ) : (
                   <>
-                    <h2 className="text-lg sm:text-xl font-semibold">
-                      {t("modals.purchase.title")}
-                    </h2>
+                <h2 className="text-lg sm:text-xl font-semibold">
+                  {t("modals.purchase.title")}
+                </h2>
                     {/* Тариф и цена */}
                     {(() => {
                       const selected =
@@ -1618,7 +1618,7 @@ if (!selectedTariff) {
 
                       if (!selected) {
                         return (
-                          <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
+                <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
                             {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
                           </p>
                         );
@@ -1654,52 +1654,334 @@ if (!selectedTariff) {
               </button>
             </div>
 
-            {/* Содержимое модалки: если воронка и шаг 1 — показываем описание и кнопку; иначе — форма оплаты */}
-            {isFunnelMode && funnelStep === 1 ? (
-              <div className="space-y-4 transition-all duration-200">
-                <button
-                  type="button"
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
-                  onClick={() => {
-                    // переходим к шагу 2: заполняем тариф "review"
-                    const amount = prices.review[activeCurrency].total;
-                    const options: PurchaseOptions = {
-                      tariffId: "review",
-                      tariffLabel: tPricing("cards.test.tariffLabel"),
-                      amount,
-                      currency: activeCurrency,
-                    };
-                    setPurchaseOptions(options);
-                    setBuyTariffId(options.tariffId);
-                    setFunnelStep(2);
-                    track("strength_test_intro_continue", {
-                      site_language,
-                      course_name: funnelCourseName,
-                      currency: activeCurrency,
-                      value: amount,
-                    });
-                  }}
-                >
-                  {t("modals.funnel.step1.ctaSimple")}
-                </button>
-                <p className="text-[11px] sm:text-xs text-brand-muted text-center">
-                  {t("modals.funnel.step1.postCtaNote")}
-                </p>
-              </div>
-            ) : (
-            <form className="space-y-4 transition-all duration-200" onSubmit={handlePurchaseSubmit}>
-              {isFunnelMode && funnelStep === 2 ? (
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    className="text-[12px] sm:text-sm text-brand-muted hover:text-white transition-colors underline decoration-dotted"
-                    onClick={() => setFunnelStep(1)}
-                  >
-                    {t("modals.funnel.step2.back")}
-                  </button>
+            {/* Содержимое модалки: flip между шагами, если воронка; иначе — форма оплаты */}
+            {isFunnelMode ? (
+              <div className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
+                <div className="flip__inner">
+                  {/* Front: Step 1 */}
+                  <div className="flip__face flip__front">
+                    <div className="space-y-4">
+                      <button
+                        type="button"
+                        className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
+                        onClick={() => {
+                          const amount = prices.review[activeCurrency].total;
+                          const options: PurchaseOptions = {
+                            tariffId: "review",
+                            tariffLabel: tPricing("cards.test.tariffLabel"),
+                            amount,
+                            currency: activeCurrency,
+                          };
+                          setPurchaseOptions(options);
+                          setBuyTariffId(options.tariffId);
+                          setFunnelStep(2);
+                          track("strength_test_intro_continue", {
+                            site_language,
+                            course_name: funnelCourseName,
+                            currency: activeCurrency,
+                            value: amount,
+                          });
+                        }}
+                      >
+                        {t("modals.funnel.step1.ctaSimple")}
+                      </button>
+                      <p className="text-[11px] sm:text-xs text-brand-muted text-center">
+                        {t("modals.funnel.step1.postCtaNote")}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Back: Step 2 (form) */}
+                  <div className="flip__face flip__back">
+            <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
+                      <div className="flex items-center justify-between">
+                        <button
+                          type="button"
+                          className="text-[12px] sm:text-sm text-brand-muted hover:text-white transition-colors underline decoration-dotted"
+                          onClick={() => setFunnelStep(1)}
+                        >
+                          {t("modals.funnel.step2.back")}
+                        </button>
+                      </div>
+              {/* выбор тарифа показываем только если пришли из Courses и тариф не предзаполнен */}
+              {purchaseContext?.source === "courses" && !purchaseOptions ? (
+                <div className="space-y-1">
+                  <label className="text-xs sm:text-sm text-brand-muted">
+                    {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
+                  </label>
+                  <div className="space-y-2">
+                    {PURCHASE_TARIFFS.filter((x) => x.id !== "review").map((tar) => {
+                      const price =
+                        prices[tar.amountKey][purchaseContext.currency].total;
+                      const label = tPricing(tar.labelKey as any) || tar.id;
+                      return (
+                        <label
+                          key={tar.id}
+                          className={[
+                            "flex items-center justify-between gap-3",
+                            "w-full rounded-2xl border px-3 py-2 text-sm",
+                            buyTariffId === tar.id ? "border-brand-primary bg-brand-primary/5" : "border-white/10 bg-white/5",
+                          ].join(" ")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="tariff"
+                              value={tar.id}
+                              checked={buyTariffId === tar.id}
+                              onChange={() => setBuyTariffId(tar.id)}
+                              className="h-4 w-4 text-brand-primary focus:ring-0"
+                            />
+                            <span>{label}</span>
+                          </div>
+                          <span className="text-white/90">
+                            {formatPrice(
+                              price,
+                              purchaseContext.currency
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {buyTriedSubmit && !buyTariffId ? (
+                    <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                      {activeLocale === "ru" ? "Выберите тариф." : "Please choose a plan."}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
-              {/* выбор тарифа показываем только если пришли из Courses и тариф не предзаполнен */}
+
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {t("modals.purchase.fullNameLabel")}
+                </label>
+                <input
+                  type="text"
+                  value={buyFullName}
+                  onChange={(e) => setBuyFullName(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    buyErrors.fullName ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                  placeholder={t("modals.purchase.fullNamePlaceholder")}
+                />
+                {buyErrors.fullName && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.fullName}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {t("modals.purchase.emailLabel")}
+                </label>
+                <input
+                  type="email"
+                  value={buyEmail}
+                  onChange={(e) => setBuyEmail(e.target.value)}
+                  className={[
+                    "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                    buyErrors.email ? "border-rose-400/60" : "border-white/10",
+                  ].join(" ")}
+                  placeholder="you@example.com"
+                />
+                {buyErrors.email && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.email}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {t("modals.purchase.phoneLabel")}
+                </label>
+
+                {buyCountryIso === "OTHER" ? (
+                  <div className="grid grid-cols-[0.7fr_1.3fr] gap-2">
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={buyCustomDial}
+                      onChange={(e) => setBuyCustomDial(e.target.value)}
+                      aria-invalid={!!buyErrors.dial}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyErrors.dial ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={t("modals.strengthTest.customDialPlaceholder")}
+                    />
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={buyPhoneNational}
+                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      aria-invalid={!!buyErrors.phone}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyErrors.phone ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={t("modals.strengthTest.phonePlaceholderGeneric")}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-[1fr_1.2fr] gap-2">
+                    <select
+                      value={buyCountryIso}
+                      onChange={(e) => {
+                        const iso = e.target.value;
+                        const dial = countryToDial(iso);
+                        setBuyCountryIso(iso);
+                        setBuyDialCode(dial);
+                      }}
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.iso} value={c.iso}>
+                          {c.flag} {c.dial || c.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={buyPhoneNational}
+                      onChange={(e) => setBuyPhoneNational(e.target.value)}
+                      aria-invalid={!!buyErrors.phone}
+                      className={[
+                        "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
+                        buyErrors.phone ? "border-rose-400/60" : "border-white/10",
+                      ].join(" ")}
+                      placeholder={
+                        COUNTRY_OPTIONS.find((c) => c.iso === buyCountryIso)
+                          ?.placeholder ?? t("modals.strengthTest.phonePlaceholderGeneric")
+                      }
+                    />
+                  </div>
+                )}
+
+                {buyCountryIso === "OTHER" && (
+                  <div className="mt-2">
+                    <select
+                      value={buyCountryIso}
+                      onChange={(e) => {
+                        const iso = e.target.value;
+                        const dial = countryToDial(iso);
+                        setBuyCountryIso(iso);
+                        setBuyDialCode(dial);
+                      }}
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
+                    >
+                      {COUNTRY_OPTIONS.map((c) => (
+                        <option key={c.iso} value={c.iso}>
+                          {c.flag} {c.dial || c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {(buyErrors.dial || buyErrors.phone) && (
+                  <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                    {buyErrors.dial || buyErrors.phone}
+                  </p>
+                )}
+              </div>
+
+              {/* выбор курса показываем только если пришли из Pricing */}
+              {purchaseContext?.source === "pricing" ? (
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-brand-muted">
+                  {t("modals.purchase.courseLabel")}
+                </label>
+
+                <div className="relative">
+                  <select
+                    value={buyCourse}
+                    onChange={(e) => setBuyCourse(e.target.value)}
+                      className={[
+                        "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
+                        buyErrors.course ? "border-rose-400/60" : "border-brand-primary/60",
+                      ].join(" ")}
+                  >
+                    <option value="" disabled>
+                      {t("modals.purchase.coursePlaceholder")}
+                    </option>
+
+                    {courseNames.map((name) => (
+                      <option key={name} value={name}>
+                          {tCourses(COURSE_TITLE_KEY[name])}
+                      </option>
+                    ))}
+                  </select>
+
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-brand-muted">
+                    ▾
+                  </span>
+                </div>
+
+                  {buyErrors.course && (
+                    <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
+                      {buyErrors.course}
+                    </p>
+                  )}
+              </div>
+              ) : null}
+
+              <label className="flex items-start gap-2 text-[11px] sm:text-xs text-brand-muted">
+                <input
+                  type="checkbox"
+                  checked={buyAgreed}
+                  onChange={(e) => setBuyAgreed(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 rounded border-white/20 bg-transparent text-brand-primary focus:ring-0"
+                    required
+                />
+                <span>
+                  {t("modals.purchase.agreeTextPrefix")}{" "}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    className="underline decoration-dotted hover:text-white"
+                  >
+                    {t("modals.purchase.privacyPolicy")}
+                  </a>{" "}
+                  {t("modals.purchase.andPaymentTerms")}
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isBuySubmitting || !buyAgreed}
+                className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-60 disabled:pointer-events-none hover:bg-brand-primary/90 transition-colors"
+              >
+                {(() => {
+                  if (isBuySubmitting) return t("modals.purchase.submitGoing");
+                  const selected =
+                    purchaseOptions ??
+                    (buyTariffId
+                      ? (() => {
+                          const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
+                          if (!tar || !purchaseContext) return null;
+                          const amount = prices[tar.amountKey][purchaseContext.currency].total;
+                          return {
+                            amount,
+                            currency: purchaseContext.currency,
+                          } as { amount: number; currency: "EUR" | "USD" | "AMD" };
+                        })()
+                      : null);
+                  if (!selected) return t("modals.purchase.submit");
+                  const amt = formatPrice(selected.amount, selected.currency);
+                  return t("modals.purchase.submitWithAmount", { amount: amt });
+                })()}
+              </button>
+            </form>
+          </div>
+        </div>
+              </div>
+            ) : (
+            <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
               {purchaseContext?.source === "courses" && !purchaseOptions ? (
                 <div className="space-y-1">
                   <label className="text-xs sm:text-sm text-brand-muted">

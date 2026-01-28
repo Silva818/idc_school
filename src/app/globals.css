@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Flip card animation for funnel modal */
+.flip {
+  perspective: 1000px;
+}
+.flip__inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 250ms ease-in-out;
+  will-change: transform;
+}
+.flip--isFlipped .flip__inner {
+  transform: rotateY(180deg);
+}
+.flip__face {
+  grid-area: 1 / 1;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip__back {
+  transform: rotateY(180deg);
+}
+
 html,
 body {
   margin: 0;
