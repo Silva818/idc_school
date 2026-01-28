@@ -5,12 +5,17 @@
 /* Flip card animation for funnel modal */
 .flip {
   perspective: 1000px;
+  position: relative;
 }
 .flip__inner {
   display: grid;
   transform-style: preserve-3d;
   transition: transform 250ms ease-in-out;
   will-change: transform;
+}
+.flip__abs {
+  position: absolute;
+  inset: 0;
 }
 .flip--isFlipped .flip__inner {
   transform: rotateY(180deg);
