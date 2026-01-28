@@ -287,29 +287,36 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
     setBuyErrors({});
   }
   
-  function openPurchaseFromCourses(courseName: string) {
+  // ФЛОУ «Выбор курса → Шаг 1 (инфо о тесте) → Шаг 2 (оплата)»
+  const [isFunnelMode, setIsFunnelMode] = useState(false);
+  const [funnelStep, setFunnelStep] = useState<1 | 2>(1);
+  const [funnelCourseName, setFunnelCourseName] = useState<string>("");
+
+  function openTestFlowStep1(courseName: string) {
     setSelectedCourse(courseName);
-  
-    // ✅ критично: при входе из Courses тариф ещё НЕ выбран
+    setFunnelCourseName(courseName);
+    setIsFunnelMode(true);
+    setFunnelStep(1);
+
+    // пока тариф не выбран
     setPurchaseOptions(null);
     setBuyTariffId("");
-  
+
     setPurchaseContext({
       preselectedCourse: courseName,
       currency: activeCurrency,
       source: "courses",
     });
-  
+
     setIsPurchaseModalOpen(true);
     setBuyCourse(courseName);
-  
-    track("purchase_start", {
+
+    track("strength_test_intro_open", {
       site_language,
-      product_type: "tariff",
       source: "courses",
       course_name: courseName,
     });
-  
+
     setBuyTriedSubmit(false);
     setBuyErrors({});
   }  
@@ -582,6 +589,8 @@ const [buyTariffId, setBuyTariffId] =
   function closePurchaseModal() {
     if (isBuySubmitting) return;
     setIsPurchaseModalOpen(false);
+    setIsFunnelMode(false);
+    setFunnelStep(1);
   
     // ✅ чтобы не "прилипало" между сценариями
     setPurchaseOptions(null);
@@ -1242,10 +1251,7 @@ if (!selectedTariff) {
         <HowItWorks />
       </div>
 
-      <Courses
-        onOpenTestModal={(opts) =>
-          openStrengthTestPurchaseFromCourses(opts?.course_name)}
-      />
+      <Courses onChooseCourse={openTestFlowStep1} />
 
 
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
@@ -1542,56 +1548,97 @@ if (!selectedTariff) {
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold">
-                  {t("modals.purchase.title")}
-                </h2>
-                {/* Тариф и цена */}
-                {(() => {
-                  const selected =
-                    purchaseOptions ??
-                    (buyTariffId
-                      ? (() => {
-                          const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
-                          if (!tar || !purchaseContext) return null;
-                          const amount = prices[tar.amountKey][purchaseContext.currency].total;
-                          const label =
-                            tar.id === "review"
-                              ? tPricing("cards.test.tariffLabel")
-                              : (tPricing(tar.labelKey as any) || tar.id);
-                          return {
-                            tariffId: tar.id,
-                            tariffLabel: label,
-                            amount,
-                            currency: purchaseContext.currency,
-                          } as PurchaseOptions;
-                        })()
-                      : null);
-
-                  if (!selected) {
-                    return (
-                      <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
-                        {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
+                {/* Заголовок/шапка зависит от шага воронки */}
+                {isFunnelMode ? (
+                  <>
+                    <div className="text-[11px] sm:text-xs text-brand-muted">
+                      {funnelStep === 1
+                        ? (activeLocale === "ru" ? "Шаг 1 из 2" : "Step 1 of 2")
+                        : (activeLocale === "ru" ? "Шаг 2 из 2" : "Step 2 of 2")}
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-semibold">
+                      {funnelStep === 1
+                        ? t("modals.funnel.step1.title", { course: funnelCourseName })
+                        : t("modals.funnel.step2.title")}
+                    </h2>
+                    {funnelStep === 2 ? (
+                      <p className="mt-1 text-[12px] sm:text-sm text-brand-muted">
+                        {t("modals.funnel.step2.subtitle", { course: funnelCourseName })}
                       </p>
-                    );
-                  }
+                    ) : (
+                      <>
+                        <p className="mt-1 text-[12px] sm:text-sm text-brand-muted">
+                          {t("modals.funnel.step1.subtitle")}
+                        </p>
+                        <ul className="mt-2 space-y-1.5 text-[12px] sm:text-sm text-brand-muted">
+                          <li>• {t("modals.funnel.step1.bullets.0")}</li>
+                          <li>• {t("modals.funnel.step1.bullets.1")}</li>
+                          <li>• {t("modals.funnel.step1.bullets.2")}</li>
+                        </ul>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
+                            {formatPrice(prices.review[activeCurrency].total, activeCurrency)}
+                          </span>
+                          <span className="text-[11px] sm:text-xs text-brand-muted">
+                            {t("modals.funnel.step1.oneTime")}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg sm:text-xl font-semibold">
+                      {t("modals.purchase.title")}
+                    </h2>
+                    {/* Тариф и цена */}
+                    {(() => {
+                      const selected =
+                        purchaseOptions ??
+                        (buyTariffId
+                          ? (() => {
+                              const tar = PURCHASE_TARIFFS.find((x) => x.id === buyTariffId);
+                              if (!tar || !purchaseContext) return null;
+                              const amount = prices[tar.amountKey][purchaseContext.currency].total;
+                              const label =
+                                tar.id === "review"
+                                  ? tPricing("cards.test.tariffLabel")
+                                  : (tPricing(tar.labelKey as any) || tar.id);
+                              return {
+                                tariffId: tar.id,
+                                tariffLabel: label,
+                                amount,
+                                currency: purchaseContext.currency,
+                              } as PurchaseOptions;
+                            })()
+                          : null);
 
-                  return (
-                    <>
-                      <p className="mt-1 text-[12px] sm:text-sm text-white">
-                        {selected.tariffLabel}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
-                          {formatPrice(selected.amount, selected.currency)}
-                        </span>
-                        <span className="text-[11px] sm:text-xs text-brand-muted">
-                          {t("modals.purchase.oneTimeNote")}
-                        </span>
-                      </div>
-                    </>
-                  );
-                })()}
+                      if (!selected) {
+                        return (
+                          <p className="mt-1 text-[11px] sm:text-xs text-brand-muted">
+                            {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
+                          </p>
+                        );
+                      }
 
+                      return (
+                        <>
+                          <p className="mt-1 text-[12px] sm:text-sm text-white">
+                            {selected.tariffLabel}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
+                              {formatPrice(selected.amount, selected.currency)}
+                            </span>
+                            <span className="text-[11px] sm:text-xs text-brand-muted">
+                              {t("modals.purchase.oneTimeNote")}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
 
               <button
@@ -1604,7 +1651,50 @@ if (!selectedTariff) {
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
+            {/* Содержимое модалки: если воронка и шаг 1 — показываем описание и кнопку; иначе — форма оплаты */}
+            {isFunnelMode && funnelStep === 1 ? (
+              <div className="space-y-4 transition-all duration-200">
+                <button
+                  type="button"
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
+                  onClick={() => {
+                    // переходим к шагу 2: заполняем тариф "review"
+                    const amount = prices.review[activeCurrency].total;
+                    const options: PurchaseOptions = {
+                      tariffId: "review",
+                      tariffLabel: tPricing("cards.test.tariffLabel"),
+                      amount,
+                      currency: activeCurrency,
+                    };
+                    setPurchaseOptions(options);
+                    setBuyTariffId(options.tariffId);
+                    setFunnelStep(2);
+                    track("strength_test_intro_continue", {
+                      site_language,
+                      course_name: funnelCourseName,
+                      currency: activeCurrency,
+                      value: amount,
+                    });
+                  }}
+                >
+                  {t("modals.funnel.step1.cta", {
+                    amount: formatPrice(prices.review[activeCurrency].total, activeCurrency),
+                  })}
+                </button>
+              </div>
+            ) : (
+            <form className="space-y-4 transition-all duration-200" onSubmit={handlePurchaseSubmit}>
+              {isFunnelMode && funnelStep === 2 ? (
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    className="text-[12px] sm:text-sm text-brand-muted hover:text-white transition-colors underline decoration-dotted"
+                    onClick={() => setFunnelStep(1)}
+                  >
+                    {t("modals.funnel.step2.back")}
+                  </button>
+                </div>
+              ) : null}
               {/* выбор тарифа показываем только если пришли из Courses и тариф не предзаполнен */}
               {purchaseContext?.source === "courses" && !purchaseOptions ? (
                 <div className="space-y-1">
@@ -1880,6 +1970,7 @@ if (!selectedTariff) {
                 })()}
               </button>
             </form>
+            )}
           </div>
         </div>
       )}

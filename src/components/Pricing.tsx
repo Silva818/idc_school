@@ -188,53 +188,8 @@ export function Pricing({
         </div>
 
         {/* Сетка тарифов */}
-        <div className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-4 items-stretch">
-          {/* 1. Тест силы — теперь платный, цена как у «Разбор техники» */}
-          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm shadow-soft">
-            <div>
-              <div className="inline-flex items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.16em] text-brand-muted">
-                <StepDot />
-                <span>{t("cards.test.step")}</span>
-              </div>
-
-              <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                {t("cards.test.title")}
-              </h3>
-
-              <p className="text-[15px] font-semibold mb-1">
-                {formatPrice(prices.review[currency].total, currency)}
-              </p>
-
-              {/* убрали пометку «бесплатно» */}
-
-              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                <li>• {t("cards.test.bullets.0")}</li>
-                <li>• {t("cards.test.bullets.1")}</li>
-                <li>• {t("cards.test.bullets.2")}</li>
-              </ul>
-
-              <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
-                {t("cards.test.text")}
-              </p>
-            </div>
-
-            <div className="mt-auto pt-4">
-              <TestSignupButton
-                label={t("cards.test.button")}
-                buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2.5 text-[13px] sm:text-sm font-semibold shadow-soft hover:bg-brand-primary/90 transition-colors"
-                onClick={() =>
-                  onOpenPurchaseModal?.({
-                    tariffId: "review",
-                    tariffLabel: t("cards.test.tariffLabel"),
-                    amount: prices.review[currency].total,
-                    currency,
-                  })
-                }
-              />
-            </div>
-          </article>
-
-          {/* 2. 12 занятий — акцентный план */}
+        <div className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+          {/* 1. 12 занятий — акцентный план */}
           <article className="relative flex h-full flex-col rounded-3xl border border-brand-primary/40 bg-brand-primary/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm shadow-[0_0_40px_rgba(216,22,150,0.35)] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 rounded-3xl border border-brand-primary/60 opacity-40" />
 
@@ -288,7 +243,7 @@ export function Pricing({
             </div>
           </article>
 
-          {/* 3. 12 тренировок — спокойный темп (отдельная карточка) */}
+          {/* 2. 12 тренировок — спокойный темп (отдельная карточка) */}
           <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
@@ -324,7 +279,7 @@ export function Pricing({
             </button>
           </article>
 
-          {/* 4. 36 тренировок — отдельная карточка */}
+          {/* 3. 36 тренировок — отдельная карточка */}
           <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
@@ -360,6 +315,9 @@ export function Pricing({
             </button>
           </article>
         </div>
+        <p className="mt-6 text-center text-[12px] sm:text-sm text-brand-muted">
+          {t("belowNote")}
+        </p>
 
         {/* ✅ NEW: маленькая ссылка под блоком */}
         {onOpenGiftModal ? (

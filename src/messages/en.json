@@ -109,6 +109,24 @@
         "submitChecking": "Checking…",
         "submit": "Log in"
       },
+      "funnel": {
+        "step1": {
+          "title": "You chose the course: {course}",
+          "subtitle": "First step — Strength test (1 session)",
+          "bullets": [
+            "Access to the app and the training format",
+            "Technique review based on your videos",
+            "Recommendations for your next workouts"
+          ],
+          "oneTime": "One-time payment, no subscription",
+          "cta": "Start the strength test — {amount}"
+        },
+        "step2": {
+          "title": "Strength test payment",
+          "subtitle": "Course start: {course}",
+          "back": "Back"
+        }
+      },
       "errors": {
         "required": "Please fill out this field.",
         "invalidEmail": "Please check your email — it looks invalid.",
@@ -169,7 +187,7 @@
       "desc": "Choose the direction that fits you best right now — you can switch to another course at any time. The program adapts flexibly to your level and interests.",
       "scrollHint": "Swipe right to see all programs.",
       "scrollNote": "Any course can be adapted to your starting level.",
-      "testButton": "Take the strength test",
+      "chooseCourse": "Choose course",
       "cards": {
         "light": {
           "badge": "Easy start · For beginners",
@@ -229,6 +247,7 @@
       }
     },
     "pricing": {
+      "belowNote": "You can start with the strength test separately or jump straight to a plan—your first workout will be the strength test.",
       "gift": {
         "link": "Gift a certificate",
         "title": "Gift a certificate",

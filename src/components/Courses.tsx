@@ -83,14 +83,9 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label={t("testButton")}
+                  label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.({
-                      source: "courses",
-                      course_name: t("cards.light.title"),
-                    })
-                  }
+                  onClick={() => onChooseCourse?.(t("cards.light.title"))}
                 />
               </div>
             </article>
@@ -119,14 +114,9 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label={t("testButton")}
+                  label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.({
-                      source: "courses",
-                      course_name: t("cards.super.title"),
-                    })
-                  }
+                  onClick={() => onChooseCourse?.(t("cards.super.title"))}
                 />
               </div>
             </article>
@@ -155,14 +145,9 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label={t("testButton")}
+                  label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.({
-                      source: "courses",
-                      course_name: t("cards.pullupsGirls.title"),
-                    })
-                  }
+                  onClick={() => onChooseCourse?.(t("cards.pullupsGirls.title"))}
                 />
               </div>
             </article>
@@ -200,14 +185,9 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label={t("testButton")}
+                  label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.({
-                      source: "courses",
-                      course_name: t("cards.handstand.title"),
-                    })
-                  }
+                  onClick={() => onChooseCourse?.(t("cards.handstand.title"))}
                 />
               </div>
             </article>
@@ -245,14 +225,9 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
 
               <div className="mt-auto pt-3">
                 <TestSignupButton
-                  label={t("testButton")}
+                  label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() =>
-                    onOpenTestModal?.({
-                      source: "courses",
-                      course_name: t("cards.crossfit.title"),
-                    })
-                  }
+                  onClick={() => onChooseCourse?.(t("cards.crossfit.title"))}
                 />
               </div>
             </article>
