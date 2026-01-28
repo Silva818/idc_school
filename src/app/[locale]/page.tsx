@@ -291,6 +291,9 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   const [isFunnelMode, setIsFunnelMode] = useState(false);
   const [funnelStep, setFunnelStep] = useState<1 | 2>(1);
   const [funnelCourseName, setFunnelCourseName] = useState<string>("");
+  const flipRef = useRef<HTMLDivElement | null>(null);
+  const flipFrontRef = useRef<HTMLDivElement | null>(null);
+  const flipBackRef = useRef<HTMLFormElement | null>(null);
 
   function openTestFlowStep1(courseName: string) {
     setSelectedCourse(courseName);
@@ -568,6 +571,17 @@ const [buyTariffId, setBuyTariffId] =
     setBuyCountryIso(iso);
     setBuyDialCode(dial);
   }, []);
+  // keep flip container height equal to the visible face
+  useEffect(() => {
+    if (!isFunnelMode) return;
+    const flip = flipRef.current;
+    if (!flip) return;
+    const front = flipFrontRef.current;
+    const back = flipBackRef.current;
+    const node = funnelStep === 1 ? front : back;
+    if (!node) return;
+    flip.style.height = `${node.scrollHeight}px`;
+  }, [isFunnelMode, funnelStep, activeCurrency]);
 
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
@@ -1656,11 +1670,11 @@ if (!selectedTariff) {
 
             {/* Содержимое модалки: flip между шагами, если воронка; иначе — форма оплаты */}
             {isFunnelMode ? (
-              <div className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
+              <div ref={flipRef} className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
                 <div className="flip__inner">
                   {/* Front: Step 1 */}
                   <div className="flip__face flip__front">
-                    <div className="space-y-4">
+                    <div ref={flipFrontRef} className="space-y-4">
                       <button
                         type="button"
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
@@ -1692,7 +1706,7 @@ if (!selectedTariff) {
                   </div>
                   {/* Back: Step 2 (form) */}
                   <div className="flip__face flip__back">
-            <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
+            <form ref={flipBackRef} className="space-y-4" onSubmit={handlePurchaseSubmit}>
                       <div className="flex items-center justify-between">
                         <button
                           type="button"

@@ -7,6 +7,7 @@
   perspective: 1000px;
   position: relative;
   overflow: hidden;
+  transition: height 250ms ease-in-out;
 }
 .flip__inner {
   display: grid;
