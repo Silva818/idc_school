@@ -1576,6 +1576,9 @@ if (!selectedTariff) {
                           <li>• {t("modals.funnel.step1.bullets.2")}</li>
                         </ul>
                         <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[12px] sm:text-sm text-brand-muted">
+                            {t("modals.funnel.step1.priceLabel")}
+                          </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
                             {formatPrice(prices.review[activeCurrency].total, activeCurrency)}
                           </span>
@@ -1677,10 +1680,11 @@ if (!selectedTariff) {
                     });
                   }}
                 >
-                  {t("modals.funnel.step1.cta", {
-                    amount: formatPrice(prices.review[activeCurrency].total, activeCurrency),
-                  })}
+                  {t("modals.funnel.step1.ctaSimple")}
                 </button>
+                <p className="text-[11px] sm:text-xs text-brand-muted text-center">
+                  {t("modals.funnel.step1.postCtaNote")}
+                </p>
               </div>
             ) : (
             <form className="space-y-4 transition-all duration-200" onSubmit={handlePurchaseSubmit}>

@@ -111,19 +111,22 @@
       },
       "funnel": {
         "step1": {
-          "title": "You chose the course: {course}",
-          "subtitle": "First step — Strength test (1 session)",
+          "title": "Great choice! Course “{course}”",
+          "subtitle": "✅ First step — the Strength test. Here’s what you’ll get:",
           "bullets": [
-            "Access to the app and the training format",
-            "Technique review based on your videos",
-            "Recommendations for your next workouts"
+            "We’ll determine your current level",
+            "We’ll review your exercise technique from video",
+            "We’ll give recommendations for your next workouts"
           ],
-          "oneTime": "One-time payment, no subscription",
-          "cta": "Start the strength test — {amount}"
+          "priceLabel": "Price:",
+          "oneTime": "no subscription or commitments",
+          "cta": "Start the strength test — {amount}",
+          "ctaSimple": "Sign up",
+          "postCtaNote": "After payment, you’ll immediately receive instructions to start"
         },
         "step2": {
           "title": "Strength test payment",
-          "subtitle": "Course start: {course}",
+          "subtitle": "Course start: “{course}”",
           "back": "Back"
         }
       },
