@@ -89,6 +89,7 @@ export function Pricing({
   onCurrencyChange,
 }: PricingProps) {
   const t = useTranslations("home.pricing");
+  const tHome = useTranslations("home");
   const pathname = usePathname();
   const site_language: "en" | "ru" = pathname.startsWith("/ru") ? "ru" : "en";
 
@@ -207,7 +208,7 @@ export function Pricing({
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-4">
-                  {t("modals.purchase.oneTimeNote")}
+                  {tHome("modals.purchase.oneTimeNote")}
                 </p>
 
                 <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
