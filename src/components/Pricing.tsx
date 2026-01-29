@@ -189,17 +189,17 @@ export function Pricing({
 
         {/* Сетка тарифов */}
         <div className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-4 items-stretch">
-          {/* 0. Тест силы — 1 тренировка (разовый платёж) */}
+          {/* 0. 1 тренировка — разовый платёж */}
           <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm">
             <div className="relative flex h-full flex-col">
               <div>
                 <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
                   <StepDot color="bg-emerald-400" />
-                  <span>{t("cards.review.badge")}</span>
+                  <span>{t("cards.short1.badge")}</span>
                 </div>
 
                 <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
-                  {t("cards.test.title")}
+                  {t("cards.short1.title")}
                 </h3>
 
                 <p className="text-[15px] font-semibold mb-1">
@@ -211,7 +211,7 @@ export function Pricing({
                 </p>
 
                 <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  {t("cards.test.text")}
+                  {t("cards.short1.text")}
                 </p>
               </div>
 
@@ -221,18 +221,18 @@ export function Pricing({
                   onClick={() => {
                     onOpenPurchaseModal?.({
                       tariffId: "review",
-                      tariffLabel: t("cards.test.tariffLabel"),
+                      tariffLabel: t("cards.short1.tariffLabel"),
                       amount: prices.review[currency].total,
                       currency,
                     });
                     track("pricing_card_click", {
                       site_language,
-                      card: "test_strength",
+                      card: "one_session",
                       currency,
                     });
                   }}
                 >
-                  {t("cards.test.button")}
+                  {t("cards.short1.button")}
                 </button>
               </div>
             </div>

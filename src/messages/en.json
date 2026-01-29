@@ -270,6 +270,13 @@
       "noteLeft": "1 workout = a personalized plan in the app + technique review based on your videos.",
       "noteRight": "The pace of completing workouts depends on the selected plan",
       "cards": {
+        "short1": {
+          "badge": "One-time",
+          "title": "1 session",
+          "text": "One-time payment — start with a single coached session and technique review.",
+          "button": "Buy 1 session",
+          "tariffLabel": "1 session"
+        },
         "test": {
           "step": "Step 1 · start · app",
           "title": "Strength test",
