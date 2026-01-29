@@ -24,15 +24,18 @@
   grid-area: 1 / 1;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transition: opacity 120ms ease-in-out;
 }
 .flip__back {
   transform: rotateY(180deg);
 }
 .flip:not(.flip--isFlipped) .flip__back {
   pointer-events: none;
+  opacity: 0;
 }
 .flip.flip--isFlipped .flip__front {
   pointer-events: none;
+  opacity: 0;
 }
 .flip__face--hidden {
   visibility: hidden;
