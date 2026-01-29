@@ -30,6 +30,12 @@ export default function RootLayout({
 }) {
   return (
     <html className="bg-brand-dark">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+      </head>
       <body
         className={`
           ${geistSans.variable}
