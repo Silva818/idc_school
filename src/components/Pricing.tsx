@@ -32,9 +32,9 @@ export const prices = {
     AMD: { total: 60000, per: 5000 }, // 12 тренировок в спокойном темпе
   },
   long36: {
-    EUR: { total: 252, per: 7 },
-    USD: { total: 324, per: 9 },
-    AMD: { total: 115200, per: 3200 }, // 36 тренировок
+    EUR: { total: 288, per: 8 },
+    USD: { total: 360, per: 10 },
+    AMD: { total: 126000, per: 3500 }, // 36 тренировок
   },
 } as const;
 
@@ -211,9 +211,12 @@ export function Pricing({
                   {tHome("modals.purchase.oneTimeNote")}
                 </p>
 
-                <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                  {t("cards.short1.text")}
-                </p>
+                <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+                  {(t.raw("cards.short1.bullets") as string[]).map((b, i) => (
+                    <li key={i}>• {b}</li>
+                  ))}
+                </ul>
+                <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.short1.text")}</p>
               </div>
 
               <div className="mt-auto pt-4">
@@ -309,9 +312,12 @@ export function Pricing({
                 {formatPrice(prices.long12[currency].per, currency)}{" "}
                 {t("cards.bundle.long12.perLabel")}
               </p>
-              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                {t("cards.bundle.long12.text")}
-              </p>
+              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+                {(t.raw("cards.bundle.long12.bullets") as string[]).map((b, i) => (
+                  <li key={i}>• {b}</li>
+                ))}
+              </ul>
+              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long12.text")}</p>
             </div>
             <button
               className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
@@ -345,9 +351,12 @@ export function Pricing({
                 {formatPrice(prices.long36[currency].per, currency)}{" "}
                 {t("cards.bundle.long36.perLabel")}
               </p>
-              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">
-                {t("cards.bundle.long36.text")}
-              </p>
+              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+                {(t.raw("cards.bundle.long36.bullets") as string[]).map((b, i) => (
+                  <li key={i}>• {b}</li>
+                ))}
+              </ul>
+              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long36.text")}</p>
             </div>
             <button
               className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"

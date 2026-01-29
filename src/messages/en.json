@@ -268,12 +268,18 @@
         "AMD": "Pay by card in drams"
       },
       "noteLeft": "1 workout = a personalized plan in the app + technique review based on your videos.",
-      "noteRight": "The pace of completing workouts depends on the selected plan",
+      "noteRight": "The pace of completing workouts depends on the selected plan.",
       "cards": {
         "short1": {
           "badge": "One-time",
           "title": "1 session",
           "text": "One-time payment — start with a single coached session and technique review.",
+          "bullets": [
+            "4 weeks",
+            "Personalized plan in the app",
+            "Technique review from your videos",
+            "Recommendations for the coming weeks"
+          ],
           "button": "Buy 1 session",
           "tariffLabel": "1 session"
         },
@@ -309,12 +315,7 @@
           "badge": "Intensive block",
           "title": "12 workouts",
           "perLabel": "per workout",
-          "bullets": [
-            "Everything included in the strength test",
-            "12 personalized workouts",
-            "Technique review after each workout",
-            "Train 3 times per week"
-          ],
+          "bullets": ["4 weeks", "12 personalized workouts", "Technique review after each workout", "Train 3 times per week"],
           "text": "A block to noticeably improve strength, technique, and physique.",
           "button": "Buy 12 workouts",
           "tariffLabel": "12-workout block — 4 weeks"
@@ -322,9 +323,10 @@
         "bundle": {
           "badge": "Easy pace and long format",
           "long12": {
-            "title": "12 workouts — easy pace",
+            "title": "12 workouts",
             "perLabel": "per workout",
             "text": "Great if you want 2 workouts per week.",
+            "bullets": ["8 weeks", "12 personalized workouts", "Technique review after each workout", "Train 2 times per week"],
             "button": "Buy easy block (12 w.)",
             "tariffLabel": "12 workouts — 8 weeks"
           },
@@ -332,6 +334,7 @@
             "title": "36 workouts",
             "perLabel": "per workout",
             "text": "For those who are staying long-term and want steady progress.",
+            "bullets": ["12 weeks", "36 personalized workouts", "Technique review after each workout", "Steady progress"],
             "button": "Buy 36 workouts",
             "tariffLabel": "36 workouts"
           }
