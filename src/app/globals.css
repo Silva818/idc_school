@@ -34,6 +34,9 @@
 .flip.flip--isFlipped .flip__front {
   pointer-events: none;
 }
+.flip__face--hidden {
+  visibility: hidden;
+}
 
 html,
 body {

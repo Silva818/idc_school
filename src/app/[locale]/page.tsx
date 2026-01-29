@@ -294,6 +294,8 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   const flipRef = useRef<HTMLDivElement | null>(null);
   const flipFrontRef = useRef<HTMLDivElement | null>(null);
   const flipBackRef = useRef<HTMLFormElement | null>(null);
+  const [hideFrontFace, setHideFrontFace] = useState(false);
+  const [hideBackFace, setHideBackFace] = useState(false);
 
   function openTestFlowStep1(courseName: string) {
     setSelectedCourse(courseName);
@@ -583,6 +585,20 @@ const [buyTariffId, setBuyTariffId] =
     flip.style.height = `${node.scrollHeight}px`;
   }, [isFunnelMode, funnelStep, activeCurrency]);
 
+  useEffect(() => {
+    if (!isFunnelMode) return;
+    // скрываем невидимую сторону в середине анимации, чтобы убрать «призрак»
+    setHideFrontFace(false);
+    setHideBackFace(false);
+    const timeout = setTimeout(() => {
+      if (funnelStep === 2) {
+        setHideFrontFace(true);
+      } else {
+        setHideBackFace(true);
+      }
+    }, 140);
+    return () => clearTimeout(timeout);
+  }, [isFunnelMode, funnelStep]);
   function openPurchaseModal(options: PurchaseOptions) {
     setPurchaseOptions(options);
     setIsPurchaseModalOpen(true);
@@ -1673,7 +1689,7 @@ if (!selectedTariff) {
               <div ref={flipRef} className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
                 <div className="flip__inner">
                   {/* Front: Step 1 */}
-                  <div className="flip__face flip__front">
+                  <div className={["flip__face", "flip__front", hideFrontFace ? "flip__face--hidden" : ""].join(" ")}>
                     <div ref={flipFrontRef} className="space-y-4">
                       <button
                         type="button"
@@ -1705,7 +1721,7 @@ if (!selectedTariff) {
                     </div>
                   </div>
                   {/* Back: Step 2 (form) */}
-                  <div className="flip__face flip__back">
+                  <div className={["flip__face", "flip__back", hideBackFace ? "flip__face--hidden" : ""].join(" ")}>
             <form ref={flipBackRef} className="space-y-4" onSubmit={handlePurchaseSubmit}>
                       <div className="flex items-center justify-between">
                         <button
