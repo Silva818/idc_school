@@ -1686,17 +1686,10 @@ if (!selectedTariff) {
 
             {/* Содержимое модалки: flip между шагами, если воронка; иначе — форма оплаты */}
             {isFunnelMode ? (
-              <div
-                ref={flipRef}
-                className={[
-                  "slide",
-                  funnelStep === 2 ? "slide--step2" : "slide--step1",
-                ].join(" ")}
-              >
-                <div>
+              <div>
                   {/* Front: Step 1 */}
-                  <div className="slide__face slide__front">
-                    <div ref={flipFrontRef} className="space-y-4">
+                  {funnelStep === 1 ? (
+                    <div className="space-y-4">
                       <button
                         type="button"
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
@@ -1721,14 +1714,10 @@ if (!selectedTariff) {
                       >
                         {t("modals.funnel.step1.ctaSimple")}
                       </button>
-                      <p className="text-[11px] sm:text-xs text-brand-muted text-center">
-                        {t("modals.funnel.step1.postCtaNote")}
-                      </p>
+                      <p className="text-[11px] sm:text-xs text-brand-muted text-center">{t("modals.funnel.step1.postCtaNote")}</p>
                     </div>
-                  </div>
-                  {/* Back: Step 2 (form) */}
-                  <div className="slide__face slide__back">
-            <form ref={flipBackRef} className="space-y-4" onSubmit={handlePurchaseSubmit}>
+                  ) : (
+            <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
                       <div className="flex items-center justify-between">
                         <button
                           type="button"
@@ -2015,8 +2004,7 @@ if (!selectedTariff) {
                 })()}
               </button>
             </form>
-          </div>
-        </div>
+                  )}
               </div>
             ) : (
             <form className="space-y-4" onSubmit={handlePurchaseSubmit}>
