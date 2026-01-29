@@ -44,7 +44,6 @@ export default function RootLayout({
           min-h-screen
           bg-brand-dark
           text-white
-          overflow-x-hidden
         `}
       >
         {/* ✅ Consent Mode default (EU/GDPR-safe): denied until user action */}
