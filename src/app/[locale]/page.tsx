@@ -994,6 +994,38 @@ if (!selectedTariff) {
     };
   }, [anyModalOpen]);
 
+  // Anchor navigation: ensure /#section and /ru#section scroll correctly after hydration
+  useEffect(() => {
+    function scrollToHash(hash: string) {
+      if (!hash || hash === "#") return;
+      const id = decodeURIComponent(hash.replace(/^#/, ""));
+      const el = document.getElementById(id);
+      if (!el) return;
+      const html = document.documentElement;
+      const prevBehavior = html.style.scrollBehavior;
+      html.style.scrollBehavior = "auto";
+      // do it on next frame to avoid layout race
+      requestAnimationFrame(() => {
+        el.scrollIntoView();
+        html.style.scrollBehavior = prevBehavior;
+      });
+      // late retry in case of late layout
+      setTimeout(() => {
+        const el2 = document.getElementById(id);
+        if (el2) el2.scrollIntoView();
+      }, 180);
+    }
+
+    // initial hash on load
+    if (typeof window !== "undefined" && window.location.hash) {
+      scrollToHash(window.location.hash);
+    }
+
+    // respond to hash changes (client-side)
+    const onHashChange = () => scrollToHash(window.location.hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
   return (
     <main className="min-h-screen bg-brand-dark text-white">
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-20">

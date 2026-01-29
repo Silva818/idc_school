@@ -20,7 +20,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
   return (
     <section
       id="courses"
-      className="border-t border-black/5 bg-[#F5F7FB] text-brand-dark py-16 sm:py-20 lg:py-24"
+      className="border-t border-black/5 bg-[#F5F7FB] text-brand-dark py-16 sm:py-20 lg:py-24 scroll-mt-24 md:scroll-mt-28"
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок + бейдж */}

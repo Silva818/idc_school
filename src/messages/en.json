@@ -112,7 +112,7 @@
       "funnel": {
         "step1": {
           "title": "Great choice! Course “{course}”",
-          "subtitle": "✅ First step — the Strength test. Here’s what you’ll get:",
+          "subtitle": "✅ First step — take the Strength test. Here’s what you’ll get:",
           "bullets": [
             "We’ll determine your current level",
             "We’ll review your exercise technique from video",
@@ -260,7 +260,7 @@
       },
       "kicker": "Pricing",
       "title": "How much training costs",
-      "desc": "You buy a workout block, complete it at your own pace, and then take the next one. No subscription and no auto-charges.",
+      "desc": "You buy a workout block, complete it at your own pace, and then take the next one.",
       "currencyLabel": "Currency",
       "switchHint": {
         "EUR": "Pay in euros",
@@ -268,7 +268,7 @@
         "AMD": "Pay by card in drams"
       },
       "noteLeft": "1 workout = a personalized plan in the app + technique review based on your videos.",
-      "noteRight": "You can use the workouts at your own pace, with no strict deadlines.",
+      "noteRight": "The pace of completing workouts depends on the selected plan",
       "cards": {
         "test": {
           "step": "Step 1 · start · app",
