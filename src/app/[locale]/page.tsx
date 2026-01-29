@@ -1695,6 +1695,8 @@ if (!selectedTariff) {
                         type="button"
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
                         onClick={() => {
+                          // мгновенно скрываем фронт и переводим flip в следующий кадр
+                          setHideFrontFace(true);
                           const amount = prices.review[activeCurrency].total;
                           const options: PurchaseOptions = {
                             tariffId: "review",
@@ -1704,7 +1706,10 @@ if (!selectedTariff) {
                           };
                           setPurchaseOptions(options);
                           setBuyTariffId(options.tariffId);
-                          setFunnelStep(2);
+                          requestAnimationFrame(() => {
+                            setFunnelStep(2);
+                            setTimeout(() => setHideFrontFace(false), 260);
+                          });
                           track("strength_test_intro_continue", {
                             site_language,
                             course_name: funnelCourseName,
@@ -1727,7 +1732,14 @@ if (!selectedTariff) {
                         <button
                           type="button"
                           className="text-[12px] sm:text-sm text-brand-muted hover:text-white transition-colors underline decoration-dotted"
-                          onClick={() => setFunnelStep(1)}
+                          onClick={() => {
+                            // мгновенно скрываем бэк, чтобы исключить «призрак» на фронте
+                            setHideBackFace(true);
+                            requestAnimationFrame(() => {
+                              setFunnelStep(1);
+                              setTimeout(() => setHideBackFace(false), 260);
+                            });
+                          }}
                         >
                           {t("modals.funnel.step2.back")}
                         </button>
