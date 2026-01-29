@@ -996,23 +996,23 @@ if (!selectedTariff) {
 
   // Anchor navigation: ensure /#section and /ru#section scroll correctly after hydration
   useEffect(() => {
-    function scrollToHash(hash: string) {
+    function scrollToHash(hash: string, behavior: ScrollBehavior = "auto") {
       if (!hash || hash === "#") return;
       const id = decodeURIComponent(hash.replace(/^#/, ""));
       const el = document.getElementById(id);
       if (!el) return;
       const html = document.documentElement;
       const prevBehavior = html.style.scrollBehavior;
-      html.style.scrollBehavior = "auto";
+      html.style.scrollBehavior = behavior;
       // do it on next frame to avoid layout race
       requestAnimationFrame(() => {
-        el.scrollIntoView();
+        el.scrollIntoView({ behavior });
         html.style.scrollBehavior = prevBehavior;
       });
       // late retry in case of late layout
       setTimeout(() => {
         const el2 = document.getElementById(id);
-        if (el2) el2.scrollIntoView();
+        if (el2) el2.scrollIntoView({ behavior });
       }, 180);
     }
 
@@ -1022,7 +1022,12 @@ if (!selectedTariff) {
     }
 
     // respond to hash changes (client-side)
-    const onHashChange = () => scrollToHash(window.location.hash);
+    const onHashChange = () => {
+      const lastClickAt = (window as any).__anchorNavClickAt as number | undefined;
+      const recentClick = lastClickAt && Date.now() - lastClickAt < 800;
+      scrollToHash(window.location.hash, recentClick ? "smooth" : "auto");
+      if (recentClick) (window as any).__anchorNavClickAt = 0;
+    };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
@@ -1046,30 +1051,65 @@ if (!selectedTariff) {
             </div>
 
             <nav className="hidden md:flex items-center gap-6 text-sm text-brand-muted">
-              <a href="#how" className="hover:text-white transition-colors">
+              <a
+                href="#how"
+                className="hover:text-white transition-colors"
+                onClick={() => {
+                  (window as any).__anchorNavClickAt = Date.now();
+                  track("menu_anchor_click", { site_language, anchor: "how" });
+                }}
+              >
                 {t("header.nav.how")}
               </a>
-              <a href="#courses" className="hover:text-white transition-colors">
+              <a
+                href="#courses"
+                className="hover:text-white transition-colors"
+                onClick={() => {
+                  (window as any).__anchorNavClickAt = Date.now();
+                  track("menu_anchor_click", { site_language, anchor: "courses" });
+                }}
+              >
                 {t("header.nav.courses")}
               </a>
               <a
   href="#pricing"
   className="hover:text-white transition-colors"
   onClick={() => {
-    (window as any).__pricingNavClickAt = Date.now();
+    (window as any).__anchorNavClickAt = Date.now();
     track("menu_pricing_click", { site_language, source: "header_menu" });
   }}
 >
                 {t("header.nav.pricing")}
               </a>
 
-              <a href="#about" className="hover:text-white transition-colors">
+              <a
+                href="#about"
+                className="hover:text-white transition-colors"
+                onClick={() => {
+                  (window as any).__anchorNavClickAt = Date.now();
+                  track("menu_anchor_click", { site_language, anchor: "about" });
+                }}
+              >
                 {t("header.nav.about")}
               </a>
-              <a href="#reviews" className="hover:text-white transition-colors">
+              <a
+                href="#reviews"
+                className="hover:text-white transition-colors"
+                onClick={() => {
+                  (window as any).__anchorNavClickAt = Date.now();
+                  track("menu_anchor_click", { site_language, anchor: "reviews" });
+                }}
+              >
                 {t("header.nav.reviews")}
               </a>
-              <a href="#faq" className="hover:text-white transition-colors">
+              <a
+                href="#faq"
+                className="hover:text-white transition-colors"
+                onClick={() => {
+                  (window as any).__anchorNavClickAt = Date.now();
+                  track("menu_anchor_click", { site_language, anchor: "faq" });
+                }}
+              >
                 {t("header.nav.faq")}
               </a>
             </nav>
