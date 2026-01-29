@@ -1686,17 +1686,21 @@ if (!selectedTariff) {
 
             {/* Содержимое модалки: flip между шагами, если воронка; иначе — форма оплаты */}
             {isFunnelMode ? (
-              <div ref={flipRef} className={["flip", funnelStep === 2 ? "flip--isFlipped" : ""].join(" ")}>
-                <div className="flip__inner">
+              <div
+                ref={flipRef}
+                className={[
+                  "slide",
+                  funnelStep === 2 ? "slide--step2" : "slide--step1",
+                ].join(" ")}
+              >
+                <div>
                   {/* Front: Step 1 */}
-                  <div className={["flip__face", "flip__front", hideFrontFace ? "flip__face--hidden" : ""].join(" ")}>
+                  <div className="slide__face slide__front">
                     <div ref={flipFrontRef} className="space-y-4">
                       <button
                         type="button"
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
                         onClick={() => {
-                          // мгновенно скрываем фронт и переводим flip в следующий кадр
-                          setHideFrontFace(true);
                           const amount = prices.review[activeCurrency].total;
                           const options: PurchaseOptions = {
                             tariffId: "review",
@@ -1706,10 +1710,7 @@ if (!selectedTariff) {
                           };
                           setPurchaseOptions(options);
                           setBuyTariffId(options.tariffId);
-                          requestAnimationFrame(() => {
-                            setFunnelStep(2);
-                            setTimeout(() => setHideFrontFace(false), 260);
-                          });
+                          setFunnelStep(2);
                           track("strength_test_intro_continue", {
                             site_language,
                             course_name: funnelCourseName,
@@ -1726,19 +1727,14 @@ if (!selectedTariff) {
                     </div>
                   </div>
                   {/* Back: Step 2 (form) */}
-                  <div className={["flip__face", "flip__back", hideBackFace ? "flip__face--hidden" : ""].join(" ")}>
+                  <div className="slide__face slide__back">
             <form ref={flipBackRef} className="space-y-4" onSubmit={handlePurchaseSubmit}>
                       <div className="flex items-center justify-between">
                         <button
                           type="button"
                           className="text-[12px] sm:text-sm text-brand-muted hover:text-white transition-colors underline decoration-dotted"
                           onClick={() => {
-                            // мгновенно скрываем бэк, чтобы исключить «призрак» на фронте
-                            setHideBackFace(true);
-                            requestAnimationFrame(() => {
-                              setFunnelStep(1);
-                              setTimeout(() => setHideBackFace(false), 260);
-                            });
+                            setFunnelStep(1);
                           }}
                         >
                           {t("modals.funnel.step2.back")}

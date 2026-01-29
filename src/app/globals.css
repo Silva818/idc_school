@@ -47,6 +47,43 @@
   visibility: hidden;
 }
 
+/* Slide+fade animation for funnel modal (artifact-free) */
+.slide {
+  position: relative;
+  overflow: hidden;
+  transition: height 220ms ease-in-out;
+}
+.slide__face {
+  position: absolute;
+  inset: 0;
+  transition: opacity 220ms ease, transform 220ms ease;
+  will-change: opacity, transform;
+}
+.slide--step1 .slide__front {
+  opacity: 1;
+  transform: translateX(0);
+  z-index: 2;
+  pointer-events: auto;
+}
+.slide--step1 .slide__back {
+  opacity: 0;
+  transform: translateX(10%);
+  z-index: 1;
+  pointer-events: none;
+}
+.slide--step2 .slide__front {
+  opacity: 0;
+  transform: translateX(-10%);
+  z-index: 1;
+  pointer-events: none;
+}
+.slide--step2 .slide__back {
+  opacity: 1;
+  transform: translateX(0);
+  z-index: 2;
+  pointer-events: auto;
+}
+
 html,
 body {
   margin: 0;
