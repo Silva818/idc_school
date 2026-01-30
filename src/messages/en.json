@@ -96,7 +96,7 @@
         "submitGoing": "Redirecting to payment...",
         "submit": "Proceed to payment",
         "submitWithAmount": "Pay {amount}",
-        "oneTimeNote": "One-time payment, no subscription"
+        "oneTimeNote": "One-time payment"
       },
       "login": {
         "title": "Log in to your account",
@@ -273,14 +273,9 @@
         "short1": {
           "badge": "One-time",
           "title": "1 session",
-          "text": "One-time payment — start with a single coached session and technique review.",
-          "bullets": [
-            "4 weeks",
-            "Personalized plan in the app",
-            "Technique review from your videos",
-            "Recommendations for the coming weeks"
-          ],
-          "button": "Buy 1 session",
+          "text": "An ideal way to understand whether calisthenics is right for you.",
+          "bullets": ["One-time payment", "Can be combined with other workouts"],
+          "button": "Buy",
           "tariffLabel": "1 session"
         },
         "test": {
@@ -314,28 +309,28 @@
         "short12": {
           "badge": "Intensive block",
           "title": "12 workouts",
-          "perLabel": "per workout",
-          "bullets": ["4 weeks", "12 personalized workouts", "Technique review after each workout", "Train 3 times per week"],
-          "text": "A block to noticeably improve strength, technique, and physique.",
-          "button": "Buy 12 workouts",
+          "perLabel": "access 4 weeks",
+          "bullets": ["Workouts 3 times per week", "Most effective format"],
+          "text": "For those who want noticeable progress in a short time.",
+          "button": "Buy",
           "tariffLabel": "12-workout block — 4 weeks"
         },
         "bundle": {
           "badge": "Easy pace and long format",
           "long12": {
             "title": "12 workouts",
-            "perLabel": "per workout",
-            "text": "Great if you want 2 workouts per week.",
-            "bullets": ["8 weeks", "12 personalized workouts", "Technique review after each workout", "Train 2 times per week"],
-            "button": "Buy easy block (12 w.)",
+            "perLabel": "access 8 weeks",
+            "text": "A great option to balance training with everyday life.",
+            "bullets": ["Workouts 2 times per week", "Calm and comfortable pace"],
+            "button": "Buy",
             "tariffLabel": "12 workouts — 8 weeks"
           },
           "long36": {
             "title": "36 workouts",
-            "perLabel": "per workout",
-            "text": "For those who are staying long-term and want steady progress.",
-            "bullets": ["12 weeks", "36 personalized workouts", "Technique review after each workout", "Steady progress"],
-            "button": "Buy 36 workouts",
+            "perLabel": "access 18 weeks",
+            "text": "For those who are definitely staying long term and want steady progress.",
+            "bullets": ["Workouts 2–3 times per week", "Steady progress"],
+            "button": "Buy",
             "tariffLabel": "36 workouts"
           }
         }

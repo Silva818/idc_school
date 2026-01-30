@@ -211,7 +211,7 @@ export function Pricing({
                   {tHome("modals.purchase.oneTimeNote")}
                 </p>
 
-                <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+                <ul className="mb-4 space-y-1.5 text-[13px] sm:text-sm text-brand-muted">
                   {(t.raw("cards.short1.bullets") as string[]).map((b, i) => (
                     <li key={i}>• {b}</li>
                   ))}
@@ -259,17 +259,14 @@ export function Pricing({
                 <p className="text-[15px] font-semibold mb-1">
                   {formatPrice(prices.short12[currency].total, currency)}
                 </p>
-
                 <p className="text-[11px] text-brand-muted mb-4">
-                  {formatPrice(prices.short12[currency].per, currency)}{" "}
                   {t("cards.short12.perLabel")}
                 </p>
 
-                <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
-                  <li>• {t("cards.short12.bullets.0")}</li>
-                  <li>• {t("cards.short12.bullets.1")}</li>
-                  <li>• {t("cards.short12.bullets.2")}</li>
-                  <li>• {t("cards.short12.bullets.3")}</li>
+                <ul className="mb-4 space-y-1.5 text-[13px] sm:text-sm text-brand-muted">
+                  {(t.raw("cards.short12.bullets") as string[]).map((b, i) => (
+                    <li key={i}>• {b}</li>
+                  ))}
                 </ul>
 
                 <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">
@@ -296,81 +293,83 @@ export function Pricing({
           </article>
 
           {/* 2. 12 тренировок — спокойный темп (отдельная карточка) */}
-          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
+          <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
                 <StepDot color="bg-brand-accent/80" />
                 <span>{t("cards.bundle.badge")}</span>
               </div>
-              <h3 className="text-[15px] sm:text-lg font-semibold mb-2">
+              <h3 className="text-[16px] sm:text-lg font-semibold mb-2">
                 {t("cards.bundle.long12.title")}
               </h3>
-              <p className="text-[15px] font-semibold text-white">
+              <p className="text-[15px] font-semibold text-white mb-1">
                 {formatPrice(prices.long12[currency].total, currency)}
               </p>
-              <p className="text-[11px] text-brand-muted mb-2">
-                {formatPrice(prices.long12[currency].per, currency)}{" "}
+              <p className="text-[11px] text-brand-muted mb-4">
                 {t("cards.bundle.long12.perLabel")}
               </p>
-              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+              <ul className="mb-4 space-y-1.5 text-[13px] sm:text-sm text-brand-muted">
                 {(t.raw("cards.bundle.long12.bullets") as string[]).map((b, i) => (
                   <li key={i}>• {b}</li>
                 ))}
               </ul>
               <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long12.text")}</p>
             </div>
-            <button
-              className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              onClick={() => {
-                onOpenPurchaseModal?.({
-                  tariffId: "long12",
-                  tariffLabel: t("cards.bundle.long12.tariffLabel"),
-                  amount: prices.long12[currency].total,
-                  currency,
-                });
-              }}
-            >
-              {t("cards.bundle.long12.button")}
-            </button>
+            <div className="mt-auto pt-4">
+              <button
+                className="w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                onClick={() => {
+                  onOpenPurchaseModal?.({
+                    tariffId: "long12",
+                    tariffLabel: t("cards.bundle.long12.tariffLabel"),
+                    amount: prices.long12[currency].total,
+                    currency,
+                  });
+                }}
+              >
+                {t("cards.bundle.long12.button")}
+              </button>
+            </div>
           </article>
 
           {/* 3. 36 тренировок — отдельная карточка */}
-          <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
+          <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-brand-muted min-h-[32px]">
                 <StepDot color="bg-brand-accent/80" />
                 <span>{t("cards.bundle.badge")}</span>
               </div>
-              <h3 className="text-[15px] sm:text-base font-semibold mb-1 text-white">
+              <h3 className="text-[16px] sm:text-lg font-semibold mb-1 text-white">
                 {t("cards.bundle.long36.title")}
               </h3>
-              <p className="text-[15px] font-semibold text-white">
+              <p className="text-[15px] font-semibold text-white mb-1">
                 {formatPrice(prices.long36[currency].total, currency)}
               </p>
-              <p className="text-[11px] text-brand-muted mb-2">
-                {formatPrice(prices.long36[currency].per, currency)}{" "}
+              <p className="text-[11px] text-brand-muted mb-4">
                 {t("cards.bundle.long36.perLabel")}
               </p>
-              <ul className="mb-4 space-y-1.5 text-[12px] sm:text-xs text-brand-muted">
+              <ul className="mb-4 space-y-1.5 text-[13px] sm:text-sm text-brand-muted">
                 {(t.raw("cards.bundle.long36.bullets") as string[]).map((b, i) => (
                   <li key={i}>• {b}</li>
                 ))}
               </ul>
               <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long36.text")}</p>
             </div>
-            <button
-              className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              onClick={() => {
-                onOpenPurchaseModal?.({
-                  tariffId: "long36",
-                  tariffLabel: t("cards.bundle.long36.tariffLabel"),
-                  amount: prices.long36[currency].total,
-                  currency,
-                });
-              }}
-            >
-              {t("cards.bundle.long36.button")}
-            </button>
+            <div className="mt-auto pt-4">
+              <button
+                className="w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                onClick={() => {
+                  onOpenPurchaseModal?.({
+                    tariffId: "long36",
+                    tariffLabel: t("cards.bundle.long36.tariffLabel"),
+                    amount: prices.long36[currency].total,
+                    currency,
+                  });
+                }}
+              >
+                {t("cards.bundle.long36.button")}
+              </button>
+            </div>
           </article>
         </div>
         <p className="mt-6 text-center text-[12px] sm:text-sm text-brand-muted">
