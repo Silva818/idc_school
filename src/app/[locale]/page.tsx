@@ -1009,11 +1009,30 @@ if (!selectedTariff) {
     // Wait for menu to close/unmount to avoid iOS cancelling navigation
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (hash && hash.startsWith("#")) {
-          // Use location.hash to trigger hashchange listener (manual scroll with offset)
-          window.location.hash = hash;
+        const id = (hash || "").replace(/^#/, "");
+        const root = document.documentElement;
+        // Read measured header height (fallback to CSS var / 96px)
+        let headerH = headerHeightRef.current || 0;
+        if (!headerH) {
+          const cssVar = getComputedStyle(root).getPropertyValue("--header-h");
+          const parsed = parseInt(cssVar, 10);
+          headerH = Number.isFinite(parsed) ? parsed : 96;
+        }
+        const el = id ? document.getElementById(id) : null;
+        if (el) {
+          const top = window.scrollY + el.getBoundingClientRect().top - headerH;
+          window.scrollTo({ top, left: 0, behavior: "smooth" });
+          // Ensure URL reflects the target even if hash didn't change
+          if (hash && hash.startsWith("#")) {
+            try {
+              history.replaceState(null, "", hash);
+            } catch {
+              window.location.hash = hash;
+            }
+          }
         } else if (hash) {
-          window.location.href = hash;
+          // Fallback: let browser handle it
+          window.location.hash = hash;
         }
       });
     });
