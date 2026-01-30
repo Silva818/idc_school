@@ -994,6 +994,28 @@ if (!selectedTariff) {
     };
   }, [anyModalOpen]);
 
+  // Lock body scroll when mobile menu is open (prevents iOS gesture interference)
+  useEffect(() => {
+    if (!isMobileNavOpen) return;
+    const y = window.scrollY || 0;
+    const body = document.body;
+    body.style.position = "fixed";
+    body.style.top = `-${y}px`;
+    body.style.left = "0";
+    body.style.right = "";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.width = "";
+      body.style.overflow = "";
+      window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    };
+  }, [isMobileNavOpen]);
+
   // Mobile menu anchor click: close menu, then change hash next frame (iOS-safe)
   function handleMobileAnchorClick(
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -1248,11 +1270,16 @@ if (!selectedTariff) {
         {isMobileNavOpen && (
           <div
             className="fixed inset-0 z-50 bg-black/70 md:hidden"
-            onClick={() => setIsMobileNavOpen(false)}
+            role="dialog"
+            aria-modal="true"
+            onPointerDown={() => setIsMobileNavOpen(false)}
+            style={{ touchAction: "none" }}
           >
             <nav
               className="absolute left-4 right-4 top-6 rounded-3xl bg-brand-dark border border-white/10 p-5 shadow-2xl"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
+              style={{ touchAction: "auto" }}
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="text-base font-medium">
