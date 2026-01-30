@@ -274,7 +274,7 @@
           "badge": "One-time",
           "title": "1 session",
           "text": "An ideal way to understand whether calisthenics is right for you.",
-          "bullets": ["One-time payment", "Can be combined with other workouts"],
+          "bullets": ["One-time payment, no obligations", "Can be combined with other workouts"],
           "button": "Buy",
           "tariffLabel": "1 session"
         },
@@ -313,23 +313,23 @@
           "bullets": ["Workouts 3 times per week", "Most effective format"],
           "text": "For those who want noticeable progress in a short time.",
           "button": "Buy",
-          "tariffLabel": "12-workout block — 4 weeks"
+          "tariffLabel": "12 workouts"
         },
         "bundle": {
           "badge": "Easy pace and long format",
           "long12": {
             "title": "12 workouts",
             "perLabel": "access 8 weeks",
-            "text": "A great option to balance training with everyday life.",
+            "text": "A great option if you want to fit training into life without rushing.",
             "bullets": ["Workouts 2 times per week", "Calm and comfortable pace"],
             "button": "Buy",
-            "tariffLabel": "12 workouts — 8 weeks"
+            "tariffLabel": "12 workouts"
           },
           "long36": {
             "title": "36 workouts",
             "perLabel": "access 18 weeks",
-            "text": "For those who are definitely staying long term and want steady progress.",
-            "bullets": ["Workouts 2–3 times per week", "Steady progress"],
+            "text": "For those committed to long-term work and steady growth.",
+            "bullets": ["Workouts 2–3 times per week", "Steady progress and best value"],
             "button": "Buy",
             "tariffLabel": "36 workouts"
           }

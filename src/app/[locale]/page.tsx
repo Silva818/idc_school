@@ -1736,7 +1736,13 @@ if (!selectedTariff) {
                               {formatPrice(selected.amount, selected.currency)}
                             </span>
                             <span className="text-[11px] sm:text-xs text-brand-muted">
-                              {t("modals.purchase.oneTimeNote")}
+                              {(() => {
+                                const tid = (selected as any).tariffId as "review" | "short12" | "long12" | "long36" | undefined;
+                                if (tid === "short12") return tPricing("cards.short12.perLabel");
+                                if (tid === "long12") return tPricing("cards.bundle.long12.perLabel");
+                                if (tid === "long36") return tPricing("cards.bundle.long36.perLabel");
+                                return t("modals.purchase.oneTimeNote");
+                              })()}
                             </span>
                           </div>
                         </>

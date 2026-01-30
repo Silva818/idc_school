@@ -182,10 +182,21 @@ export function Pricing({
           </div>
         </div>
 
-        {/* Две аккуратные колонки с текстом над карточками */}
-        <div className="mb-8 sm:mb-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[13px] sm:text-sm text-brand-muted">
-          <span>{t("noteLeft")}</span>
-          <span className="text-brand-muted/80">{t("noteRight")}</span>
+        {/* Две подписи над сеткой, выровненные над 1–2 и 3–4 карточками */}
+        <div
+          className="
+            mb-8 sm:mb-10
+            grid gap-6 lg:gap-8
+            text-[13px] sm:text-sm text-brand-muted
+            grid-cols-1 md:grid-cols-2 xl:grid-cols-4
+          "
+        >
+          <span className="xl:col-span-2 text-center md:text-left">
+            {t("noteLeft")}
+          </span>
+          <span className="xl:col-span-2 text-center md:text-left text-brand-muted/80">
+            {t("noteRight")}
+          </span>
         </div>
 
         {/* Сетка тарифов */}
@@ -216,7 +227,7 @@ export function Pricing({
                     <li key={i}>• {b}</li>
                   ))}
                 </ul>
-                <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.short1.text")}</p>
+                <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">{t("cards.short1.text")}</p>
               </div>
 
               <div className="mt-auto pt-4">
@@ -313,7 +324,7 @@ export function Pricing({
                   <li key={i}>• {b}</li>
                 ))}
               </ul>
-              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long12.text")}</p>
+              <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">{t("cards.bundle.long12.text")}</p>
             </div>
             <div className="mt-auto pt-4">
               <button
@@ -353,7 +364,7 @@ export function Pricing({
                   <li key={i}>• {b}</li>
                 ))}
               </ul>
-              <p className="text-[12px] sm:text-xs text-brand-muted leading-relaxed">{t("cards.bundle.long36.text")}</p>
+              <p className="text-[13px] sm:text-sm text-brand-muted leading-relaxed">{t("cards.bundle.long36.text")}</p>
             </div>
             <div className="mt-auto pt-4">
               <button
