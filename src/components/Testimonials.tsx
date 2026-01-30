@@ -31,7 +31,7 @@ export function Testimonials() {
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок */}
-        <div id="reviews-top" className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10 scroll-mt-24 md:scroll-mt-28 anchor-top">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10">
           <div className="max-w-2xl">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
               {t("kicker")}
@@ -53,7 +53,7 @@ export function Testimonials() {
         </div>
 
         {/* ВАЖНО: без масок/градиентов по бокам */}
-        <div className="relative">
+        <div id="reviews-top" className="relative scroll-mt-24 md:scroll-mt-28 anchor-top">
           <Swiper
             modules={[Pagination]}
             spaceBetween={20}

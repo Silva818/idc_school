@@ -200,7 +200,7 @@ export function Pricing({
         </div>
 
         {/* Сетка тарифов */}
-        <div className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-4 items-stretch">
+        <div id="pricing-top" className="grid gap-6 lg:gap-8 md:grid-cols-2 xl:grid-cols-4 items-stretch scroll-mt-24 md:scroll-mt-28 anchor-top">
           {/* 0. 1 тренировка — разовый платёж */}
           <article className="relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm">
             <div className="relative flex h-full flex-col">

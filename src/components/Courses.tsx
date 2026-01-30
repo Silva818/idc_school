@@ -24,7 +24,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок + бейдж */}
-        <div id="courses-top" className="flex flex-col gap-4 mb-8 sm:mb-10 scroll-mt-24 md:scroll-mt-28 anchor-top">
+        <div className="flex flex-col gap-4 mb-8 sm:mb-10">
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white shadow-sm border border-black/5 px-3 py-1.5 text-xs sm:text-[13px] text-gray-600">
             <span className="h-2 w-2 rounded-full bg-brand-accent" />
             <span>{t("badge")}</span>
@@ -47,7 +47,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
         </div>
 
         {/* Горизонтальный скролл с карточками */}
-        <div className="mt-3">
+        <div id="courses-top" className="mt-3 scroll-mt-24 md:scroll-mt-28 anchor-top">
           <div
             className="
               flex gap-4 sm:gap-6 lg:gap-8

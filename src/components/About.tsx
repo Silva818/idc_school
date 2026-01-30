@@ -190,7 +190,7 @@ export function About() {
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок */}
-        <div id="about-top" className="mb-8 sm:mb-10 max-w-4xl scroll-mt-24 md:scroll-mt-28 anchor-top">
+        <div className="mb-8 sm:mb-10 max-w-4xl">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
             {t("kicker")}
           </p>
@@ -203,7 +203,7 @@ export function About() {
         </div>
 
         {/* История + фото/факты */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] mb-12 sm:mb-14">
+        <div id="about-top" className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] mb-12 sm:mb-14 scroll-mt-24 md:scroll-mt-28 anchor-top">
           {/* История и миссия */}
           <div className="space-y-5 text-[15px] sm:text-base text-brand-muted leading-relaxed">
             <p>

@@ -1281,7 +1281,7 @@ if (!selectedTariff) {
                   onClick={() => {
                     setIsMobileNavOpen(false);
     track("mobile_menu_cta_click", { site_language, target: "courses" });
-    document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("courses-top")?.scrollIntoView({ behavior: "smooth" });
                   }}
                   className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
                 >
@@ -1316,7 +1316,7 @@ if (!selectedTariff) {
             <div className="pt-2">
   {/* Primary: Courses */}
               <a
-                href="#courses"
+                href="#courses-top"
     className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand-primary px-8 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
     onClick={() => track("hero_cta_click", { site_language, target: "courses" })}
               >
