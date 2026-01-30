@@ -396,11 +396,12 @@ export async function POST(req: Request) {
       });
 
       const purchasePayload = {
-        transaction_id: paymentId, // ✅ обязателен для GA4 purchase
-        site_language: String(fields?.locale ?? "").trim() || undefined, // "ru" | "en"
-        tariff_id: String(fields?.Tag ?? "").trim() || undefined,        // твой Tag
-        currency: String(fields?.Currency ?? "").trim() || undefined,    // "EUR" | "USD"
-        value: Number(fields?.Sum ?? 0) || 0,                            // сумма
+        site_language: String(fields?.locale ?? "").trim() || undefined,
+        product_type: String(fields?.product_type ?? "").trim() || undefined,
+        tariff_label: String(fields?.tariff_label ?? "").trim() || undefined,
+        currency: String(fields?.Currency ?? "").trim() || undefined,
+        value: Number(fields?.Sum ?? 0) || 0,
+        payment_id: paymentId,
       };
     
       // ✅ Уведомление в TG — только если раньше не было paid (чтобы не спамить)
