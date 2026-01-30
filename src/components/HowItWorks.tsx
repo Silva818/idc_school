@@ -23,7 +23,7 @@ export function HowItWorks() {
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24 relative">
         {/* заголовок */}
-        <div className="mb-10 sm:mb-16 lg:mb-20 max-w-2xl">
+        <div id="how-top" className="mb-10 sm:mb-16 lg:mb-20 max-w-2xl scroll-mt-24 md:scroll-mt-28">
           <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
             {t("howItWorks.kicker")}
           </p>

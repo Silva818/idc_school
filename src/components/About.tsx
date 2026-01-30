@@ -190,7 +190,7 @@ export function About() {
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок */}
-        <div className="mb-8 sm:mb-10 max-w-4xl">
+        <div id="about-top" className="mb-8 sm:mb-10 max-w-4xl scroll-mt-24 md:scroll-mt-28">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
             {t("kicker")}
           </p>

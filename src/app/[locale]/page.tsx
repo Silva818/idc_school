@@ -1052,7 +1052,7 @@ if (!selectedTariff) {
 
             <nav className="hidden md:flex items-center gap-6 text-sm text-brand-muted">
               <a
-                href="#how"
+                href="#how-top"
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
@@ -1062,7 +1062,7 @@ if (!selectedTariff) {
                 {t("header.nav.how")}
               </a>
               <a
-                href="#courses"
+                href="#courses-top"
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
@@ -1072,7 +1072,7 @@ if (!selectedTariff) {
                 {t("header.nav.courses")}
               </a>
               <a
-  href="#pricing"
+  href="#pricing-top"
   className="hover:text-white transition-colors"
   onClick={() => {
     (window as any).__anchorNavClickAt = Date.now();
@@ -1083,7 +1083,7 @@ if (!selectedTariff) {
               </a>
 
               <a
-                href="#about"
+                href="#about-top"
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
@@ -1093,7 +1093,7 @@ if (!selectedTariff) {
                 {t("header.nav.about")}
               </a>
               <a
-                href="#reviews"
+                href="#reviews-top"
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
@@ -1103,7 +1103,7 @@ if (!selectedTariff) {
                 {t("header.nav.reviews")}
               </a>
               <a
-                href="#faq"
+                href="#faq-top"
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
@@ -1168,21 +1168,21 @@ if (!selectedTariff) {
 
               <div className="flex flex-col gap-2 mb-4 text-[16px]">
                 <a
-                  href="#how"
+                  href="#how-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
                   {t("header.nav.how")}
                 </a>
                 <a
-                  href="#courses"
+                  href="#courses-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
                   {t("header.nav.courses")}
                 </a>
                 <a
-                  href="#pricing"
+                  href="#pricing-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
   onClick={() => {
     (window as any).__pricingNavClickAt = Date.now();
@@ -1194,21 +1194,21 @@ if (!selectedTariff) {
                 </a>
 
                 <a
-                  href="#about"
+                  href="#about-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
                   {t("header.nav.about")}
                 </a>
                 <a
-                  href="#reviews"
+                  href="#reviews-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
                   {t("header.nav.reviews")}
                 </a>
                 <a
-                  href="#faq"
+                  href="#faq-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={() => setIsMobileNavOpen(false)}
                 >
