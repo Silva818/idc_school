@@ -994,6 +994,31 @@ if (!selectedTariff) {
     };
   }, [anyModalOpen]);
 
+  // Mobile menu anchor click: close menu, then change hash next frame (iOS-safe)
+  function handleMobileAnchorClick(
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    hash: string,
+    trackEvent?: () => void
+  ) {
+    e.preventDefault();
+    (window as any).__anchorNavClickAt = Date.now();
+    try {
+      trackEvent?.();
+    } catch {}
+    setIsMobileNavOpen(false);
+    // Wait for menu to close/unmount to avoid iOS cancelling navigation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (hash && hash.startsWith("#")) {
+          // Use location.hash to trigger hashchange listener (manual scroll with offset)
+          window.location.hash = hash;
+        } else if (hash) {
+          window.location.href = hash;
+        }
+      });
+    });
+  }
+
   // Measure sticky header height and set CSS var for offset
   const headerRef = useRef<HTMLElement | null>(null);
   const headerHeightRef = useRef<number>(0);
@@ -1229,25 +1254,33 @@ if (!selectedTariff) {
                 <a
                   href="#how-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#how-top", () =>
+                      track("menu_anchor_click", { site_language, anchor: "how" })
+                    )
+                  }
                 >
                   {t("header.nav.how")}
                 </a>
                 <a
                   href="#courses-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#courses-top", () =>
+                      track("menu_anchor_click", { site_language, anchor: "courses" })
+                    )
+                  }
                 >
                   {t("header.nav.courses")}
                 </a>
                 <a
                   href="#pricing-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-  onClick={() => {
-    (window as any).__pricingNavClickAt = Date.now();
-    track("menu_pricing_click", { site_language, source: "header_menu" });
-    setIsMobileNavOpen(false);
-  }}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#pricing-top", () =>
+                      track("menu_pricing_click", { site_language, source: "header_menu" })
+                    )
+                  }
                 >
                   {t("header.nav.pricing")}
                 </a>
@@ -1255,21 +1288,33 @@ if (!selectedTariff) {
                 <a
                   href="#about-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#about-top", () =>
+                      track("menu_anchor_click", { site_language, anchor: "about" })
+                    )
+                  }
                 >
                   {t("header.nav.about")}
                 </a>
                 <a
                   href="#reviews-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#reviews-top", () =>
+                      track("menu_anchor_click", { site_language, anchor: "reviews" })
+                    )
+                  }
                 >
                   {t("header.nav.reviews")}
                 </a>
                 <a
                   href="#faq-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={() => setIsMobileNavOpen(false)}
+                  onClick={(e) =>
+                    handleMobileAnchorClick(e, "#faq-top", () =>
+                      track("menu_anchor_click", { site_language, anchor: "faq" })
+                    )
+                  }
                 >
                   {t("header.nav.faq")}
                 </a>
