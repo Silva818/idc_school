@@ -994,26 +994,85 @@ if (!selectedTariff) {
     };
   }, [anyModalOpen]);
 
-  // Anchor navigation: ensure /#section and /ru#section scroll correctly after hydration
+  // Measure sticky header height and set CSS var for offset
+  const headerRef = useRef<HTMLElement | null>(null);
+  const headerHeightRef = useRef<number>(0);
+
   useEffect(() => {
+    const root = document.documentElement;
+    function applyHeaderHeight(h: number) {
+      headerHeightRef.current = h;
+      root.style.setProperty("--header-h", `${Math.max(0, Math.round(h))}px`);
+    }
+
+    function measure() {
+      const h = headerRef.current?.offsetHeight ?? 0;
+      applyHeaderHeight(h);
+    }
+
+    measure();
+
+    // React to resizes and orientation changes
+    const ro = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => measure())
+      : null;
+    if (ro && headerRef.current) ro.observe(headerRef.current);
+
+    const onResize = () => measure();
+    const onOrientation = () => setTimeout(measure, 50);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onOrientation);
+    window.addEventListener("load", measure);
+
+    // Fallback re-measures after layout/font shifts
+    const t1 = setTimeout(measure, 120);
+    const t2 = setTimeout(measure, 400);
+
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onOrientation);
+      window.removeEventListener("load", measure);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  // Anchor navigation: manual scroll with header offset (robust on iOS)
+  useEffect(() => {
+    function getHeaderHeight(): number {
+      const inline = headerHeightRef.current || 0;
+      if (inline > 0) return inline;
+      const cssVar = getComputedStyle(document.documentElement).getPropertyValue("--header-h");
+      const parsed = parseInt(cssVar, 10);
+      return Number.isFinite(parsed) ? parsed : 96;
+    }
+
+    function manualScrollTo(el: HTMLElement, behavior: ScrollBehavior) {
+      const headerH = getHeaderHeight();
+      const top = window.scrollY + el.getBoundingClientRect().top - headerH;
+      window.scrollTo({ top, left: 0, behavior });
+    }
+
     function scrollToHash(hash: string, behavior: ScrollBehavior = "auto") {
       if (!hash || hash === "#") return;
       const id = decodeURIComponent(hash.replace(/^#/, ""));
       const el = document.getElementById(id);
       if (!el) return;
-      const html = document.documentElement;
-      const prevBehavior = html.style.scrollBehavior;
-      html.style.scrollBehavior = behavior;
-      // do it on next frame to avoid layout race
+
+      // Do it next frame to avoid layout race
       requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior });
-        html.style.scrollBehavior = prevBehavior;
+        manualScrollTo(el, behavior);
       });
-      // late retry in case of late layout
+      // Late retries in case of late layout/asset shifts
       setTimeout(() => {
         const el2 = document.getElementById(id);
-        if (el2) el2.scrollIntoView({ behavior });
+        if (el2) manualScrollTo(el2, behavior);
       }, 180);
+      setTimeout(() => {
+        const el3 = document.getElementById(id);
+        if (el3) manualScrollTo(el3, behavior);
+      }, 500);
     }
 
     // initial hash on load
@@ -1034,7 +1093,7 @@ if (!selectedTariff) {
   return (
     <main className="min-h-screen bg-brand-dark text-white">
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-20">
-        <header className="sticky top-0 z-40 mb-8 sm:mb-12 backdrop-blur-md">
+        <header ref={headerRef} className="sticky top-0 z-40 mb-8 sm:mb-12 backdrop-blur-md">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-2">
               <Image

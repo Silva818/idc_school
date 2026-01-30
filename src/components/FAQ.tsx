@@ -27,7 +27,7 @@ export function FAQ() {
       className="py-16 sm:py-20 lg:py-24 scroll-mt-24 md:scroll-mt-28 border-t border-white/5"
     >
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div id="faq-top" className="mb-8 sm:mb-10 scroll-mt-24 md:scroll-mt-28">
+        <div id="faq-top" className="mb-8 sm:mb-10 scroll-mt-24 md:scroll-mt-28 anchor-top">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
             {t("kicker")}
           </p>

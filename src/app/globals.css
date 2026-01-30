@@ -102,6 +102,11 @@ section {
   overflow-x: clip;
 }
 
+/* Anchor targets reserve space under sticky header */
+.anchor-top {
+  scroll-margin-top: var(--header-h, 96px);
+}
+
 /* Точки пагинации блока отзывов */
 #reviews .swiper-pagination-bullet {
   width: 8px !important;
