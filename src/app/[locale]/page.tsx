@@ -1022,6 +1022,7 @@ if (!selectedTariff) {
       requestAnimationFrame(() => {
         const id = (hash || "").replace(/^#/, "");
         const root = document.documentElement;
+        const extra = id === "courses-top" ? 12 : 0;
         // Read measured header height (fallback to CSS var / 96px)
         let headerH = headerHeightRef.current || 0;
         if (!headerH) {
@@ -1031,7 +1032,7 @@ if (!selectedTariff) {
         }
         const el = id ? document.getElementById(id) : null;
         if (el) {
-          const top = window.scrollY + el.getBoundingClientRect().top - headerH;
+          const top = window.scrollY + el.getBoundingClientRect().top - headerH + extra;
           window.scrollTo({ top, left: 0, behavior });
           // Ensure URL reflects the target even if hash didn't change
           if (hash && hash.startsWith("#")) {
@@ -1110,6 +1111,10 @@ if (!selectedTariff) {
 
   // Anchor navigation: manual scroll with header offset (robust on iOS)
   useEffect(() => {
+    const anchorExtraOffset: Record<string, number> = {
+      "courses-top": 12,
+    };
+
     function getHeaderHeight(): number {
       const inline = headerHeightRef.current || 0;
       if (inline > 0) return inline;
@@ -1118,9 +1123,9 @@ if (!selectedTariff) {
       return Number.isFinite(parsed) ? parsed : 96;
     }
 
-    function manualScrollTo(el: HTMLElement, behavior: ScrollBehavior) {
+    function manualScrollTo(el: HTMLElement, behavior: ScrollBehavior, extra = 0) {
       const headerH = getHeaderHeight();
-      const top = window.scrollY + el.getBoundingClientRect().top - headerH;
+      const top = window.scrollY + el.getBoundingClientRect().top - headerH + (extra || 0);
       window.scrollTo({ top, left: 0, behavior });
     }
 
@@ -1129,19 +1134,20 @@ if (!selectedTariff) {
       const id = decodeURIComponent(hash.replace(/^#/, ""));
       const el = document.getElementById(id);
       if (!el) return;
+      const extra = anchorExtraOffset[id] || 0;
 
       // Do it next frame to avoid layout race
       requestAnimationFrame(() => {
-        manualScrollTo(el, behavior);
+        manualScrollTo(el, behavior, extra);
       });
       // Late retries in case of late layout/asset shifts
       setTimeout(() => {
         const el2 = document.getElementById(id);
-        if (el2) manualScrollTo(el2, behavior);
+        if (el2) manualScrollTo(el2, behavior, extra);
       }, 180);
       setTimeout(() => {
         const el3 = document.getElementById(id);
-        if (el3) manualScrollTo(el3, behavior);
+        if (el3) manualScrollTo(el3, behavior, extra);
       }, 500);
     }
 

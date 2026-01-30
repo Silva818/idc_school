@@ -38,30 +38,26 @@ export function LanguageSwitcher() {
   
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1">
-      <button
-        type="button"
-        onClick={() => go("en")}
+    <button
+      type="button"
+      onClick={() => go(activeLocale === "en" ? "ru" : "en")}
+      aria-label="Toggle language"
+      className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 select-none"
+    >
+      <span
         className={`rounded-full px-3 py-1 text-sm transition-colors ${
-          activeLocale === "en"
-            ? "bg-white/15 text-white"
-            : "text-white/70 hover:text-white"
+          activeLocale === "en" ? "bg-white/15 text-white" : "text-white/70"
         }`}
       >
         EN
-      </button>
-
-      <button
-        type="button"
-        onClick={() => go("ru")}
+      </span>
+      <span
         className={`rounded-full px-3 py-1 text-sm transition-colors ${
-          activeLocale === "ru"
-            ? "bg-white/15 text-white"
-            : "text-white/70 hover:text-white"
+          activeLocale === "ru" ? "bg-white/15 text-white" : "text-white/70"
         }`}
       >
         RU
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }
