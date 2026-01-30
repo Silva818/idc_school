@@ -1016,19 +1016,8 @@ if (!selectedTariff) {
     };
   }, [isMobileNavOpen]);
 
-  // Mobile menu anchor click: close menu, then change hash next frame (iOS-safe)
-  function handleMobileAnchorClick(
-    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    hash: string,
-    trackEvent?: () => void
-  ) {
-    e.preventDefault();
-    (window as any).__anchorNavClickAt = Date.now();
-    try {
-      trackEvent?.();
-    } catch {}
-    setIsMobileNavOpen(false);
-    // Wait for menu to close/unmount to avoid iOS cancelling navigation
+  // Schedule scrolling to hash after mobile menu closes (iOS-safe)
+  function navigateToHashAfterMenu(hash: string, behavior: ScrollBehavior = "smooth") {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const id = (hash || "").replace(/^#/, "");
@@ -1043,7 +1032,7 @@ if (!selectedTariff) {
         const el = id ? document.getElementById(id) : null;
         if (el) {
           const top = window.scrollY + el.getBoundingClientRect().top - headerH;
-          window.scrollTo({ top, left: 0, behavior: "smooth" });
+          window.scrollTo({ top, left: 0, behavior });
           // Ensure URL reflects the target even if hash didn't change
           if (hash && hash.startsWith("#")) {
             try {
@@ -1058,6 +1047,21 @@ if (!selectedTariff) {
         }
       });
     });
+  }
+
+  // Mobile menu anchor click: close menu, then navigate next frame
+  function handleMobileAnchorClick(
+    e: React.MouseEvent<HTMLElement, MouseEvent>,
+    hash: string,
+    trackEvent?: () => void
+  ) {
+    e.preventDefault();
+    (window as any).__anchorNavClickAt = Date.now();
+    try {
+      trackEvent?.();
+    } catch {}
+    setIsMobileNavOpen(false);
+    navigateToHashAfterMenu(hash, "smooth");
   }
 
   // Measure sticky header height and set CSS var for offset
@@ -1370,9 +1374,9 @@ if (!selectedTariff) {
                 <button
                   type="button"
                   onClick={() => {
+                    track("mobile_menu_cta_click", { site_language, target: "courses" });
                     setIsMobileNavOpen(false);
-    track("mobile_menu_cta_click", { site_language, target: "courses" });
-    document.getElementById("courses-top")?.scrollIntoView({ behavior: "smooth" });
+                    navigateToHashAfterMenu("#courses-top", "smooth");
                   }}
                   className="w-full rounded-full bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary/90 transition-colors"
                 >
