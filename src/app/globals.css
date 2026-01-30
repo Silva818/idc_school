@@ -91,6 +91,17 @@ body {
   scroll-behavior: smooth;
 }
 
+/* iOS zoom-out artifact guard: prevent horizontal expansion while keeping section-level scrolls */
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Ensure main sections don't create accidental horizontal overflow on zoom-out */
+section {
+  overflow-x: clip;
+}
+
 /* Точки пагинации блока отзывов */
 #reviews .swiper-pagination-bullet {
   width: 8px !important;
