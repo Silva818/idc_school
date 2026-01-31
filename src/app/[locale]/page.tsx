@@ -1032,7 +1032,10 @@ if (!selectedTariff) {
         }
         const el = id ? document.getElementById(id) : null;
         if (el) {
-          const top = window.scrollY + el.getBoundingClientRect().top - headerH + extra;
+          // Prefer element's CSS scroll-margin-top if present (browser-like behavior)
+          const smt = parseFloat(getComputedStyle(el).scrollMarginTop || "0") || 0;
+          const offset = smt > 0 ? smt : headerH;
+          const top = window.scrollY + el.getBoundingClientRect().top - offset + extra;
           window.scrollTo({ top, left: 0, behavior });
           // Ensure URL reflects the target even if hash didn't change
           if (hash && hash.startsWith("#")) {
@@ -1131,7 +1134,9 @@ if (!selectedTariff) {
 
     function manualScrollTo(el: HTMLElement, behavior: ScrollBehavior, extra = 0) {
       const headerH = getHeaderHeight();
-      const top = window.scrollY + el.getBoundingClientRect().top - headerH + (extra || 0);
+      const smt = parseFloat(getComputedStyle(el).scrollMarginTop || "0") || 0;
+      const offset = smt > 0 ? smt : headerH;
+      const top = window.scrollY + el.getBoundingClientRect().top - offset + (extra || 0);
       window.scrollTo({ top, left: 0, behavior });
     }
 
