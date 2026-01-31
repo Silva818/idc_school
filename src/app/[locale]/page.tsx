@@ -1022,7 +1022,7 @@ if (!selectedTariff) {
       requestAnimationFrame(() => {
         const id = (hash || "").replace(/^#/, "");
         const root = document.documentElement;
-        const extra = id === "courses-top" ? 12 : 0;
+        const extra = 0;
         // Read measured header height (fallback to CSS var / 96px)
         let headerH = headerHeightRef.current || 0;
         if (!headerH) {
@@ -1111,9 +1111,7 @@ if (!selectedTariff) {
 
   // Anchor navigation: manual scroll with header offset (robust on iOS)
   useEffect(() => {
-    const anchorExtraOffset: Record<string, number> = {
-      "courses-top": 12,
-    };
+    const anchorExtraOffset: Record<string, number> = {};
 
     function getHeaderHeight(): number {
       const inline = headerHeightRef.current || 0;
