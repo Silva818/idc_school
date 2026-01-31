@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Locale = "en" | "ru";
@@ -36,13 +37,25 @@ export function LanguageSwitcher() {
     router.replace(withQuery(nextPath));
   };
   
+  const lastToggleAtRef = useRef(0);
+  const toggleLocale = () => {
+    const now = Date.now();
+    if (now - lastToggleAtRef.current < 300) return; // защита от двойного срабатывания (pointerup + click)
+    lastToggleAtRef.current = now;
+    go(activeLocale === "en" ? "ru" : "en");
+  };
 
   return (
     <button
       type="button"
-      onClick={() => go(activeLocale === "en" ? "ru" : "en")}
+      onClick={toggleLocale}
+      onPointerUp={(e) => {
+        e.preventDefault();
+        toggleLocale();
+      }}
       aria-label="Toggle language"
-      className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 select-none"
+      className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 p-1 select-none pointer-events-auto"
+      style={{ touchAction: "manipulation" }}
     >
       <span
         className={`rounded-full px-3 py-1 text-sm transition-colors ${
