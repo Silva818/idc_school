@@ -24,14 +24,14 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
     >
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок + бейдж */}
-        <div id="courses-top" className="flex flex-col gap-4 mb-8 sm:mb-10 scroll-mt-24 md:scroll-mt-28 anchor-top">
+        <div className="flex flex-col gap-4 mb-8 sm:mb-10">
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white shadow-sm border border-black/5 px-3 py-1.5 text-xs sm:text-[13px] text-gray-600">
             <span className="h-2 w-2 rounded-full bg-brand-accent" />
             <span>{t("badge")}</span>
           </div>
 
           <div className="max-w-3xl">
-            <h2 className="text-3xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3">
+            <h2 id="courses-top" className="text-3xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 scroll-mt-24 md:scroll-mt-28 anchor-top">
               {t("title")}
             </h2>
             <p className="text-base sm:text-base text-gray-600 leading-relaxed">
