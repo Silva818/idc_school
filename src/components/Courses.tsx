@@ -31,7 +31,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
           </div>
 
           <div className="max-w-3xl">
-            <h2 id="courses-top" className="text-3xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 scroll-mt-[calc(var(--header-h,96px)-30px)] md:scroll-mt-[var(--header-h,96px)]">
+            <h2 id="courses-top" className="text-3xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 scroll-mt-[calc(var(--header-h,96px)-18px)] md:scroll-mt-[var(--header-h,96px)]">
               {t("title")}
             </h2>
             <p className="text-base sm:text-base text-gray-600 leading-relaxed">
