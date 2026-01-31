@@ -1077,7 +1077,15 @@ if (!selectedTariff) {
     }
 
     function measure() {
-      const h = headerRef.current?.offsetHeight ?? 0;
+      if (!headerRef.current) {
+        applyHeaderHeight(0);
+        return;
+      }
+      const headerEl = headerRef.current;
+      const base = headerEl.offsetHeight || 0;
+      const cs = getComputedStyle(headerEl);
+      const mb = parseFloat(cs.marginBottom || "0") || 0;
+      const h = base + mb;
       applyHeaderHeight(h);
     }
 
