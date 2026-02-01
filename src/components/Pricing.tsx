@@ -243,11 +243,6 @@ export function Pricing({
                       amount: prices.review[currency].total,
                       currency,
                     });
-                    track("pricing_card_click", {
-                      site_language,
-                      card: "one_session",
-                      currency,
-                    });
                   }}
                 >
                   {t("cards.short1.button")}

@@ -11,6 +11,14 @@ export function track(event: string, params: TrackParams = {}) {
   });
 }
 
+export function getDeviceType(): "mobile" | "tablet" | "desktop" {
+  if (typeof window === "undefined") return "desktop";
+  const w = window.innerWidth || 0;
+  if (w < 768) return "mobile";
+  if (w < 1024) return "tablet";
+  return "desktop";
+}
+
 export function slugifyCourseName(name: string) {
   return name
     .trim()

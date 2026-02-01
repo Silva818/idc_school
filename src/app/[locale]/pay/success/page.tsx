@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { track } from "@/lib/track";
+import { track, getDeviceType } from "@/lib/track";
 
 type PurchasePayload = {
   transaction_id: string;        // id_payment
@@ -150,7 +150,12 @@ if (!transactionId) return;
 const key = `ga4_purchase_sent_${transactionId}`;
 if (sessionStorage.getItem(key) === "1") return;
 
-track("purchase_made", {...payload, payment_id: transactionId,});
+track("purchase_made", {
+  ...payload,
+  payment_id: transactionId,
+  course_name: (payload as any)?.course_name,
+  device_type: getDeviceType(),
+});
 
 
 sessionStorage.setItem(key, "1");
@@ -242,6 +247,7 @@ sessionStorage.setItem(key, "1");
                   track("telegram_bot_open_click", {
                     site_language: payload?.site_language ?? (pref ? "ru" : "en"),
                     payment_id: pid || undefined,
+                    device_type: getDeviceType(),
               
                     // опционально (если есть в payload)
                     tariff_label: payload?.tariff_label,

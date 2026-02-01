@@ -22,7 +22,7 @@ import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { track } from "@/lib/track";
+import { track, getDeviceType } from "@/lib/track";
 
 
 
@@ -281,6 +281,8 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
       currency: options.currency,
       value: options.amount,
       source: "pricing",
+      course_name: selectedCourse || buyCourse || undefined,
+      device_type: getDeviceType(),
     });
   
     setBuyTriedSubmit(false);
@@ -316,10 +318,10 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
     setIsPurchaseModalOpen(true);
     setBuyCourse(courseName);
 
-    track("strength_test_intro_open", {
+    track("courses_chose", {
       site_language,
-      source: "courses",
       course_name: courseName,
+      device_type: getDeviceType(),
     });
 
     setBuyTriedSubmit(false);
@@ -354,8 +356,9 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
       tariff_label: options.tariffLabel,
       currency: options.currency,
       value: options.amount,
-      source: "courses_strength_test",
+      source: "courses",
       course_name: courseName || undefined,
+      device_type: getDeviceType(),
     });
     setBuyTriedSubmit(false);
     setBuyErrors({});
@@ -376,12 +379,7 @@ function openTestModal(opts?: {
 
     setIsTestModalOpen(true);
 
-  track("strength_test_start", {
-    site_language,
-    source,
-    course_preselected,
-    course_name: course_name || undefined,
-  });
+  // tracking removed per new spec
 
   setTestTriedSubmit(false);
   setTestErrors({});
@@ -446,7 +444,33 @@ function openTestModal(opts?: {
         const entry_point =
           lastNavAt && Date.now() - lastNavAt < 5000 ? "nav" : "scroll";
 
-        track("pricing_view", { site_language, entry_point });
+        track("pricing_view", { site_language, entry_point, device_type: getDeviceType() });
+        obs.disconnect();
+      },
+      { threshold: 0.25 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [site_language]);
+
+  // courses_view
+  useEffect(() => {
+    const el = document.getElementById("courses");
+    if (!el) return;
+
+    let fired = false;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || fired) return;
+        fired = true;
+
+        const lastNavAt = (window as any).__coursesNavClickAt as number | undefined;
+        const entry_point =
+          lastNavAt && Date.now() - lastNavAt < 5000 ? "nav" : "scroll";
+
+        track("courses_view", { site_language, entry_point, device_type: getDeviceType() });
         obs.disconnect();
       },
       { threshold: 0.25 }
@@ -504,11 +528,7 @@ function openTestModal(opts?: {
       if (!res.ok) {
         console.error("Ошибка отправки формы теста", await res.text());
       } else {
-        track("strength_test_submit", {
-          site_language,
-          source: testContext ?? "unknown",
-          course_name: testCourse || undefined,
-        });
+        // tracking removed per new spec
         
         setTestFullName("");
         setTestEmail("");
@@ -609,6 +629,9 @@ const [buyTariffId, setBuyTariffId] =
       tariff_label: options.tariffLabel,
       currency: options.currency,
       value: options.amount,
+      source: purchaseContext?.source ?? undefined,
+      course_name: purchaseContext?.preselectedCourse || buyCourse || undefined,
+      device_type: getDeviceType(),
     });
 
     // reset ошибок
@@ -816,6 +839,7 @@ const [buyTariffId, setBuyTariffId] =
           currency,
           value: Number(giftAmount.replace(",", ".")),
           payment_id: data.paymentId,
+          device_type: getDeviceType(),
         });
         window.location.href = data.paymentUrl;
       } else {
@@ -914,7 +938,9 @@ if (!selectedTariff) {
             tariff_label: selectedTariff.tariffLabel,
             currency: selectedTariff.currency,
             value: selectedTariff.amount,
+            course_name: buyCourse || undefined,
             payment_id: data.paymentId, // важно!
+            device_type: getDeviceType(),
           });
           window.location.href = data.paymentUrl;
         } else {
@@ -1064,6 +1090,8 @@ if (!selectedTariff) {
     try {
       trackEvent?.();
     } catch {}
+    if (hash.startsWith("#courses")) (window as any).__coursesNavClickAt = Date.now();
+    if (hash.startsWith("#pricing")) (window as any).__pricingNavClickAt = Date.now();
     setIsMobileNavOpen(false);
     navigateToHashAfterMenu(hash, "smooth");
   }
@@ -1202,7 +1230,6 @@ if (!selectedTariff) {
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
-                  track("menu_anchor_click", { site_language, anchor: "how" });
                 }}
               >
                 {t("header.nav.how")}
@@ -1212,7 +1239,12 @@ if (!selectedTariff) {
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
-                  track("menu_anchor_click", { site_language, anchor: "courses" });
+                  (window as any).__coursesNavClickAt = Date.now();
+                  track("courses_cta_click", {
+                    site_language,
+                    source: "menu",
+                    device_type: getDeviceType(),
+                  });
                 }}
               >
                 {t("header.nav.courses")}
@@ -1222,7 +1254,8 @@ if (!selectedTariff) {
   className="hover:text-white transition-colors"
   onClick={() => {
     (window as any).__anchorNavClickAt = Date.now();
-    track("menu_pricing_click", { site_language, source: "header_menu" });
+    (window as any).__pricingNavClickAt = Date.now();
+    track("menu_pricing_click", { site_language, source: "header_menu", device_type: getDeviceType() });
   }}
 >
                 {t("header.nav.pricing")}
@@ -1233,7 +1266,6 @@ if (!selectedTariff) {
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
-                  track("menu_anchor_click", { site_language, anchor: "about" });
                 }}
               >
                 {t("header.nav.about")}
@@ -1243,7 +1275,6 @@ if (!selectedTariff) {
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
-                  track("menu_anchor_click", { site_language, anchor: "reviews" });
                 }}
               >
                 {t("header.nav.reviews")}
@@ -1253,7 +1284,6 @@ if (!selectedTariff) {
                 className="hover:text-white transition-colors"
                 onClick={() => {
                   (window as any).__anchorNavClickAt = Date.now();
-                  track("menu_anchor_click", { site_language, anchor: "faq" });
                 }}
               >
                 {t("header.nav.faq")}
@@ -1321,11 +1351,7 @@ if (!selectedTariff) {
                 <a
                   href="#how-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={(e) =>
-                    handleMobileAnchorClick(e, "#how-top", () =>
-                      track("menu_anchor_click", { site_language, anchor: "how" })
-                    )
-                  }
+                  onClick={(e) => handleMobileAnchorClick(e, "#how-top")}
                 >
                   {t("header.nav.how")}
                 </a>
@@ -1333,9 +1359,14 @@ if (!selectedTariff) {
                   href="#courses-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={(e) =>
-                    handleMobileAnchorClick(e, "#courses-top", () =>
-                      track("menu_anchor_click", { site_language, anchor: "courses" })
-                    )
+                    handleMobileAnchorClick(e, "#courses-top", () => {
+                      (window as any).__coursesNavClickAt = Date.now();
+                      track("courses_cta_click", {
+                        site_language,
+                        source: "menu",
+                        device_type: getDeviceType(),
+                      });
+                    })
                   }
                 >
                   {t("header.nav.courses")}
@@ -1344,9 +1375,10 @@ if (!selectedTariff) {
                   href="#pricing-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
                   onClick={(e) =>
-                    handleMobileAnchorClick(e, "#pricing-top", () =>
-                      track("menu_pricing_click", { site_language, source: "header_menu" })
-                    )
+                    handleMobileAnchorClick(e, "#pricing-top", () => {
+                      (window as any).__pricingNavClickAt = Date.now();
+                      track("menu_pricing_click", { site_language, source: "header_menu", device_type: getDeviceType() });
+                    })
                   }
                 >
                   {t("header.nav.pricing")}
@@ -1355,33 +1387,21 @@ if (!selectedTariff) {
                 <a
                   href="#about-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={(e) =>
-                    handleMobileAnchorClick(e, "#about-top", () =>
-                      track("menu_anchor_click", { site_language, anchor: "about" })
-                    )
-                  }
+                  onClick={(e) => handleMobileAnchorClick(e, "#about-top")}
                 >
                   {t("header.nav.about")}
                 </a>
                 <a
                   href="#reviews-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={(e) =>
-                    handleMobileAnchorClick(e, "#reviews-top", () =>
-                      track("menu_anchor_click", { site_language, anchor: "reviews" })
-                    )
-                  }
+                  onClick={(e) => handleMobileAnchorClick(e, "#reviews-top")}
                 >
                   {t("header.nav.reviews")}
                 </a>
                 <a
                   href="#faq-top"
                   className="rounded-2xl px-3 py-2 hover:bg-white/5"
-                  onClick={(e) =>
-                    handleMobileAnchorClick(e, "#faq-top", () =>
-                      track("menu_anchor_click", { site_language, anchor: "faq" })
-                    )
-                  }
+                  onClick={(e) => handleMobileAnchorClick(e, "#faq-top")}
                 >
                   {t("header.nav.faq")}
                 </a>
@@ -1391,7 +1411,8 @@ if (!selectedTariff) {
                 <button
                   type="button"
                   onClick={() => {
-                    track("mobile_menu_cta_click", { site_language, target: "courses" });
+                    (window as any).__coursesNavClickAt = Date.now();
+                    track("courses_cta_click", { site_language, source: "menu", device_type: getDeviceType() });
                     setIsMobileNavOpen(false);
                     navigateToHashAfterMenu("#courses-top", "smooth");
                   }}
@@ -1430,7 +1451,10 @@ if (!selectedTariff) {
               <a
                 href="#courses-top"
     className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand-primary px-8 py-3 text-sm sm:text-base font-semibold text-white hover:bg-brand-primary/90 transition-colors"
-    onClick={() => track("hero_cta_click", { site_language, target: "courses" })}
+    onClick={() => {
+      (window as any).__coursesNavClickAt = Date.now();
+      track("courses_cta_click", { site_language, source: "hero", device_type: getDeviceType() });
+    }}
               >
                 {t("hero.ctaCourses")}
               </a>
@@ -1737,11 +1761,7 @@ if (!selectedTariff) {
                         const name = e.target.value;
                         setTestCourse(name);
                       
-                        track("strength_test_course_select", {
-                          site_language,
-                          source: testContext,
-                          course_name: name,
-                        });                        
+                        // tracking removed per new spec
                       }}
                       className={[
                         "w-full rounded-2xl border bg-brand-dark px-3 py-2 pr-8 text-sm text-white outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary appearance-none",
@@ -1953,11 +1973,15 @@ if (!selectedTariff) {
                           setPurchaseOptions(options);
                           setBuyTariffId(options.tariffId);
                           setFunnelStep(2);
-                          track("strength_test_intro_continue", {
+                          track("purchase_start", {
                             site_language,
-                            course_name: funnelCourseName,
+                            product_type: "tariff",
+                            source: "courses",
+                            tariff_label: tPricing("cards.test.tariffLabel"),
                             currency: activeCurrency,
                             value: amount,
+                            course_name: funnelCourseName,
+                            device_type: getDeviceType(),
                           });
                         }}
                       >
