@@ -109,12 +109,15 @@ export function Pricing({
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок + переключатель валюты */}
         <div className="mb-10 sm:mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div id="pricing-top" className="max-w-3xl scroll-mt-24 md:scroll-mt-28 anchor-top">
+          <div className="max-w-3xl">
             <p className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-brand-muted mb-3">
               {t("kicker")}
             </p>
 
-            <h2 className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 leading-tight">
+            <h2
+              id="pricing-top"
+              className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 leading-tight scroll-mt-[calc(var(--header-h,96px)-36px)] md:scroll-mt-[var(--header-h,96px)]"
+            >
               {t("title")}
             </h2>
 

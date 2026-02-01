@@ -119,7 +119,7 @@
             "We’ll give recommendations for your next workouts"
           ],
           "priceLabel": "Price:",
-          "oneTime": "no subscription or commitments",
+          "oneTime": "",
           "cta": "Start the strength test — {amount}",
           "ctaSimple": "Sign up",
           "postCtaNote": "After payment, you’ll immediately receive instructions to start"
@@ -391,7 +391,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Frequently asked questions",
-      "desc": "If you still have doubts, there’s probably an answer here. If not, you can always ask the coach a question before you start.",
+      "desc": "If you still have doubts, there’s likely an answer here.",
       "items": [
         {
           "question": "Is this suitable if I’ve never trained before?",
@@ -418,7 +418,7 @@
           "answer": "Yes. You buy a training block, not a rigid commitment to one course. If during the process you want to shift focus—for example from pull-ups to a handstand—discuss it with the coach and they’ll adapt the program."
         }
       ],
-      "cta": "Still unsure where to start? Try the free strength test — it’s a safe way to understand your level and the training format."
+      "cta": "Still unsure where to start? Start with the strength test — a safe way to understand your level and the training format."
     },
     "footer": {
       "copyright": "© {yearLabel}. All rights reserved.",

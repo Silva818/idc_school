@@ -1783,7 +1783,7 @@ if (!selectedTariff) {
                 <span>
                   {t("modals.strengthTest.agreeTextPrefix")}{" "}
                   <a
-                    href="/privacy"
+                    href={activeLocale === "ru" ? "/ru/privacy" : "/privacy"}
                     target="_blank"
                     className="underline decoration-dotted hover:text-white"
                   >
@@ -2215,15 +2215,23 @@ if (!selectedTariff) {
                     required
                 />
                 <span>
-                  {t("modals.purchase.agreeTextPrefix")}{" "}
+                  {activeLocale === "ru" ? "Я согласен(на) с условиями " : "I agree to the "}
                   <a
-                    href="/privacy"
+                    href={activeLocale === "ru" ? "/ru/offer" : "/offer"}
                     target="_blank"
                     className="underline decoration-dotted hover:text-white"
                   >
-                    {t("modals.purchase.privacyPolicy")}
-                  </a>{" "}
-                  {t("modals.purchase.andPaymentTerms")}
+                    {activeLocale === "ru" ? "Договора оферты" : "Terms of Offer"}
+                  </a>
+                  {activeLocale === "ru" ? " и " : " and "}
+                  <a
+                    href={activeLocale === "ru" ? "/ru/privacy" : "/privacy"}
+                    target="_blank"
+                    className="underline decoration-dotted hover:text-white"
+                  >
+                    {activeLocale === "ru" ? "Политикой обработки персональных данных" : "Privacy Policy"}
+                  </a>
+                  .
                 </span>
               </label>
 
@@ -2493,15 +2501,23 @@ if (!selectedTariff) {
                   required
                 />
                 <span>
-                  {t("modals.purchase.agreeTextPrefix")}{" "}
+                  {activeLocale === "ru" ? "Я согласен(на) с условиями " : "I agree to the "}
                   <a
-                    href="/privacy"
+                    href={activeLocale === "ru" ? "/ru/offer" : "/offer"}
                     target="_blank"
                     className="underline decoration-dotted hover:text-white"
                   >
-                    {t("modals.purchase.privacyPolicy")}
-                  </a>{" "}
-                  {t("modals.purchase.andPaymentTerms")}
+                    {activeLocale === "ru" ? "Договора оферты" : "Terms of Offer"}
+                  </a>
+                  {activeLocale === "ru" ? " и " : " and "}
+                  <a
+                    href={activeLocale === "ru" ? "/ru/privacy" : "/privacy"}
+                    target="_blank"
+                    className="underline decoration-dotted hover:text-white"
+                  >
+                    {activeLocale === "ru" ? "Политикой обработки персональных данных" : "Privacy Policy"}
+                  </a>
+                  .
                 </span>
               </label>
 
@@ -2811,7 +2827,7 @@ if (!selectedTariff) {
                     "w-full rounded-2xl border bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-primary",
                     (giftErrors as any).amount ? "border-rose-400/60" : "border-white/10",
                   ].join(" ")}
-                  placeholder={activeLocale === "ru" ? "Например, 50" : "e.g., 50"}
+                  placeholder={activeLocale === "ru" ? "Например, 120" : "e.g., 120"}
                 />
                 {(giftErrors as any).amount && (
                   <p className="text-[11px] sm:text-xs text-rose-300/90 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-3 py-2">
@@ -2832,7 +2848,7 @@ if (!selectedTariff) {
                 <span>
                   {activeLocale === "ru" ? "Я согласен(на) с " : "I agree with "}
                   <a
-                    href="/privacy"
+                    href={activeLocale === "ru" ? "/ru/privacy" : "/privacy"}
                     target="_blank"
                     className="underline decoration-dotted hover:text-white"
                   >
