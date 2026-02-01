@@ -116,7 +116,7 @@ export function Pricing({
 
             <h2
               id="pricing-top"
-              className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 leading-tight scroll-mt-[calc(var(--header-h,96px)-36px)] md:scroll-mt-[var(--header-h,96px)]"
+              className="text-[26px] sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3 leading-tight scroll-mt-[calc(var(--header-h,96px)-48px)] md:scroll-mt-[var(--header-h,96px)]"
             >
               {t("title")}
             </h2>
