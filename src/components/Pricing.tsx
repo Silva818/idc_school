@@ -106,15 +106,6 @@ export function Pricing({
       id="pricing"
       className="relative overflow-hidden py-16 sm:py-20 lg:py-24 scroll-mt-24 md:scroll-mt-28 border-t border-white/5"
     >
-      {/* full-bleed, very subtle edge fade to blend with page background */}
-      <div
-        aria-hidden
-        className="
-          pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2
-          w-screen
-          bg-[linear-gradient(to_right,rgba(5,8,22,0.85),transparent_18%,transparent_82%,rgba(5,8,22,0.85))]
-        "
-      />
       <div className="mx-auto max-w-container px-4 sm:px-6 lg:px-8">
         {/* Заголовок + переключатель валюты */}
         <div className="mb-10 sm:mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
