@@ -17,18 +17,37 @@ export function HowItWorks() {
       id="how"
       className="relative w-full border-t border-white/5 bg-[#050816] scroll-mt-24 md:scroll-mt-28 overflow-hidden"
     >
-      {/* full-bleed, very subtle edge fade */}
+      {/* left edge fade (wider & slightly stronger to soften hard edge) */}
       <div
         aria-hidden
         className="
-          pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2
-          w-screen
-          bg-[linear-gradient(to_right,rgba(5,8,22,0.85),transparent_18%,transparent_82%,rgba(5,8,22,0.85))]
+          pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen z-10
+          [mask-image:linear-gradient(to_right,black_0,black_64px,transparent_200px)]
+          bg-[#050816]
+        "
+      />
+      {/* bottom-right radial fade to blend the purple glow into page bg (wider and higher) */}
+      <div
+        aria-hidden
+        className="
+          pointer-events-none absolute z-0
+          right-0 bottom-[-80px]
+          w-[860px] h-[560px]
+          [background:radial-gradient(62%_62%_at_90%_78%,rgba(5,8,22,0.65)_0%,rgba(5,8,22,0.0)_76%)]
+        "
+      />
+      {/* slight right edge fade at top half to soften container seam on bright screens */}
+      <div
+        aria-hidden
+        className="
+          pointer-events-none absolute inset-y-0 right-0 w-[28px] z-10
+          [mask-image:linear-gradient(to_bottom,black_0,black_48%,transparent_60%)]
+          bg-[#050816]
         "
       />
       {/* лёгкое фоновое свечение слева / справа */}
-      <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-brand-blue/30 blur-[120px]" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-brand-primary/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-brand-blue/30 blur-[120px] z-0" />
+      <div className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-brand-primary/20 blur-[120px] z-0" />
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24 relative">
         {/* заголовок */}

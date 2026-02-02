@@ -1431,6 +1431,7 @@ if (!selectedTariff) {
           <div
             aria-hidden
             className="
+              hidden md:block
               pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2
               w-screen
               bg-[linear-gradient(to_right,rgba(5,8,22,0.85),transparent_18%,transparent_82%,rgba(5,8,22,0.85))]
