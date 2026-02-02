@@ -1426,7 +1426,16 @@ if (!selectedTariff) {
           </div>
         )}
 
-        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center mb-16 lg:mb-24">
+        <section className="relative overflow-visible grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center mb-16 lg:mb-24">
+          {/* hero full-bleed subtle edge fade */}
+          <div
+            aria-hidden
+            className="
+              pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2
+              w-screen
+              bg-[linear-gradient(to_right,rgba(5,8,22,0.85),transparent_18%,transparent_82%,rgba(5,8,22,0.85))]
+            "
+          />
           <div className="space-y-6 sm:space-y-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[12px] sm:text-sm text-brand-muted border border-white/10">
               <span className="h-2 w-2 rounded-full bg-brand-accent" />

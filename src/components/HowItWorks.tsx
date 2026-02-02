@@ -15,8 +15,17 @@ export function HowItWorks() {
   return (
     <section
       id="how"
-      className="relative w-full border-t border-white/5 bg-[#050816] scroll-mt-24 md:scroll-mt-28 overflow-x-clip"
+      className="relative w-full border-t border-white/5 bg-[#050816] scroll-mt-24 md:scroll-mt-28 overflow-hidden"
     >
+      {/* full-bleed, very subtle edge fade */}
+      <div
+        aria-hidden
+        className="
+          pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2
+          w-screen
+          bg-[linear-gradient(to_right,rgba(5,8,22,0.85),transparent_18%,transparent_82%,rgba(5,8,22,0.85))]
+        "
+      />
       {/* лёгкое фоновое свечение слева / справа */}
       <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-brand-blue/30 blur-[120px]" />
       <div className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-brand-primary/20 blur-[120px]" />
