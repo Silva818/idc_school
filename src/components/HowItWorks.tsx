@@ -17,29 +17,32 @@ export function HowItWorks() {
       id="how"
       className="relative w-full border-t border-white/5 bg-[#050816] scroll-mt-24 md:scroll-mt-28 overflow-hidden"
     >
-      {/* left edge fade (wider & slightly stronger to soften hard edge) */}
+      {/* left edge fade (desktop-only) */}
       <div
         aria-hidden
         className="
+          hidden md:block
           pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen z-10
           [mask-image:linear-gradient(to_right,black_0,black_64px,transparent_200px)]
           bg-[#050816]
         "
       />
-      {/* bottom-right radial fade to blend the purple glow into page bg (wider and higher) */}
+      {/* bottom-right radial fade (desktop-only) */}
       <div
         aria-hidden
         className="
+          hidden md:block
           pointer-events-none absolute z-0
           right-0 bottom-[-80px]
           w-[860px] h-[560px]
           [background:radial-gradient(62%_62%_at_90%_78%,rgba(5,8,22,0.65)_0%,rgba(5,8,22,0.0)_76%)]
         "
       />
-      {/* slight right edge fade at top half to soften container seam on bright screens */}
+      {/* slight right edge fade at top half (desktop-only) */}
       <div
         aria-hidden
         className="
+          hidden md:block
           pointer-events-none absolute inset-y-0 right-0 w-[28px] z-10
           [mask-image:linear-gradient(to_bottom,black_0,black_48%,transparent_60%)]
           bg-[#050816]
