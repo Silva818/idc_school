@@ -18,9 +18,6 @@ export function HowItWorks() {
       className="relative w-full border-t border-white/5 bg-[#050816] scroll-mt-24 md:scroll-mt-28 overflow-hidden"
     >
       {/* edge fades removed per latest design */}
-      {/* лёгкое фоновое свечение слева / справа */}
-      <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-brand-blue/30 blur-[120px] z-0" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-72 w-72 rounded-full bg-brand-primary/20 blur-[120px] z-0" />
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24 relative">
         {/* заголовок */}
