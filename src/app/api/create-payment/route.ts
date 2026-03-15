@@ -133,6 +133,27 @@ function makeTelegramLinkToken() {
   return crypto.randomBytes(16).toString("hex");
 }
 
+function normalizeEmail(emailRaw: string) {
+  return String(emailRaw ?? "").trim().toLowerCase();
+}
+
+function normalizeTariffId(rawTariffId: string) {
+  const v = String(rawTariffId ?? "").trim().toLowerCase();
+  if (v === "review") return "online_test";
+  if (v === "online-test") return "online_test";
+  return v;
+}
+
+function courseCodeFromCourseName(courseNameRaw: string) {
+  const v = String(courseNameRaw ?? "").trim().toLowerCase();
+  if (v === "calisthenics_light") return "light";
+  if (v === "calisthenics_classic") return "classic";
+  if (v === "pullups") return "pullups";
+  if (v === "handstand") return "handstand";
+  if (v === "calisthenics_for_crossfit") return "crossfit";
+  return "";
+}
+
 /* ---------------- API ---------------- */
 
 export async function POST(req: Request) {
@@ -145,6 +166,7 @@ export async function POST(req: Request) {
       currency,
       email,
       fullName,
+      phone,
       tariffId,
       tariffLabel,
       courseName,
@@ -154,11 +176,15 @@ export async function POST(req: Request) {
       currency: Currency;
       email: string;
       fullName: string;
+      phone?: string;
       tariffId: string;
       tariffLabel: string;
       courseName?: string;
       locale?: Locale;
     };
+
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedTariffId = normalizeTariffId(tariffId);
 
     // ✅ FIX: если вдруг фронт не прислал locale, страхуемся по referer
     const referer = req.headers.get("referer") || "";
@@ -167,48 +193,55 @@ export async function POST(req: Request) {
     const safeLocale: Locale =
       locale === "ru" ? "ru" : locale === "en" ? "en" : inferredLocale;
 
-    if (!amount || !currency || !email || !fullName || !tariffId) {
+    if (!amount || !currency || !normalizedEmail || !fullName || !normalizedTariffId || !phone) {
       console.warn("⚠️ Missing fields:", {
         amount,
         currency,
-        email,
+        email: normalizedEmail,
         fullName,
-        tariffId,
+        phone,
+        tariffId: normalizedTariffId,
       });
 
       return NextResponse.json({ error: "Не хватает данных" }, { status: 400 });
     }
 
     const lessonsByTariff: Record<string, number> = {
-      review: 1,
+      online_test: 1,
+      short1: 1,
       short12: 12,
       long12: 12,
       long36: 36,
     };
 
-    const lessons = lessonsByTariff[tariffId] ?? 1;
+    const lessons = lessonsByTariff[normalizedTariffId] ?? 1;
 
     const tgToken = makeTelegramLinkToken();
     const orderId = makeOrderIdFromToken(tgToken);
 
     /* ---------- AMERIA ---------- */
     const descriptionByTariff: Record<string, string> = {
-      review: "I Do Calisthenics - 1 lesson",
+      online_test: "I Do Calisthenics - Strength test",
+      short1: "I Do Calisthenics - 1 lesson",
       short12: "I Do Calisthenics - 12 lessons (4 weeks)",
       long12: "I Do Calisthenics - 12 lessons (8 weeks)",
       long36: "I Do Calisthenics - 36 lessons",
     };
 
     const description =
-      descriptionByTariff[tariffId] ?? `I Do Calisthenics - ${tariffId}`;
+      descriptionByTariff[normalizedTariffId] ?? `I Do Calisthenics - ${normalizedTariffId}`;
 
     const opaque = JSON.stringify({
-      tariffId,
-      email,
+      tariffId: normalizedTariffId,
+      email: normalizedEmail,
       currency,
       locale: safeLocale,
       courseName: courseName ?? "",
     });
+
+    const currencyCode = String(currency).toLowerCase();
+    const courseCode = courseCodeFromCourseName(courseName ?? "");
+    const courseNameForAirtable = courseCode ? `ds_${currencyCode}_${courseCode}` : "";
 
     const { paymentUrl, paymentId } = await initAmeriaPayment({
       orderId,
@@ -221,17 +254,18 @@ export async function POST(req: Request) {
     
 
     await sendPurchaseToAirtable({
-      email: email,
+      email: normalizedEmail,
       FIO: fullName,
+      Phone: String(phone).trim(),
       Sum: amount,
       Lessons: lessons,
       id_payment: paymentId,
       Currency: currency,
-      Tag: tariffId,
+      Tag: normalizedTariffId,
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,
-      course_name: courseName ?? "",
+      course_name: courseNameForAirtable,
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });

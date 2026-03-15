@@ -128,6 +128,10 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
 }
 
+function normalizeEmail(emailRaw: string) {
+  return String(emailRaw ?? "").trim().toLowerCase();
+}
+
 function digitsOnly(v: string) {
   return String(v).replace(/\D/g, "");
 }
@@ -160,6 +164,7 @@ export async function POST(req: Request) {
       buyerPhone: string;
       recipientName: string;
     };
+    const normalizedBuyerEmail = normalizeEmail(buyerEmail);
 
     // fallback locale
     const referer = req.headers.get("referer") || "";
@@ -173,7 +178,7 @@ export async function POST(req: Request) {
     if (!buyerName || !String(buyerName).trim()) {
       return NextResponse.json({ error: "Не указано имя" }, { status: 400 });
     }
-    if (!buyerEmail || !isValidEmail(buyerEmail)) {
+    if (!normalizedBuyerEmail || !isValidEmail(normalizedBuyerEmail)) {
       return NextResponse.json({ error: "Некорректный email" }, { status: 400 });
     }
     if (!buyerPhone || !isLikelyValidPhone(buyerPhone)) {
@@ -188,13 +193,13 @@ export async function POST(req: Request) {
 
     // Airtable base fields
     const airtableFieldsBase = {
-      email: buyerEmail,
+      email: normalizedBuyerEmail,
       FIO: buyerName,
       Phone: buyerPhone, // поле должно существовать в Airtable
       Sum: Number(amount),
       Lessons: 0,
       Currency: currency,
-      Tag: "gift",
+      Tag: "gift_certificate",
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,
@@ -209,7 +214,7 @@ export async function POST(req: Request) {
       type: "gift",
       currency,
       locale: safeLocale,
-      email: buyerEmail,
+      email: normalizedBuyerEmail,
     });
 
     const { paymentUrl, paymentId } = await initAmeriaPayment({

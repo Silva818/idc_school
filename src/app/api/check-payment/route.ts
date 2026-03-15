@@ -15,6 +15,39 @@ function escapeTgHtml(s: string) {
     .replace(/>/g, "&gt;");
 }
 
+function formatPurchaseDate(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+}
+
+function currencySymbol(currencyRaw: string) {
+  const c = String(currencyRaw || "").trim().toUpperCase();
+  if (c === "USD") return "$";
+  if (c === "EUR") return "€";
+  if (c === "AMD") return "֏";
+  return c || "";
+}
+
+function formatMoney(valueRaw: any, currencyRaw: string) {
+  const n = Number(valueRaw);
+  const value = Number.isFinite(n) ? n : 0;
+  const symbol = currencySymbol(currencyRaw);
+  const pretty = Number.isInteger(value)
+    ? value.toLocaleString("ru-RU")
+    : value.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  return `${pretty}${symbol}`;
+}
+
+function normalizePhone(phoneRaw: string) {
+  const src = String(phoneRaw || "").trim();
+  const hasPlus = src.startsWith("+");
+  const digits = src.replace(/\D/g, "");
+  if (!digits) return "";
+  return `${hasPlus ? "+" : "+"}${digits}`;
+}
+
 async function sendTelegramMessage(text: string) {
   if (!TELEGRAM_BOT_TOKEN || !Number.isFinite(TELEGRAM_CHAT_ID)) {
     console.warn("⚠️ Telegram config missing");
@@ -406,11 +439,34 @@ export async function POST(req: Request) {
     
       // ✅ Уведомление в TG — только если раньше не было paid (чтобы не спамить)
       if (prevStatus !== "paid") {
+        const courseName = String(fields?.course_name ?? "").trim();
+        const tag = String(fields?.Tag ?? "").trim();
+        const fio = String(fields?.FIO ?? "").trim();
+        const email = String(fields?.email ?? "").trim().toLowerCase();
+        const phone = normalizePhone(String(fields?.Phone ?? ""));
+        const sum = Number(fields?.Sum ?? 0) || 0;
+        const lessons = Math.max(0, Number(fields?.Lessons ?? 0) || 0);
+        const currency = String(fields?.Currency ?? "").trim().toUpperCase();
+        const perWorkout = lessons > 0 ? sum / lessons : 0;
+        const dateStr = formatPurchaseDate(new Date());
+
+        const phoneLine = phone
+          ? `<b>Тел:</b> <a href="tel:${escapeTgHtml(phone)}">${escapeTgHtml(phone)}</a>`
+          : `<b>Тел:</b> —`;
+
         const msg =
-          `<b>✅ Оплата успешна</b>\n` +
-          `<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>\n` +
-          (tgToken ? `<b>TG token:</b> <code>${escapeTgHtml(tgToken)}</code>\n` : "") +
-          `<b>Airtable:</b> Status → paid`;
+          `<b>✅ Новая покупка ${escapeTgHtml(courseName || "unknown_course")}</b>\n` +
+          `${escapeTgHtml(tag || "unknown_tag")}\n` +
+          `<b>Дата:</b> ${escapeTgHtml(dateStr)}\n` +
+          `<b>Имя:</b> ${escapeTgHtml(fio || "—")}\n` +
+          `${phoneLine}\n` +
+          `<b>Email:</b> ${escapeTgHtml(email || "—")}\n` +
+          `<b>Сумма:</b> ${escapeTgHtml(formatMoney(sum, currency))}\n` +
+          `<b>Кол-во тренировок:</b> ${escapeTgHtml(String(lessons))}\n` +
+          `<b>Стоимость за тренировку:</b> ${escapeTgHtml(
+            lessons > 0 ? formatMoney(perWorkout, currency) : "—"
+          )}\n` +
+          `<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>`;
     
         await sendTelegramMessage(msg);
       }

@@ -331,12 +331,12 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
 
   // Открыть оплату «Тест силы» из блока курсов:
   // - курс проставляем из карточки
-  // - тариф сразу проставляем как 1 тренировка (review) по активной валюте
+  // - тариф сразу проставляем как тест силы по активной валюте
   function openStrengthTestPurchaseFromCourses(courseName: string | undefined) {
     const options: PurchaseOptions = {
-      tariffId: "review",
+      tariffId: "online_test",
       tariffLabel: tPricing("cards.test.tariffLabel"),
-      amount: prices.review[activeCurrency].total,
+      amount: prices.online_test[activeCurrency].total,
       currency: activeCurrency,
     };
     setPurchaseOptions(options);
@@ -1470,7 +1470,7 @@ if (!selectedTariff) {
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-6 w-6 rounded-full bg-white/5 flex items-center justify-center text-[11px]">
-                  24/7
+                👤
                 </span>
                 <span>{t("hero.benefitChat")}</span>
               </div>
@@ -1873,7 +1873,7 @@ if (!selectedTariff) {
                             {t("modals.funnel.step1.priceLabel")}
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 px-2 py-1 text-[11px] text-white">
-                            {formatPrice(prices.review[activeCurrency].total, activeCurrency)}
+                            {formatPrice(prices.online_test[activeCurrency].total, activeCurrency)}
                           </span>
                           <span className="text-[11px] sm:text-xs text-brand-muted">
                             {t("modals.funnel.step1.oneTime")}
@@ -1897,7 +1897,7 @@ if (!selectedTariff) {
                               if (!tar || !purchaseContext) return null;
                               const amount = prices[tar.amountKey][purchaseContext.currency].total;
                               const label =
-                                tar.id === "review"
+                                tar.id === "online_test"
                                   ? tPricing("cards.test.tariffLabel")
                                   : (tPricing(tar.labelKey as any) || tar.id);
                               return {
@@ -1928,7 +1928,7 @@ if (!selectedTariff) {
                             </span>
                             <span className="text-[11px] sm:text-xs text-brand-muted">
                               {(() => {
-                                const tid = (selected as any).tariffId as "review" | "short12" | "long12" | "long36" | undefined;
+                                const tid = (selected as any).tariffId as "online_test" | "short1" | "short12" | "long12" | "long36" | undefined;
                                 if (tid === "short12") return tPricing("cards.short12.perLabel");
                                 if (tid === "long12") return tPricing("cards.bundle.long12.perLabel");
                                 if (tid === "long36") return tPricing("cards.bundle.long36.perLabel");
@@ -1963,9 +1963,9 @@ if (!selectedTariff) {
                         type="button"
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-brand-primary px-4 py-2.5 text-sm font-semibold hover:bg-brand-primary/90 transition-colors"
                         onClick={() => {
-                          const amount = prices.review[activeCurrency].total;
+                          const amount = prices.online_test[activeCurrency].total;
                           const options: PurchaseOptions = {
-                            tariffId: "review",
+                            tariffId: "online_test",
                             tariffLabel: tPricing("cards.test.tariffLabel"),
                             amount,
                             currency: activeCurrency,
@@ -2009,7 +2009,7 @@ if (!selectedTariff) {
                     {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
                   </label>
                   <div className="space-y-2">
-                    {PURCHASE_TARIFFS.filter((x) => x.id !== "review").map((tar) => {
+                    {PURCHASE_TARIFFS.filter((x) => x.id !== "online_test" && x.id !== "short1").map((tar) => {
                       const price =
                         prices[tar.amountKey][purchaseContext.currency].total;
                       const label = tPricing(tar.labelKey as any) || tar.id;
@@ -2295,7 +2295,7 @@ if (!selectedTariff) {
                     {activeLocale === "ru" ? "Выберите тариф" : "Choose a plan"}
                   </label>
                   <div className="space-y-2">
-                    {PURCHASE_TARIFFS.filter((x) => x.id !== "review").map((tar) => {
+                    {PURCHASE_TARIFFS.filter((x) => x.id !== "online_test" && x.id !== "short1").map((tar) => {
                       const price =
                         prices[tar.amountKey][purchaseContext.currency].total;
                       const label = tPricing(tar.labelKey as any) || tar.id;

@@ -16,7 +16,12 @@ function StepDot({ color = "bg-emerald-400" }: { color?: string }) {
 
 // отдельные цены для AMD, EUR и USD
 export const prices = {
-  review: {
+  online_test: {
+    EUR: { total: 11, per: 11 },
+    USD: { total: 13, per: 13 },
+    AMD: { total: 5500, per: 5500 }, // тест силы
+  },
+  short1: {
     EUR: { total: 11, per: 11 },
     USD: { total: 13, per: 13 },
     AMD: { total: 5500, per: 5500 }, // разовый формат
@@ -52,7 +57,7 @@ export function formatPrice(value: number, currency: Currency) {
 
 // то, что передаём вверх в модалку покупки
 export type PurchaseOptions = {
-  tariffId: "review" | "short12" | "long12" | "long36";
+  tariffId: "online_test" | "short1" | "short12" | "long12" | "long36";
   tariffLabel: string;
   amount: number;
   currency: Currency;
@@ -63,7 +68,8 @@ export const PURCHASE_TARIFFS: Array<{
   labelKey: string; // ключ в i18n для tariffLabel
   amountKey: keyof typeof prices; // откуда брать цену
 }> = [
-  { id: "review", labelKey: "cards.review.tariffLabel", amountKey: "review" },
+  { id: "online_test", labelKey: "cards.test.tariffLabel", amountKey: "online_test" },
+  { id: "short1", labelKey: "cards.short1.tariffLabel", amountKey: "short1" },
   { id: "short12", labelKey: "cards.short12.tariffLabel", amountKey: "short12" },
   { id: "long12", labelKey: "cards.bundle.long12.tariffLabel", amountKey: "long12" },
   { id: "long36", labelKey: "cards.bundle.long36.tariffLabel", amountKey: "long36" },
@@ -218,7 +224,7 @@ export function Pricing({
                 </h3>
 
                 <p className="text-[15px] font-semibold mb-1">
-                  {formatPrice(prices.review[currency].total, currency)}
+                  {formatPrice(prices.short1[currency].total, currency)}
                 </p>
 
                 <p className="text-[11px] text-brand-muted mb-4">
@@ -238,9 +244,9 @@ export function Pricing({
                   className="mt-3 w-full rounded-full border border-white/40 bg-transparent px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
                   onClick={() => {
                     onOpenPurchaseModal?.({
-                      tariffId: "review",
+                      tariffId: "short1",
                       tariffLabel: t("cards.short1.tariffLabel"),
-                      amount: prices.review[currency].total,
+                      amount: prices.short1[currency].total,
                       currency,
                     });
                   }}

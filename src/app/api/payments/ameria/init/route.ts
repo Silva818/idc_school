@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-type TariffId = "review" | "short12" | "long12" | "long36";
+type TariffId = "online_test" | "short1" | "short12" | "long12" | "long36";
 type Currency = "AMD" | "EUR" | "USD";
 
 const ameriaCurrency: Record<Currency, string> = {

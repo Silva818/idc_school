@@ -50,7 +50,7 @@
       "desc": "Learn proper technique, build strength, and master skills step by step. Every workout adapts to your level, goals, and schedule.",
       "ctaCourses": "View courses",
       "benefitPlan": "personal plan tailored to your goals",
-      "benefitChat": "support chat",
+      "benefitChat": "coach support",
       "nextStepLabel": "Your next step",
       "nextStepTitle": "Find out how it works",
       "start": "See how",
@@ -111,8 +111,8 @@
       },
       "funnel": {
         "step1": {
-          "title": "Great choice! Course “{course}”",
-          "subtitle": "✅ First step — take the Strength test. Here’s what you’ll get:",
+          "title": "First step — take the strength test",
+          "subtitle": "Here’s what you’ll get:",
           "bullets": [
             "We’ll determine your current level",
             "We’ll review your exercise technique from video",
@@ -190,7 +190,7 @@
       "desc": "Choose the direction that fits you best right now — you can switch to another course at any time. The program adapts flexibly to your level and interests.",
       "scrollHint": "Swipe right to see all programs.",
       "scrollNote": "Any course can be adapted to your starting level.",
-      "chooseCourse": "Choose course",
+      "chooseCourse": "Start with the strength test",
       "cards": {
         "light": {
           "badge": "Easy start · For beginners",
