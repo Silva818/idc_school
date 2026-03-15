@@ -200,6 +200,7 @@ export async function POST(req: Request) {
       Lessons: 0,
       Currency: currency,
       Tag: "gift_certificate",
+      format: "ds",
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,

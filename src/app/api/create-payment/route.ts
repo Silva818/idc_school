@@ -262,6 +262,7 @@ export async function POST(req: Request) {
       id_payment: paymentId,
       Currency: currency,
       Tag: normalizedTariffId,
+      format: "ds",
       Status: "created",
       tg_link_token: tgToken,
       locale: safeLocale,
