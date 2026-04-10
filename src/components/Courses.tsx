@@ -3,6 +3,7 @@
 
 import { TestSignupButton } from "@/components/TestSignupButton";
 import { useTranslations } from "next-intl";
+import type { CourseName } from "@/data/courses";
 
 type OpenStrengthTestOpts = {
   source?: "courses" | "pricing";
@@ -11,7 +12,7 @@ type OpenStrengthTestOpts = {
 
 type CoursesProps = {
   onOpenTestModal?: (opts?: { source?: "courses" | "pricing"; course_name?: string }) => void;
-  onChooseCourse?: (courseName: string) => void; // ✅ добавить
+  onChooseCourse?: (courseName: CourseName) => void;
 };
 
 export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
@@ -85,7 +86,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
                 <TestSignupButton
                   label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onChooseCourse?.(t("cards.light.title"))}
+                  onClick={() => onChooseCourse?.("calisthenics_light")}
                 />
               </div>
             </article>
@@ -116,7 +117,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
                 <TestSignupButton
                   label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onChooseCourse?.(t("cards.super.title"))}
+                  onClick={() => onChooseCourse?.("calisthenics_classic")}
                 />
               </div>
             </article>
@@ -147,7 +148,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
                 <TestSignupButton
                   label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onChooseCourse?.(t("cards.pullupsGirls.title"))}
+                  onClick={() => onChooseCourse?.("pullups")}
                 />
               </div>
             </article>
@@ -187,7 +188,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
                 <TestSignupButton
                   label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onChooseCourse?.(t("cards.handstand.title"))}
+                  onClick={() => onChooseCourse?.("handstand")}
                 />
               </div>
             </article>
@@ -227,7 +228,7 @@ export function Courses({ onOpenTestModal, onChooseCourse }: CoursesProps) {
                 <TestSignupButton
                   label={t("chooseCourse")}
                   buttonClassName="w-full rounded-full bg-brand-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-primary/90"
-                  onClick={() => onChooseCourse?.(t("cards.crossfit.title"))}
+                  onClick={() => onChooseCourse?.("calisthenics_for_crossfit")}
                 />
               </div>
             </article>

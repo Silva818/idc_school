@@ -17,7 +17,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { About } from "@/components/About";
 import { FAQ } from "@/components/FAQ";
 import { Testimonials } from "@/components/Testimonials";
-import { courseNames, COURSE_TITLE_KEY } from "@/data/courses";
+import { courseNames, COURSE_TITLE_KEY, type CourseName } from "@/data/courses";
 import { Footer } from "@/components/Footer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
@@ -224,6 +224,20 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+function isCourseSlug(value: string): value is CourseName {
+  return (courseNames as readonly string[]).includes(value);
+}
+
+function getSafeCourseSlug(
+  primary?: string,
+  secondary?: string,
+  fallback: CourseName = courseNames[0]
+): CourseName {
+  if (primary && isCourseSlug(primary)) return primary;
+  if (secondary && isCourseSlug(secondary)) return secondary;
+  return fallback;
+}
+
 export default function HomePage() {
   const t = useTranslations("home");
   const tErr = useTranslations("home.modals.errors");
@@ -259,11 +273,13 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   const [testErrors, setTestErrors] = useState<FormErrors>({});
 
   function openPurchaseFromPricing(options: PurchaseOptions) {
+    const preselectedCourse = getSafeCourseSlug(selectedCourse, buyCourse);
+
     setPurchaseOptions(options);
     setActiveCurrency(options.currency);
     setPurchaseContext({
       preselectedTariffId: options.tariffId,
-      preselectedCourse: selectedCourse || buyCourse || "",
+      preselectedCourse,
       currency: options.currency,
       source: "pricing",
     });
@@ -272,7 +288,7 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
 
   
     // проставим тариф/курс в локальные стейты формы
-    setBuyCourse(selectedCourse || buyCourse || "");
+    setBuyCourse(preselectedCourse);
   
     track("purchase_start", {
       site_language,
@@ -281,7 +297,7 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
       currency: options.currency,
       value: options.amount,
       source: "pricing",
-      course_name: selectedCourse || buyCourse || undefined,
+      course_name: preselectedCourse || undefined,
       device_type: getDeviceType(),
     });
   
@@ -299,9 +315,11 @@ const [testContext, setTestContext] = useState<StrengthTestSource>("unknown");
   const [hideFrontFace, setHideFrontFace] = useState(false);
   const [hideBackFace, setHideBackFace] = useState(false);
 
-  function openTestFlowStep1(courseName: string) {
+  function openTestFlowStep1(courseName: CourseName) {
+    const courseLabel = tCourses(COURSE_TITLE_KEY[courseName]);
+
     setSelectedCourse(courseName);
-    setFunnelCourseName(courseName);
+    setFunnelCourseName(courseLabel);
     setIsFunnelMode(true);
     setFunnelStep(1);
 
@@ -715,7 +733,9 @@ const [buyTariffId, setBuyTariffId] =
     else if (!isValidEmail(buyEmail)) errs.email = tErr("invalidEmail");
 
     // Требование курса только когда модалка открыта из pricing
-    if (purchaseContext?.source === "pricing" && !buyCourse) errs.course = tErr("chooseCourse");
+    if (purchaseContext?.source === "pricing" && !buyCourse) {
+      errs.course = tErr("chooseCourse");
+    }
 
     const dialToCheck = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
 
@@ -907,6 +927,10 @@ if (!selectedTariff) {
 
 
     const dialToSend = buyCountryIso === "OTHER" ? buyCustomDial : buyDialCode;
+    const safeBuyCourse = getSafeCourseSlug(
+      buyCourse,
+      purchaseContext?.preselectedCourse
+    );
 
     setIsBuySubmitting(true);
 
@@ -919,7 +943,7 @@ if (!selectedTariff) {
           fullName: buyFullName,
           email: buyEmail,
           phone: buildE164(dialToSend, buyPhoneNational),
-          courseName: buyCourse,
+          courseName: safeBuyCourse,
           tariffId: selectedTariff.tariffId,
           tariffLabel: selectedTariff.tariffLabel,
           amount: selectedTariff.amount,
@@ -938,7 +962,7 @@ if (!selectedTariff) {
             tariff_label: selectedTariff.tariffLabel,
             currency: selectedTariff.currency,
             value: selectedTariff.amount,
-            course_name: buyCourse || undefined,
+            course_name: safeBuyCourse || undefined,
             payment_id: data.paymentId, // важно!
             device_type: getDeviceType(),
           });
