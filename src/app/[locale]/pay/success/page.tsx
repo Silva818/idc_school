@@ -149,6 +149,10 @@ if (!transactionId) return;
 
 const key = `ga4_purchase_sent_${transactionId}`;
 if (sessionStorage.getItem(key) === "1") return;
+if (localStorage.getItem(key) === "1") {
+  sessionStorage.setItem(key, "1");
+  return;
+}
 
 track("purchase_made", {
   ...payload,
@@ -159,6 +163,7 @@ track("purchase_made", {
 
 
 sessionStorage.setItem(key, "1");
+localStorage.setItem(key, "1");
 
   }, [paymentId, resp]);
   

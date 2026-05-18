@@ -424,10 +424,16 @@ export async function POST(req: Request) {
     
       const prevStatus = String(fields?.Status ?? "").trim().toLowerCase();
     
-      const upd = await airtableUpdateRecord(found.record.id, {
-        Status: "paid",
-        // Paid_time: new Date().toISOString(),
-      });
+      let upd:
+        | Awaited<ReturnType<typeof airtableUpdateRecord>>
+        | { ok: true; skipped: "already_paid" } = { ok: true, skipped: "already_paid" };
+
+      if (prevStatus !== "paid") {
+        upd = await airtableUpdateRecord(found.record.id, {
+          Status: "paid",
+          // Paid_time: new Date().toISOString(),
+        });
+      }
 
       const purchasePayload = {
         site_language: String(fields?.locale ?? "").trim() || undefined,
