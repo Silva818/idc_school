@@ -1,5 +1,6 @@
 // src/app/api/check-payment/route.ts
 import { NextResponse } from "next/server";
+import { markPurchasePaidAndProcess } from "@/lib/supabase/purchases";
 
 /* ---------------- TELEGRAM HELPERS ---------------- */
 
@@ -470,11 +471,14 @@ export async function POST(req: Request) {
     
         await sendTelegramMessage(msg);
       }
+
+      const supabaseResult = await markPurchasePaidAndProcess(paymentId);
     
       return NextResponse.json({
         ...baseResponse,
         tgToken,
         purchasePayload,
+        supabase: supabaseResult,
         airtable: {
           action: "updated",
           found: true,
@@ -495,6 +499,8 @@ export async function POST(req: Request) {
     await sendTelegramMessage(
       `<b>✅ Оплата успешна (fallback)</b>\n<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>\n<b>Airtable:</b> record created with paid`
     );
+
+    const supabaseResult = await markPurchasePaidAndProcess(paymentId);
     
 
     return NextResponse.json({
@@ -510,6 +516,7 @@ export async function POST(req: Request) {
         find: found,
         result: create,
       },
+      supabase: supabaseResult,
     });
   } catch (e: any) {
     console.error("check-payment error:", e);

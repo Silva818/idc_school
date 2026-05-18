@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { upsertPurchaseCreated } from "@/lib/supabase/purchases";
 
 type Currency = "AMD" | "EUR" | "USD";
 type Locale = "en" | "ru";
@@ -227,9 +228,34 @@ export async function POST(req: Request) {
       locale: safeLocale,
     });
 
+    const purchaseSum = Number(amount);
+
     await sendToAirtable({
       ...airtableFieldsBase,
       id_payment: paymentId,
+    });
+
+    await upsertPurchaseCreated({
+      source_channel: "website",
+      email: normalizedBuyerEmail,
+      fi: buyerName,
+      phone: buyerPhone,
+      purchaseSum,
+      currency,
+      lessons: 0,
+      price_per_lesson: 0,
+      id_payment: paymentId,
+      course_name: null,
+      tag: "gift_certificate",
+      tariff_label: "Gift Certificate",
+      format: "ds",
+      tg_link_token: tgToken,
+      locale: safeLocale,
+      gift_recipient: recipientName,
+      tgid: null,
+      nickname: null,
+      studio_slug: null,
+      slot_start_at: null,
     });
 
     return NextResponse.json({ paymentUrl, paymentId, orderId, tgToken });
