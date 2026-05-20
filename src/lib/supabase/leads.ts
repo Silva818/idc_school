@@ -8,14 +8,14 @@ import {
 
 export type SupabaseLeadInput = {
   fio: string;
-  phone?: string;
-  email?: string;
-  city?: string;
-  studio?: string;
-  product?: string;
-  source?: string;
-  tgid?: string;
-  created_time?: string;
+  tgid?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  city?: string | null;
+  studio?: string | null;
+  product?: string | null;
+  source?: string | null;
+  raw_payload: unknown;
 };
 
 export async function createLeadInSupabase(input: SupabaseLeadInput) {
@@ -27,14 +27,14 @@ export async function createLeadInSupabase(input: SupabaseLeadInput) {
 
   const payload = {
     fio: String(input.fio ?? "").trim(),
+    tgid: String(input.tgid ?? "").trim() || null,
     phone: String(input.phone ?? "").trim() || null,
     email: String(input.email ?? "").trim().toLowerCase() || null,
     city: String(input.city ?? "").trim() || null,
     studio: String(input.studio ?? "").trim() || null,
     product: String(input.product ?? "").trim() || null,
     source: String(input.source ?? "").trim() || null,
-    tgid: String(input.tgid ?? "").trim() || null,
-    created_time: input.created_time || new Date().toISOString(),
+    raw_payload: input.raw_payload ?? {},
   };
 
   if (!payload.fio) {
@@ -43,7 +43,7 @@ export async function createLeadInSupabase(input: SupabaseLeadInput) {
   }
 
   try {
-    const response = await supabaseRestRequest("leads", {
+    const response = await supabaseRestRequest("leads_raw", {
       method: "POST",
       headers: {
         Prefer: "return=representation",

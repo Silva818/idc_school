@@ -17,13 +17,18 @@ export async function POST(req: NextRequest) {
     return new Response("Telegram config is missing", { status: 500 });
   }
 
-  const { fullName, email, phone, context, courseName } = await req.json();
+  const requestBody = await req.json();
+  const { fullName, email, phone, context, courseName, city, studio, tgid } =
+    (requestBody ?? {}) as Record<string, unknown>;
+  const fullNameStr = String(fullName ?? "").trim();
+  const emailStr = String(email ?? "").trim();
+  const contextStr = String(context ?? "").trim();
 
   const text =
     `<b>📝 Новая заявка на тест силы</b>\n\n` +
-    `👤 Имя: ${escapeTgHtml(fullName || "-")}\n` +
-    `📧 Email: ${escapeTgHtml(email || "-")}\n` +
-    (context ? `📌 Источник: ${escapeTgHtml(context)}\n` : "");
+    `👤 Имя: ${escapeTgHtml(fullNameStr || "-")}\n` +
+    `📧 Email: ${escapeTgHtml(emailStr || "-")}\n` +
+    (contextStr ? `📌 Источник: ${escapeTgHtml(contextStr)}\n` : "");
 
   const tgRes = await fetch(
     `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -48,10 +53,14 @@ export async function POST(req: NextRequest) {
 
   await createLeadInSupabase({
     fio: String(fullName ?? "").trim(),
+    tgid: String(tgid ?? "").trim() || undefined,
     email: String(email ?? "").trim().toLowerCase(),
     phone: String(phone ?? "").trim() || undefined,
+    city: String(city ?? "").trim() || undefined,
+    studio: String(studio ?? "").trim() || undefined,
     product: String(courseName ?? "").trim() || undefined,
     source: String(context ?? "").trim() || "website_test_signup",
+    raw_payload: requestBody ?? {},
   });
 
   return new Response("ok");
