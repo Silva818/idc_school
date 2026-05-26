@@ -186,6 +186,8 @@ export async function POST(req: Request) {
 
     const normalizedEmail = normalizeEmail(email);
     const normalizedTariffId = normalizeTariffId(tariffId);
+    const supabaseTag =
+      normalizedTariffId === "online_test" ? "short1" : normalizedTariffId;
 
     // ✅ FIX: если вдруг фронт не прислал locale, страхуемся по referer
     const referer = req.headers.get("referer") || "";
@@ -283,7 +285,7 @@ export async function POST(req: Request) {
       price_per_lesson: lessons > 0 ? purchaseSum / lessons : 0,
       id_payment: paymentId,
       course_name: courseNameForAirtable,
-      tag: normalizedTariffId,
+      tag: supabaseTag,
       tariff_label: String(tariffLabel ?? "").trim() || normalizedTariffId,
       format: "ds",
       tg_link_token: tgToken,
