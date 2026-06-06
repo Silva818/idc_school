@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 
 type TariffId = "online_test" | "short1" | "short12" | "long12" | "long36";
-type Currency = "AMD" | "EUR" | "USD";
+const allowedCurrencies = ["AMD", "EUR", "USD", "RUB"] as const;
+type Currency = (typeof allowedCurrencies)[number];
 
 const ameriaCurrency: Record<Currency, string> = {
   AMD: "051",
   EUR: "978",
   USD: "840",
+  RUB: "643",
 };
+
+function parseCurrency(value: unknown): Currency | null {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase();
+  if ((allowedCurrencies as readonly string[]).includes(normalized)) {
+    return normalized as Currency;
+  }
+  return null;
+}
 
 function makeOrderId(): number {
   // в доке OrderID = integer :contentReference[oaicite:3]{index=3}
@@ -19,11 +31,16 @@ export async function POST(req: Request) {
     const {
       tariffId,
       amount,
-      currency,
-    }: { tariffId: TariffId; amount: number; currency: Currency } = await req.json();
+      currency: currencyRaw,
+    }: { tariffId: TariffId; amount: number; currency: unknown } = await req.json();
 
-    if (!tariffId || !amount || !currency) {
+    const currency = parseCurrency(currencyRaw);
+
+    if (!tariffId || !amount) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
+    }
+    if (!currency) {
+      return NextResponse.json({ error: "Invalid currency" }, { status: 400 });
     }
 
     const base = process.env.AMERIA_VPOS_BASE!;

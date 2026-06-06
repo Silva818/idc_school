@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { upsertPurchaseCreated } from "@/lib/supabase/purchases";
 
-type Currency = "AMD" | "EUR" | "USD";
+const allowedCurrencies = ["AMD", "EUR", "USD", "RUB"] as const;
+type Currency = (typeof allowedCurrencies)[number];
 type Locale = "en" | "ru";
 
 
@@ -12,7 +13,18 @@ const ameriaCurrency: Record<Currency, string> = {
   AMD: "051",
   EUR: "978",
   USD: "840",
+  RUB: "643",
 };
+
+function parseCurrency(value: unknown): Currency | null {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase();
+  if ((allowedCurrencies as readonly string[]).includes(normalized)) {
+    return normalized as Currency;
+  }
+  return null;
+}
 
 /**
  * Делает OrderID:
@@ -150,7 +162,7 @@ export async function POST(req: Request) {
 
     const {
       amount,
-      currency,
+      currency: currencyRaw,
       locale,
       buyerName,
       buyerEmail,
@@ -158,7 +170,7 @@ export async function POST(req: Request) {
       recipientName,
     } = body as {
       amount: number;
-      currency: Currency;
+      currency: unknown;
       locale?: Locale;
       buyerName: string;
       buyerEmail: string;
@@ -166,6 +178,7 @@ export async function POST(req: Request) {
       recipientName: string;
     };
     const normalizedBuyerEmail = normalizeEmail(buyerEmail);
+    const currency = parseCurrency(currencyRaw);
 
     // fallback locale
     const referer = req.headers.get("referer") || "";
@@ -187,6 +200,9 @@ export async function POST(req: Request) {
     }
     if (!recipientName || !String(recipientName).trim()) {
       return NextResponse.json({ error: "Не указано имя получателя" }, { status: 400 });
+    }
+    if (!currency) {
+      return NextResponse.json({ error: "Некорректная валюта" }, { status: 400 });
     }
 
     const tgToken = makeTelegramLinkToken();

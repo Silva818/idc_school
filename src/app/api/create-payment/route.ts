@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { upsertPurchaseCreated } from "@/lib/supabase/purchases";
 
-type Currency = "AMD" | "EUR" | "USD";
+const allowedCurrencies = ["AMD", "EUR", "USD", "RUB"] as const;
+type Currency = (typeof allowedCurrencies)[number];
 type Locale = "en" | "ru";
 
 /* ---------------- AMERIA ---------------- */
@@ -11,7 +12,18 @@ const ameriaCurrency: Record<Currency, string> = {
   AMD: "051",
   EUR: "978",
   USD: "840",
+  RUB: "643",
 };
+
+function parseCurrency(value: unknown): Currency | null {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase();
+  if ((allowedCurrencies as readonly string[]).includes(normalized)) {
+    return normalized as Currency;
+  }
+  return null;
+}
 
 function makeOrderIdFromToken(tokenHex: string): number {
   // Детерминированно: один token -> один OrderID
@@ -164,7 +176,7 @@ export async function POST(req: Request) {
 
     const {
       amount,
-      currency,
+      currency: currencyRaw,
       email,
       fullName,
       phone,
@@ -174,7 +186,7 @@ export async function POST(req: Request) {
       locale,
     } = body as {
       amount: number;
-      currency: Currency;
+      currency: unknown;
       email: string;
       fullName: string;
       phone?: string;
@@ -186,6 +198,7 @@ export async function POST(req: Request) {
 
     const normalizedEmail = normalizeEmail(email);
     const normalizedTariffId = normalizeTariffId(tariffId);
+    const currency = parseCurrency(currencyRaw);
     const supabaseTag =
       normalizedTariffId === "online_test" ? "short1" : normalizedTariffId;
 
@@ -196,10 +209,10 @@ export async function POST(req: Request) {
     const safeLocale: Locale =
       locale === "ru" ? "ru" : locale === "en" ? "en" : inferredLocale;
 
-    if (!amount || !currency || !normalizedEmail || !fullName || !normalizedTariffId || !phone) {
+    if (!amount || !normalizedEmail || !fullName || !normalizedTariffId || !phone) {
       console.warn("⚠️ Missing fields:", {
         amount,
-        currency,
+        currency: currencyRaw,
         email: normalizedEmail,
         fullName,
         phone,
@@ -207,6 +220,9 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json({ error: "Не хватает данных" }, { status: 400 });
+    }
+    if (!currency) {
+      return NextResponse.json({ error: "Некорректная валюта" }, { status: 400 });
     }
 
     const lessonsByTariff: Record<string, number> = {
