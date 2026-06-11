@@ -528,7 +528,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const paymentIdRaw = String(body?.paymentId ?? "");
-    const paymentId = paymentIdRaw.trim();
+    const paymentId = paymentIdRaw.trim().toUpperCase();
     const paymentIdNorm = paymentId.toLowerCase();
 
     if (!paymentId) {

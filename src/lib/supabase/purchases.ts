@@ -39,12 +39,16 @@ type PurchaseLookupRow = {
   id_payment: string;
 };
 
+function normalizePaymentId(raw: string) {
+  return String(raw ?? "").trim().toUpperCase();
+}
+
 function terminalStatus(status: unknown) {
   const s = String(status ?? "").trim().toLowerCase();
   return s === "paid" || s === "matched";
 }
 
-async function getPurchaseByPaymentId(idPayment: string) {
+async function queryPurchaseByPaymentId(idPayment: string) {
   const q = `purchases?select=id,status,id_payment&id_payment=eq.${encodeURIComponent(
     idPayment
   )}&limit=1`;
@@ -58,7 +62,22 @@ async function getPurchaseByPaymentId(idPayment: string) {
       rows,
     };
   }
-  return { ok: true as const, row: rows[0] ?? null };
+  return { ok: true as const, row: rows[0] ?? null, rows };
+}
+
+async function getPurchaseByPaymentId(idPaymentRaw: string) {
+  const canonical = normalizePaymentId(idPaymentRaw);
+  const variants = Array.from(
+    new Set([canonical, canonical.toLowerCase(), String(idPaymentRaw ?? "").trim()])
+  ).filter(Boolean);
+
+  for (const variant of variants) {
+    const result = await queryPurchaseByPaymentId(variant);
+    if (!result.ok) return result;
+    if (result.row) return result;
+  }
+
+  return { ok: true as const, row: null };
 }
 
 export async function upsertPurchaseCreated(input: UpsertPurchaseCreatedInput) {
@@ -68,7 +87,7 @@ export async function upsertPurchaseCreated(input: UpsertPurchaseCreatedInput) {
     return { ok: false as const, skipped: gate.reason };
   }
 
-  const idPayment = String(input.id_payment ?? "").trim();
+  const idPayment = normalizePaymentId(input.id_payment ?? "");
   if (!idPayment) {
     console.warn("[supabase:purchases] upsert skip: empty id_payment");
     return { ok: false as const, skipped: "empty_id_payment" as const };
@@ -159,7 +178,7 @@ export async function markPurchasePaidAndProcess(idPaymentRaw: string) {
     return { ok: false as const, skipped: gate.reason };
   }
 
-  const idPayment = String(idPaymentRaw ?? "").trim();
+  const idPayment = normalizePaymentId(idPaymentRaw ?? "");
   if (!idPayment) {
     return { ok: false as const, reason: "empty_id_payment" as const };
   }
