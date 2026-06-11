@@ -80,7 +80,11 @@ export async function upsertPurchaseCreated(input: UpsertPurchaseCreatedInput) {
       console.warn("[supabase:purchases] lookup failed before upsert", {
         status: found.status,
       });
-      return { ok: false as const, reason: "lookup_failed" as const };
+      return {
+        ok: false as const,
+        reason: "lookup_failed" as const,
+        status: found.status,
+      };
     }
 
     if (found.row && terminalStatus(found.row.status)) {
@@ -133,7 +137,12 @@ export async function upsertPurchaseCreated(input: UpsertPurchaseCreatedInput) {
       console.warn("[supabase:purchases] upsert failed", {
         status: response.status,
       });
-      return { ok: false as const, reason: "upsert_failed" as const, data: json };
+      return {
+        ok: false as const,
+        reason: "upsert_failed" as const,
+        status: response.status,
+        data: json,
+      };
     }
 
     return { ok: true as const, data: json };
@@ -161,13 +170,21 @@ export async function markPurchasePaidAndProcess(idPaymentRaw: string) {
       console.warn("[supabase:purchases] lookup failed on mark paid", {
         status: found.status,
       });
-      return { ok: false as const, reason: "lookup_failed" as const };
+      return {
+        ok: false as const,
+        reason: "lookup_failed" as const,
+        status: found.status,
+      };
     }
     if (!found.row) {
       console.warn("[supabase:purchases] purchase not found by id_payment", {
         id_payment: idPayment,
       });
-      return { ok: false as const, reason: "purchase_not_found" as const };
+      return {
+        ok: false as const,
+        reason: "purchase_not_found" as const,
+        id_payment: idPayment,
+      };
     }
 
     if (!terminalStatus(found.row.status)) {
@@ -181,11 +198,17 @@ export async function markPurchasePaidAndProcess(idPaymentRaw: string) {
           body: JSON.stringify({ status: "Paid" as PurchaseStatus }),
         }
       );
+      const patchJson = await readJsonSafe(patch);
       if (!patch.ok) {
         console.warn("[supabase:purchases] status update failed", {
           status: patch.status,
         });
-        return { ok: false as const, reason: "status_update_failed" as const };
+        return {
+          ok: false as const,
+          reason: "status_update_failed" as const,
+          status: patch.status,
+          data: patchJson,
+        };
       }
     }
 
@@ -195,12 +218,21 @@ export async function markPurchasePaidAndProcess(idPaymentRaw: string) {
     const rpcJson = await readJsonSafe(rpc);
     if (!rpc.ok) {
       console.warn("[supabase:purchases] rpc failed", { status: rpc.status });
-      return { ok: false as const, reason: "rpc_failed" as const, data: rpcJson };
+      return {
+        ok: false as const,
+        reason: "rpc_failed" as const,
+        status: rpc.status,
+        data: rpcJson,
+      };
     }
 
     return { ok: true as const, purchase_id: found.row.id, data: rpcJson };
   } catch (error) {
     console.warn("[supabase:purchases] mark paid crashed", error);
-    return { ok: false as const, reason: "mark_paid_crashed" as const };
+    return {
+      ok: false as const,
+      reason: "mark_paid_crashed" as const,
+      error: String((error as Error)?.message ?? error),
+    };
   }
 }

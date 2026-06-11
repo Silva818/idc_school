@@ -1,6 +1,9 @@
 // src/app/api/check-payment/route.ts
 import { NextResponse } from "next/server";
-import { markPurchasePaidAndProcess } from "@/lib/supabase/purchases";
+import {
+  markPurchasePaidAndProcess,
+  upsertPurchaseCreated,
+} from "@/lib/supabase/purchases";
 
 /* ---------------- TELEGRAM HELPERS ---------------- */
 
@@ -123,14 +126,22 @@ async function airtableFindByPaymentId(paymentIdRaw: string) {
   const env = airtableEnv();
   if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
 
-  const paymentId = airtableEscapeForDoubleQuotes(paymentIdRaw);
+  const paymentIdExact = airtableEscapeForDoubleQuotes(
+    String(paymentIdRaw ?? "").trim()
+  );
+  const paymentIdNorm = airtableEscapeForDoubleQuotes(
+    String(paymentIdRaw ?? "")
+      .trim()
+      .toLowerCase()
+  );
 
   // ✅ 1) Самый надёжный вариант: приводим поле к строке через конкатенацию
   // ({id_payment}&"") гарантирует string compare даже если поле number.
-  const filter1 = `(LOWER({id_payment}&"") = "${paymentId}")`;
+  const filter1 = `(LOWER({id_payment}&"") = "${paymentIdNorm}")`;
 
   // ✅ 2) На всякий случай — “прямое” сравнение (если поле точно строковое)
-  const filter2 = `(LOWER({id_payment}) = "${paymentId}")`;
+  const filter2 = `(LOWER({id_payment}) = "${paymentIdNorm}")`;
+  const filter3 = `(({id_payment}&"") = "${paymentIdExact}")`;
 
   const tryFetch = async (filterByFormula: string) => {
     const url = `${airtableBaseUrl(
@@ -177,7 +188,11 @@ async function airtableFindByPaymentId(paymentIdRaw: string) {
 
   // Потом пробуем прямое сравнение (вдруг поле реально текстовое)
   const b = await tryFetch(filter2);
-  return b;
+  if (b.ok && b.record?.id) return b;
+
+  // И в конце — точное сравнение без LOWER
+  const c = await tryFetch(filter3);
+  return c;
 }
 
 async function airtableUpdateRecord(
@@ -222,48 +237,6 @@ async function airtableUpdateRecord(
   } catch (err) {
     console.error("💥 Airtable UPDATE crashed:", err);
     return { ok: false as const, reason: "update_crashed" as const };
-  }
-}
-
-async function airtableCreateRecord(fields: Record<string, any>) {
-  const env = airtableEnv();
-  if (!env.ok) return { ok: false as const, reason: "env_missing" as const };
-
-  const url = airtableBaseUrl(env);
-
-  try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ fields }),
-      cache: "no-store",
-    });
-
-    const text = await r.text();
-
-    if (!r.ok) {
-      return {
-        ok: false as const,
-        reason: "create_failed" as const,
-        status: r.status,
-        text,
-      };
-    }
-
-    let json: any = null;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      // ok
-    }
-
-    return { ok: true as const, record: json ?? text };
-  } catch (err) {
-    console.error("💥 Airtable CREATE crashed:", err);
-    return { ok: false as const, reason: "create_crashed" as const };
   }
 }
 
@@ -383,7 +356,9 @@ function ameriaStatus(details: any): {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const paymentId = String(body?.paymentId ?? "").trim();
+    const paymentIdRaw = String(body?.paymentId ?? "");
+    const paymentId = paymentIdRaw.trim();
+    const paymentIdNorm = paymentId.toLowerCase();
 
     if (!paymentId) {
       console.warn("⚠️ paymentId missing");
@@ -406,6 +381,11 @@ export async function POST(req: Request) {
       paid,
       status: bank.status,
       bank,
+      diagnostics: {
+        paymentIdRaw,
+        paymentId,
+        paymentIdNorm,
+      },
     };
 
     // Airtable не трогаем, если оплата не успешна
@@ -478,7 +458,47 @@ export async function POST(req: Request) {
         await sendTelegramMessage(msg);
       }
 
-      const supabaseResult = await markPurchasePaidAndProcess(paymentId);
+      const supabaseResultInitial = await markPurchasePaidAndProcess(paymentId);
+      let supabaseResult: any = supabaseResultInitial;
+
+      if (supabaseResultInitial?.reason === "purchase_not_found") {
+        const sum = Number(fields?.Sum ?? 0) || 0;
+        const lessons = Math.max(0, Number(fields?.Lessons ?? 0) || 0);
+        const recoveryUpsert = await upsertPurchaseCreated({
+          source_channel: "website",
+          email: String(fields?.email ?? "").trim().toLowerCase() || null,
+          fi: String(fields?.FIO ?? "").trim() || null,
+          tgid: null,
+          gift_recipient: String(fields?.GiftRecipient ?? "").trim() || null,
+          tg_link_token: String(fields?.tg_link_token ?? "").trim() || null,
+          purchaseSum: sum,
+          currency: String(fields?.Currency ?? "").trim().toUpperCase() || null,
+          lessons,
+          price_per_lesson: lessons > 0 ? sum / lessons : 0,
+          id_payment: paymentId,
+          course_name: String(fields?.course_name ?? "").trim() || null,
+          tag: String(fields?.Tag ?? "").trim() || null,
+          nickname: null,
+          phone: normalizePhone(String(fields?.Phone ?? "")) || null,
+          locale: String(fields?.locale ?? "").trim() || null,
+          tariff_label:
+            String(fields?.tariff_label ?? "").trim() ||
+            String(fields?.Tag ?? "").trim() ||
+            null,
+          studio_slug: null,
+          slot_start_at: null,
+          format: String(fields?.format ?? "").trim() || "ds",
+        });
+        const retryMarkPaid = await markPurchasePaidAndProcess(paymentId);
+        supabaseResult = {
+          ...retryMarkPaid,
+          recovery: {
+            initial: supabaseResultInitial,
+            upsert: recoveryUpsert,
+            retry: retryMarkPaid,
+          },
+        };
+      }
     
       return NextResponse.json({
         ...baseResponse,
@@ -496,31 +516,26 @@ export async function POST(req: Request) {
     }
     
 
-    // Если не нашли — создаём запись, чтобы не потерять оплату (но теперь это должно быть редкостью)
-    const create = await airtableCreateRecord({
-      id_payment: paymentId,
-      Status: "paid",
-    });
-
-    await sendTelegramMessage(
-      `<b>✅ Оплата успешна (fallback)</b>\n<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>\n<b>Airtable:</b> record created with paid`
-    );
-
     const supabaseResult = await markPurchasePaidAndProcess(paymentId);
-    
+    console.warn("[check-payment] airtable record not found for paid payment", {
+      paymentId,
+      paymentIdNorm,
+      bankStatus: bank.status,
+      findResult: found,
+    });
 
     return NextResponse.json({
       ...baseResponse,
-      tgToken: null, // ✅ NEW: токена нет, потому что запись была создана fallback-ом
+      ok: false,
+      reconcile: "needs_manual_reconcile",
+      tgToken: null,
       purchasePayload: {
         transaction_id: paymentId,
-        // остального нет, потому что запись только создали и в ней нет полей
       },
       airtable: {
-        action: "created",
+        action: "not_found",
         found: false,
         find: found,
-        result: create,
       },
       supabase: supabaseResult,
     });
