@@ -4,6 +4,177 @@ import {
   markPurchasePaidAndProcess,
   upsertPurchaseCreated,
 } from "@/lib/supabase/purchases";
+import { readJsonSafe, supabaseRestRequest } from "@/lib/supabase/server";
+
+const MAX_RECOVERY_RETRIES = 3;
+const RECOVERY_COOLDOWN_MS = 60_000;
+
+type RecoveryBudgetRow = {
+  id_payment: string;
+  recovery_retry_count: number | null;
+  recovery_last_attempt_at: string | null;
+  recovery_last_reason: string | null;
+};
+
+const localRecoveryBudget = new Map<
+  string,
+  { count: number; lastAttemptMs: number; lastReason: string }
+>();
+
+function logStage(
+  stage: "airtable_update" | "telegram_send" | "supabase_mark_paid" | "recovery_budget",
+  outcome: "ok" | "skip" | "error",
+  data: Record<string, unknown>
+) {
+  const method = outcome === "error" ? "warn" : "info";
+  console[method](`[check-payment:${stage}] ${outcome}`, data);
+}
+
+function normalizeIsoDateMs(isoRaw: string | null | undefined) {
+  const t = Date.parse(String(isoRaw ?? ""));
+  return Number.isFinite(t) ? t : 0;
+}
+
+async function getRecoveryBudgetSupabase(idPayment: string) {
+  const response = await supabaseRestRequest(
+    `payment_recovery_budget?select=id_payment,recovery_retry_count,recovery_last_attempt_at,recovery_last_reason&id_payment=eq.${encodeURIComponent(
+      idPayment
+    )}&limit=1`,
+    { method: "GET" }
+  );
+  const rows = (await readJsonSafe<RecoveryBudgetRow[]>(response)) || [];
+  if (!response.ok) {
+    return { ok: false as const, status: response.status, rows };
+  }
+  return { ok: true as const, row: rows[0] ?? null };
+}
+
+async function upsertRecoveryBudgetSupabase(row: {
+  id_payment: string;
+  recovery_retry_count: number;
+  recovery_last_attempt_at: string;
+  recovery_last_reason: string;
+}) {
+  const response = await supabaseRestRequest(
+    "payment_recovery_budget?on_conflict=id_payment",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify(row),
+    }
+  );
+  const data = await readJsonSafe(response);
+  if (!response.ok) {
+    return { ok: false as const, status: response.status, data };
+  }
+  return { ok: true as const, data };
+}
+
+function readLocalRecoveryBudget(idPayment: string) {
+  return localRecoveryBudget.get(idPayment) ?? {
+    count: 0,
+    lastAttemptMs: 0,
+    lastReason: "",
+  };
+}
+
+function writeLocalRecoveryBudget(
+  idPayment: string,
+  count: number,
+  reason: string,
+  whenMs: number
+) {
+  localRecoveryBudget.set(idPayment, {
+    count,
+    lastAttemptMs: whenMs,
+    lastReason: reason,
+  });
+}
+
+async function getRecoveryBudget(idPayment: string) {
+  try {
+    const remote = await getRecoveryBudgetSupabase(idPayment);
+    if (remote.ok) {
+      const row = remote.row;
+      return {
+        source: "supabase" as const,
+        count: Number(row?.recovery_retry_count ?? 0) || 0,
+        lastAttemptMs: normalizeIsoDateMs(row?.recovery_last_attempt_at ?? null),
+        lastReason: String(row?.recovery_last_reason ?? ""),
+      };
+    }
+    logStage("recovery_budget", "error", {
+      paymentId: idPayment,
+      where: "get",
+      source: "supabase",
+      status: remote.status,
+    });
+  } catch (error) {
+    logStage("recovery_budget", "error", {
+      paymentId: idPayment,
+      where: "get",
+      source: "supabase",
+      error: String((error as Error)?.message ?? error),
+    });
+  }
+  return {
+    source: "local" as const,
+    ...readLocalRecoveryBudget(idPayment),
+  };
+}
+
+async function bumpRecoveryBudget(idPayment: string, reason: string) {
+  const nowMs = Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const current = await getRecoveryBudget(idPayment);
+  const nextCount = current.count + 1;
+
+  writeLocalRecoveryBudget(idPayment, nextCount, reason, nowMs);
+
+  try {
+    const remote = await upsertRecoveryBudgetSupabase({
+      id_payment: idPayment,
+      recovery_retry_count: nextCount,
+      recovery_last_attempt_at: nowIso,
+      recovery_last_reason: reason,
+    });
+    if (!remote.ok) {
+      logStage("recovery_budget", "error", {
+        paymentId: idPayment,
+        where: "upsert",
+        source: "supabase",
+        status: remote.status,
+      });
+    }
+  } catch (error) {
+    logStage("recovery_budget", "error", {
+      paymentId: idPayment,
+      where: "upsert",
+      source: "supabase",
+      error: String((error as Error)?.message ?? error),
+    });
+  }
+
+  return { count: nextCount, lastAttemptMs: nowMs };
+}
+
+function evaluateRecoveryBudget(budget: {
+  count: number;
+  lastAttemptMs: number;
+}) {
+  if (budget.count >= MAX_RECOVERY_RETRIES) {
+    return { allowed: false as const, reason: "retry_cap_reached" as const };
+  }
+  if (
+    budget.lastAttemptMs > 0 &&
+    Date.now() - budget.lastAttemptMs < RECOVERY_COOLDOWN_MS
+  ) {
+    return { allowed: false as const, reason: "retry_cooldown" as const };
+  }
+  return { allowed: true as const };
+}
 
 /* ---------------- TELEGRAM HELPERS ---------------- */
 
@@ -390,11 +561,21 @@ export async function POST(req: Request) {
 
     // Airtable не трогаем, если оплата не успешна
     if (!paid) {
+      logStage("airtable_update", "skip", {
+        paymentId,
+        reason: "not_paid_by_bank",
+        bankStatus: bank.status,
+      });
       return NextResponse.json(baseResponse);
     }
 
     // ✅ Обновляем существующую запись created → paid
     const found = await airtableFindByPaymentId(paymentId);
+    logStage("airtable_update", found.ok ? "ok" : "error", {
+      paymentId,
+      stage: "find",
+      result: found,
+    });
 
     if (found.ok && found.record?.id) {
       const fields = (found.record?.fields ?? {}) as any;
@@ -412,6 +593,17 @@ export async function POST(req: Request) {
         upd = await airtableUpdateRecord(found.record.id, {
           Status: "paid",
           // Paid_time: new Date().toISOString(),
+        });
+        logStage("airtable_update", upd.ok ? "ok" : "error", {
+          paymentId,
+          recordId: found.record.id,
+          outcome: upd,
+        });
+      } else {
+        logStage("airtable_update", "skip", {
+          paymentId,
+          recordId: found.record.id,
+          reason: "already_paid",
         });
       }
 
@@ -455,13 +647,67 @@ export async function POST(req: Request) {
           )}\n` +
           `<b>PaymentID:</b> <code>${escapeTgHtml(paymentId)}</code>`;
     
-        await sendTelegramMessage(msg);
+        const tgResult = await sendTelegramMessage(msg);
+        logStage("telegram_send", tgResult.ok ? "ok" : "error", {
+          paymentId,
+          result: tgResult,
+        });
+      } else {
+        logStage("telegram_send", "skip", {
+          paymentId,
+          reason: "already_paid",
+        });
       }
 
       const supabaseResultInitial = await markPurchasePaidAndProcess(paymentId);
+      logStage(
+        "supabase_mark_paid",
+        supabaseResultInitial?.ok ? "ok" : "error",
+        {
+          paymentId,
+          stage: "initial",
+          result: supabaseResultInitial,
+        }
+      );
       let supabaseResult: any = supabaseResultInitial;
 
       if (supabaseResultInitial?.reason === "purchase_not_found") {
+        const budget = await getRecoveryBudget(paymentId);
+        const budgetDecision = evaluateRecoveryBudget(budget);
+        logStage(
+          "recovery_budget",
+          budgetDecision.allowed ? "ok" : "skip",
+          {
+            paymentId,
+            source: budget.source,
+            count: budget.count,
+            lastAttemptMs: budget.lastAttemptMs,
+            decision: budgetDecision,
+          }
+        );
+        if (!budgetDecision.allowed) {
+          supabaseResult = {
+            ...supabaseResultInitial,
+            recovery: {
+              skipped: true,
+              reason: "retry_blocked",
+              blockedBy: budgetDecision.reason,
+              budget: {
+                maxRetries: MAX_RECOVERY_RETRIES,
+                cooldownMs: RECOVERY_COOLDOWN_MS,
+                currentCount: budget.count,
+                lastAttemptAt:
+                  budget.lastAttemptMs > 0
+                    ? new Date(budget.lastAttemptMs).toISOString()
+                    : null,
+              },
+            },
+          };
+        } else {
+          const bumped = await bumpRecoveryBudget(
+            paymentId,
+            "purchase_not_found_recovery"
+          );
         const sum = Number(fields?.Sum ?? 0) || 0;
         const lessons = Math.max(0, Number(fields?.Lessons ?? 0) || 0);
         const recoveryUpsert = await upsertPurchaseCreated({
@@ -489,15 +735,32 @@ export async function POST(req: Request) {
           slot_start_at: null,
           format: String(fields?.format ?? "").trim() || "ds",
         });
+        logStage("supabase_mark_paid", recoveryUpsert?.ok ? "ok" : "error", {
+          paymentId,
+          stage: "recovery_upsert",
+          result: recoveryUpsert,
+        });
         const retryMarkPaid = await markPurchasePaidAndProcess(paymentId);
+        logStage("supabase_mark_paid", retryMarkPaid?.ok ? "ok" : "error", {
+          paymentId,
+          stage: "retry",
+          result: retryMarkPaid,
+        });
         supabaseResult = {
           ...retryMarkPaid,
           recovery: {
             initial: supabaseResultInitial,
             upsert: recoveryUpsert,
             retry: retryMarkPaid,
+            budget: {
+              maxRetries: MAX_RECOVERY_RETRIES,
+              cooldownMs: RECOVERY_COOLDOWN_MS,
+              currentCount: bumped.count,
+              lastAttemptAt: new Date(bumped.lastAttemptMs).toISOString(),
+            },
           },
         };
+        }
       }
     
       return NextResponse.json({
@@ -516,7 +779,18 @@ export async function POST(req: Request) {
     }
     
 
+    logStage("airtable_update", "skip", {
+      paymentId,
+      stage: "find",
+      reason: "record_not_found",
+    });
+
     const supabaseResult = await markPurchasePaidAndProcess(paymentId);
+    logStage("supabase_mark_paid", supabaseResult?.ok ? "ok" : "error", {
+      paymentId,
+      stage: "not_found_airtable_branch",
+      result: supabaseResult,
+    });
     console.warn("[check-payment] airtable record not found for paid payment", {
       paymentId,
       paymentIdNorm,
