@@ -1,8 +1,37 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 const LOCALES = ["en", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
+
+const OPERATOR_DETAILS: Record<Locale, string> = {
+  en: [
+    "9. OPERATOR DETAILS:",
+    "Individual Entrepreneur Ambartsumyan Sirvard Sergeevna",
+    "Registration number: 264.1489864",
+    "Tax ID: 26913722",
+    "Address: OneBusiness, 1 Yekmalyan St, Yerevan 0010, Armenia",
+    "Mobile: +37494901718",
+    "E-mail: silva.ambartsumian@outlook.com",
+  ].join("\n"),
+  ru: [
+    "9. СВЕДЕНИЯ ОБ ОПЕРАТОРЕ:",
+    "Индивидуальный предприниматель Амбарцумян Сирвард Сергеевна",
+    "Регистрационный номер: 264.1489864",
+    "ИНН: 26913722",
+    "Адрес: OneBusiness, ул. Екмаляна 1, Ереван 0010, Армения",
+    "Мобильный: +37494901718",
+    "E-mail: silva.ambartsumian@outlook.com",
+  ].join("\n"),
+};
+
+function withUpdatedOperatorDetails(contentRaw: string, locale: Locale) {
+  const content = String(contentRaw ?? "").trimEnd();
+  const cleaned = content.replace(/\n\n9\.[\s\S]*$/m, "");
+  return `${cleaned}\n\n${OPERATOR_DETAILS[locale]}\n`;
+}
 
 function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes((value as unknown) as Locale);
@@ -26,6 +55,12 @@ export default async function PrivacyPage(props: PrivacyPageProps) {
     locale: safeLocale,
     namespace: "legal.privacy",
   });
+
+  const rawContent =
+    safeLocale === "ru"
+      ? await readFile(path.join(process.cwd(), "src/privacy-ru.md"), "utf8")
+      : t("content");
+  const content = withUpdatedOperatorDetails(rawContent, safeLocale);
 
   const homeHref = safeLocale === "ru" ? "/ru" : "/";
 
@@ -51,7 +86,7 @@ export default async function PrivacyPage(props: PrivacyPageProps) {
 
         <section className="rounded-3xl border border-white/10 bg-black/30 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 text-[13px] sm:text-sm leading-relaxed text-brand-muted">
           <div className="whitespace-pre-wrap">
-            {t("content")}
+            {content}
           </div>
         </section>
       </div>
