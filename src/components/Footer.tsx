@@ -97,6 +97,12 @@ export function Footer() {
             </a>
           </div>
         </div>
+
+        <div className="mt-5 border-t border-white/5 pt-4">
+          <p className="text-[10px] sm:text-[11px] leading-relaxed text-brand-muted/65 whitespace-pre-wrap text-center sm:text-left">
+            {t("operatorDetails")}
+          </p>
+        </div>
       </div>
     </footer>
   );
